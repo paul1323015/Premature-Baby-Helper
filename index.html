@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>巴掌小太陽 - 早產兒照護與生長曲線小幫手</title>
+  <title>巴掌小太陽·早產兒照護小幫手</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React & ReactDOM CDN -->
@@ -165,30 +165,25 @@
       }
     };
 
-    // Helper to sanitize date strings and fix typos like "202605-05-01"
     const sanitizeDateStr = (str) => {
       if (!str || typeof str !== 'string') return new Date().toISOString().slice(0, 10);
       let cleaned = str.trim();
       
-      // Fix double year concatenation typo (e.g., "202605-05-01" or "202605-01")
       if (/^\d{6}-\d{2}-\d{2}$/.test(cleaned)) {
         const year = cleaned.slice(0, 4);
         const month = cleaned.slice(4, 6);
         const day = cleaned.slice(10, 12);
         cleaned = `${year}-${month}-${day}`;
       } else if (/^\d{6}/.test(cleaned)) {
-        // Fallback for 6-digit year start
         const year = cleaned.slice(0, 4);
         cleaned = year + cleaned.slice(6);
       }
 
-      // Validate Date object parsing
       const dateObj = new Date(cleaned);
       if (isNaN(dateObj.getTime())) {
         return new Date().toISOString().slice(0, 10);
       }
 
-      // Prevent astronomical years (> 2035 or < 2010)
       const yr = dateObj.getFullYear();
       if (yr > 2035 || yr < 2010) {
         const now = new Date();
@@ -267,7 +262,7 @@
 
     const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord }) => {
       const [showRecordModal, setShowRecordModal] = React.useState(false);
-      const [useChronoAxis, setUseChronoAxis] = React.useState(false); // Toggle between Corrected vs Chrono age
+      const [useChronoAxis, setUseChronoAxis] = React.useState(false);
       const [recDate, setRecDate] = React.useState(new Date().toISOString().slice(0, 10));
       const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
       const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
@@ -281,17 +276,14 @@
 
       const refData = (WHO_GROWTH_DATA[gender] || WHO_GROWTH_DATA.boy)[metric];
 
-      // SVG Dimensions
       const width = 600;
       const height = 340;
       const padding = { top: 25, right: 35, bottom: 55, left: 45 };
 
-      // Filter and map baby points cleanly
       const babyPoints = growthHistory.map(item => {
         let val = parseFloat(item[metric]);
         if (isNaN(val)) return null;
 
-        // Auto convert g -> kg if weight > 30 (e.g. 3200g)
         if (metric === 'weight' && val > 30) {
           val = val / 1000;
         }
@@ -416,7 +408,6 @@
 
               <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#94a3b8" strokeWidth="1.5" />
 
-              {/* WHO Percentile Reference Curves */}
               {percentileIndices.map((pIndex, i) => {
                 const pathD = refData.map((d, idx) => `${idx === 0 ? 'M' : 'L'} ${xScale(d[0])} ${yScale(d[pIndex])}`).join(' ');
                 const lastPt = refData[refData.length - 1];
@@ -430,7 +421,6 @@
                 );
               })}
 
-              {/* Baby Data Points - Vertical Dotted Lines */}
               {babyPoints.map((p, i) => {
                 const labelText = p.plotMonths < 0
                   ? `${Math.round(p.plotMonths * 30.4375)}天`
@@ -446,12 +436,10 @@
                 );
               })}
 
-              {/* Connecting Line between Baby Points */}
               {babyPoints.length > 1 && (
                 <path d={babyPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')} fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" />
               )}
 
-              {/* Interactive Baby Points Circles */}
               {babyPoints.map((p, i) => (
                 <g key={`pt-${p.id || i}`} className="group cursor-pointer">
                   <circle cx={p.x} cy={p.y} r="7" className="fill-amber-500 stroke-white stroke-2 shadow-lg hover:r-9 transition-all" />
@@ -472,7 +460,6 @@
             )}
           </div>
 
-          {/* History List Section */}
           <div className="bg-white rounded-2xl border p-3 shadow-sm space-y-2">
             <h4 className="font-bold text-xs text-slate-700 flex justify-between items-center">
               <span>歷史測量列表</span>
@@ -524,7 +511,6 @@
             )}
           </div>
 
-          {/* Add Record Modal */}
           {showRecordModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
@@ -601,7 +587,6 @@
       const [selectedMetric, setSelectedMetric] = React.useState('weight');
       const [selectedGender, setSelectedGender] = React.useState('boy');
 
-      // Initialize baby profile
       const [babyInfo, setBabyInfo] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_profile_v5');
         if (saved) {
@@ -626,7 +611,6 @@
         };
       });
 
-      // Initialize growth history with auto date repair
       const [growthHistory, setGrowthHistory] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_growth_history_v1');
         if (saved) {
@@ -693,7 +677,6 @@
         localStorage.setItem('sun_baby_doctor_notes_v1', JSON.stringify(doctorNotes));
       }, [doctorNotes]);
 
-      // Auto-repair malformed dates in growthHistory when component mounts
       React.useEffect(() => {
         let hasFixed = false;
         const cleaned = growthHistory.map(item => {
@@ -1375,7 +1358,6 @@
                 </div>
 
                 <div className="space-y-4 text-xs">
-                  {/* Export Block */}
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
                     <h4 className="font-bold text-amber-900 flex items-center gap-1 text-xs">
                       <Icon name="download" className="w-4 h-4 text-amber-600" />
@@ -1402,7 +1384,6 @@
                     </div>
                   </div>
 
-                  {/* Import Block */}
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-3">
                     <h4 className="font-bold text-blue-900 flex items-center gap-1 text-xs">
                       <Icon name="upload" className="w-4 h-4 text-blue-600" />
@@ -1797,14 +1778,14 @@
                     {growthHistory.map((rec) => {
                       const cleanD = sanitizeDateStr(rec.date);
                       const cM = getCorrectedAgeAtDate(cleanD, babyInfo.dueDate, babyInfo.birthDate);
-                      const cText = cM > 24 ? "已滿 2 歲" : cM < 0 ? `預產期前` : `矯正 ${cM.toFixed(1)} 個月`;
+                      const cText = cM > 24 ? "已滿 2 歲" : cM < 0 ? `預產期前 ${Math.abs(Math.round(cM * 30.4375))} 天` : `矯正 ${Math.floor(cM)} 個月 ${Math.floor((cM % 1) * 30.4375)} 天`;
                       return (
                         <tr key={rec.id} className="border-b">
-                          <td className="p-1.5 font-bold">{cleanD}</td>
-                          <td className="p-1.5 font-bold text-amber-700">{cText}</td>
-                          <td className="p-1.5">{rec.weight || '—'}</td>
-                          <td className="p-1.5">{rec.height || '—'}</td>
-                          <td className="p-1.5">{rec.head || '—'}</td>
+                          <td className="p-1.5 font-medium">{cleanD}</td>
+                          <td className="p-1.5 text-amber-700 font-bold">{cText}</td>
+                          <td className="p-1.5">{rec.weight ? `${rec.weight} kg` : '-'}</td>
+                          <td className="p-1.5">{rec.height ? `${rec.height} cm` : '-'}</td>
+                          <td className="p-1.5">{rec.head ? `${rec.head} cm` : '-'}</td>
                         </tr>
                       );
                     })}
@@ -1814,32 +1795,27 @@
             </div>
 
             <div className="mb-6">
-              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🏥 看診提問與醫師回覆紀錄</h2>
+              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🏥 門診諮詢問題備忘</h2>
               {doctorNotes.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">尚無提問備忘紀錄。</p>
+                <p className="text-xs text-slate-400 italic">尚無門診諮詢問題。</p>
               ) : (
-                <div className="space-y-2 text-xs">
-                  {doctorNotes.map((note, index) => (
-                    <div key={note.id || index} className="p-2 border rounded-lg bg-slate-50 flex justify-between items-center">
-                      <span className="font-medium text-slate-700">問題 {index + 1}：{note.question}</span>
-                      <span className={`font-bold ${note.answered ? 'text-green-600' : 'text-amber-600'}`}>
-                        {note.answered ? '[已獲得解答]' : '[待詢問/未解答]'}
-                      </span>
-                    </div>
+                <ul className="list-disc pl-5 text-xs space-y-1">
+                  {doctorNotes.map(n => (
+                    <li key={n.id} className="text-slate-700">
+                      <span className={n.answered ? "line-through text-slate-400" : "font-medium"}>{n.question}</span>
+                      {n.answered && <span className="text-green-600 text-[10px] ml-2">(已解答)</span>}
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-            </div>
-
-            <div className="mt-8 pt-4 border-t text-center text-[10px] text-slate-400">
-              巴掌小太陽 - 早產兒照護與矯正月齡生長曲線小幫手 ☀️
             </div>
           </div>
         </div>
       );
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
     root.render(<App />);
   </script>
 </body>
