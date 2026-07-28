@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>巴掌小太陽 - 早產兒照護小幫手</title>
+  <title>巴掌小太陽 - 早產兒照護與生長曲線小幫手</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- React & ReactDOM CDN -->
@@ -23,1583 +23,1824 @@
   <div id="root"></div>
 
   <script type="text/babel">
-  const Icon = ({ name, className = "w-5 h-5", ...props }) => {
-    const icons = {
-      sun: <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" />,
-      edit: <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />,
-      heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
-      calendar: <path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />,
-      droplet: <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 15.1 5 17 5 15a7 7 0 0 0 7 7z" />,
-      clock: <g><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></g>,
-      moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
-      plus: <path d="M5 12h14m-7-7v14" />,
-      check: <path d="M20 6 9 17l-5-5" />,
-      x: <g><path d="M18 6 6 18" /><path d="M6 6l12 12" /></g>,
-      send: <g><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></g>,
-      trendingUp: <g><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></g>,
-      eye: <g><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7Z" /><circle cx="12" cy="12" r="3" /></g>,
-      stethoscope: <g><path d="M4.8 2.3A.3.3 0 0 0 4.5 2.6V8A6 6 0 0 0 16.5 8V2.6a.3.3 0 0 0-.3-.3h-1.4a.3.3 0 0 0-.3.3V8a4 4 0 0 1-8 0V2.6a.3.3 0 0 0-.3-.3z" /><path d="M12 14v4a2 2 0 0 0 2 2h2a3 3 0 0 0 3-3V11" /></g>,
-      sparkles: <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />,
-      user: <g><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></g>,
-      info: <g><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></g>,
-      download: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></g>,
-      trash: <g><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></g>,
-      alertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></g>
+    const Icon = ({ name, className = "w-5 h-5", ...props }) => {
+      const icons = {
+        sun: <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" />,
+        edit: <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />,
+        heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
+        calendar: <path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />,
+        droplet: <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 15.1 5 17 5 15a7 7 0 0 0 7 7z" />,
+        clock: <g><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></g>,
+        moon: <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />,
+        plus: <path d="M5 12h14m-7-7v14" />,
+        check: <path d="M20 6 9 17l-5-5" />,
+        x: <g><path d="M18 6 6 18" /><path d="M6 6l12 12" /></g>,
+        send: <g><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></g>,
+        trendingUp: <g><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></g>,
+        eye: <g><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7Z" /><circle cx="12" cy="12" r="3" /></g>,
+        stethoscope: <g><path d="M4.8 2.3A.3.3 0 0 0 4.5 2.6V8A6 6 0 0 0 16.5 8V2.6a.3.3 0 0 0-.3-.3h-1.4a.3.3 0 0 0-.3.3V8a4 4 0 0 1-8 0V2.6a.3.3 0 0 0-.3-.3z" /><path d="M12 14v4a2 2 0 0 0 2 2h2a3 3 0 0 0 3-3V11" /></g>,
+        sparkles: <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />,
+        user: <g><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></g>,
+        info: <g><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></g>,
+        download: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></g>,
+        upload: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></g>,
+        database: <g><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></g>,
+        copy: <g><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></g>,
+        trash: <g><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></g>,
+        alertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></g>,
+        refresh: <g><path d="M21.5 2v6h-6" /><path d="M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" /></g>
+      };
+
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={className}
+          {...props}
+        >
+          {icons[name] || <circle cx="12" cy="12" r="10" />}
+        </svg>
+      );
     };
 
-    return (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={className}
-        {...props}
-      >
-        {icons[name] || <circle cx="12" cy="12" r="10" />}
-      </svg>
-    );
-  };
-
-  const WHO_GROWTH_DATA = {
-    boy: {
-      weight: [
-        [-2, 1.2, 1.5, 2.0, 2.5, 3.0],
-        [0, 2.5, 2.9, 3.3, 3.9, 4.4],
-        [1, 3.4, 3.9, 4.5, 5.1, 5.8],
-        [2, 4.3, 4.9, 5.6, 6.3, 7.1],
-        [3, 5.0, 5.7, 6.4, 7.2, 8.0],
-        [4, 5.6, 6.2, 7.0, 7.8, 8.7],
-        [5, 6.0, 6.7, 7.5, 8.4, 9.3],
-        [6, 6.4, 7.1, 7.9, 8.8, 9.8],
-        [8, 6.9, 7.7, 8.6, 9.6, 10.7],
-        [10, 7.4, 8.2, 9.2, 10.2, 11.4],
-        [12, 7.8, 8.6, 9.6, 10.8, 12.0]
-      ],
-      height: [
-        [-2, 38, 40, 43, 46, 48],
-        [0, 46.3, 48.0, 49.9, 51.8, 53.4],
-        [1, 50.8, 52.8, 54.7, 56.7, 58.6],
-        [2, 54.4, 56.4, 58.4, 60.4, 62.4],
-        [3, 57.3, 59.3, 61.4, 63.5, 65.5],
-        [4, 59.7, 61.8, 63.9, 66.0, 68.0],
-        [5, 61.7, 63.8, 65.9, 68.0, 70.1],
-        [6, 63.3, 65.5, 67.6, 69.8, 71.9],
-        [8, 66.2, 68.4, 70.6, 72.8, 75.0],
-        [10, 68.7, 71.0, 73.3, 75.6, 77.9],
-        [12, 71.0, 73.4, 75.7, 78.1, 80.5]
-      ],
-      head: [
-        [-2, 27, 28.5, 30.5, 32.5, 34],
-        [0, 31.9, 33.1, 34.5, 35.8, 37.0],
-        [1, 34.9, 36.1, 37.3, 38.6, 39.7],
-        [2, 36.9, 38.0, 39.1, 40.3, 41.3],
-        [3, 38.3, 39.4, 40.5, 41.6, 42.6],
-        [4, 39.4, 40.5, 41.6, 42.7, 43.7],
-        [5, 40.3, 41.4, 42.5, 43.6, 44.6],
-        [6, 41.0, 42.1, 43.3, 44.4, 45.4],
-        [8, 42.2, 43.3, 44.5, 45.6, 46.6],
-        [10, 43.1, 44.2, 45.4, 46.5, 47.6],
-        [12, 43.8, 45.0, 46.1, 47.3, 48.3]
-      ]
-    },
-    girl: {
-      weight: [
-        [-2, 1.1, 1.4, 1.9, 2.4, 2.9],
-        [0, 2.4, 2.8, 3.2, 3.7, 4.2],
-        [1, 3.2, 3.6, 4.2, 4.8, 5.5],
-        [2, 3.9, 4.5, 5.1, 5.8, 6.6],
-        [3, 4.5, 5.2, 5.8, 6.6, 7.5],
-        [4, 5.0, 5.7, 6.4, 7.3, 8.2],
-        [5, 5.4, 6.1, 6.9, 7.8, 8.8],
-        [6, 5.7, 6.5, 7.3, 8.2, 9.3],
-        [8, 6.3, 7.0, 7.9, 9.0, 10.2],
-        [10, 6.7, 7.5, 8.5, 9.6, 10.9],
-        [12, 7.0, 7.9, 8.9, 10.1, 11.5]
-      ],
-      height: [
-        [-2, 37, 39, 42, 45, 47],
-        [0, 45.4, 47.3, 49.1, 51.0, 52.7],
-        [1, 49.8, 51.7, 53.7, 55.6, 57.6],
-        [2, 53.0, 55.0, 57.1, 59.1, 61.1],
-        [3, 55.6, 57.7, 59.8, 61.9, 64.0],
-        [4, 57.8, 59.9, 62.1, 64.2, 66.4],
-        [5, 59.6, 61.8, 64.0, 66.2, 68.5],
-        [6, 61.2, 63.5, 65.7, 68.0, 70.3],
-        [8, 64.0, 66.3, 68.7, 71.0, 73.4],
-        [10, 66.4, 68.8, 71.2, 73.6, 76.1],
-        [12, 68.5, 71.0, 73.5, 76.0, 78.5]
-      ],
-      head: [
-        [-2, 26.5, 28, 30, 32, 33.5],
-        [0, 31.5, 32.7, 33.9, 35.1, 36.2],
-        [1, 34.2, 35.4, 36.5, 37.7, 38.8],
-        [2, 36.0, 37.1, 38.3, 39.4, 40.5],
-        [3, 37.3, 38.4, 39.5, 40.6, 41.7],
-        [4, 38.3, 39.4, 40.6, 41.7, 42.8],
-        [5, 39.2, 40.3, 41.5, 42.6, 43.7],
-        [6, 39.9, 41.0, 42.2, 43.3, 44.4],
-        [8, 41.0, 42.2, 43.4, 44.5, 45.6],
-        [10, 41.9, 43.1, 44.3, 45.4, 46.5],
-        [12, 42.6, 43.8, 45.0, 46.2, 47.3]
-      ]
-    }
-  };
-
-  const calculateAges = (birthDateStr, dueDateStr) => {
-    if (!birthDateStr || !dueDateStr) {
-      return {
-        chronoText: '資料未設定',
-        correctedText: '請點擊「自訂/修改」設定生日與預產期',
-        chronoMonths: 0,
-        correctedMonths: 0,
-        isSet: false
-      };
-    }
-    const now = new Date();
-    const birth = new Date(birthDateStr);
-    const due = new Date(dueDateStr);
-
-    const chronoDays = Math.max(0, Math.floor((now - birth) / (1000 * 60 * 60 * 24)));
-    const chronoMonths = chronoDays / 30.4375;
-    const chronoMInt = Math.floor(chronoMonths);
-    const chronoDaysRemaining = Math.floor(chronoDays % 30.4375);
-
-    const correctedDays = Math.floor((now - due) / (1000 * 60 * 60 * 24));
-    const correctedMonths = correctedDays / 30.4375;
-
-    let correctedText = "";
-    if (correctedDays < 0) {
-      const remainingWeeks = Math.ceil(Math.abs(correctedDays) / 7);
-      correctedText = `尚未滿預產期 (差約 ${remainingWeeks} 週)`;
-    } else if (correctedMonths > 24) {
-      correctedText = "已滿 2 歲（改看實際年齡）";
-    } else {
-      const correctedMInt = Math.floor(correctedDays / 30.4375);
-      const correctedDaysRemaining = Math.floor(correctedDays % 30.4375);
-      correctedText = `矯正 ${correctedMInt} 個月 ${correctedDaysRemaining} 天`;
-    }
-
-    return {
-      chronoText: `實際 ${chronoMInt} 個月 ${chronoDaysRemaining} 天`,
-      correctedText,
-      chronoMonths,
-      correctedMonths,
-      isSet: true
+    const WHO_GROWTH_DATA = {
+      boy: {
+        weight: [
+          [-2, 1.2, 1.5, 2.0, 2.5, 3.0],
+          [0, 2.5, 2.9, 3.3, 3.9, 4.4],
+          [1, 3.4, 3.9, 4.5, 5.1, 5.8],
+          [2, 4.3, 4.9, 5.6, 6.3, 7.1],
+          [3, 5.0, 5.7, 6.4, 7.2, 8.0],
+          [4, 5.6, 6.2, 7.0, 7.8, 8.7],
+          [5, 6.0, 6.7, 7.5, 8.4, 9.3],
+          [6, 6.4, 7.1, 7.9, 8.8, 9.8],
+          [8, 6.9, 7.7, 8.6, 9.6, 10.7],
+          [10, 7.4, 8.2, 9.2, 10.2, 11.4],
+          [12, 7.8, 8.6, 9.6, 10.8, 12.0],
+          [18, 8.8, 9.8, 10.9, 12.2, 13.7],
+          [24, 9.7, 10.8, 12.2, 13.6, 15.3]
+        ],
+        height: [
+          [-2, 38, 40, 43, 46, 48],
+          [0, 46.3, 48.0, 49.9, 51.8, 53.4],
+          [1, 50.8, 52.8, 54.7, 56.7, 58.6],
+          [2, 54.4, 56.4, 58.4, 60.4, 62.4],
+          [3, 57.3, 59.3, 61.4, 63.5, 65.5],
+          [4, 59.7, 61.8, 63.9, 66.0, 68.0],
+          [5, 61.7, 63.8, 65.9, 68.0, 70.1],
+          [6, 63.3, 65.5, 67.6, 69.8, 71.9],
+          [8, 66.2, 68.4, 70.6, 72.8, 75.0],
+          [10, 68.7, 71.0, 73.3, 75.6, 77.9],
+          [12, 71.0, 73.4, 75.7, 78.1, 80.5],
+          [18, 76.9, 79.6, 82.3, 85.0, 87.7],
+          [24, 81.7, 84.6, 87.8, 90.9, 93.9]
+        ],
+        head: [
+          [-2, 27, 28.5, 30.5, 32.5, 34],
+          [0, 31.9, 33.1, 34.5, 35.8, 37.0],
+          [1, 34.9, 36.1, 37.3, 38.6, 39.7],
+          [2, 36.9, 38.0, 39.1, 40.3, 41.3],
+          [3, 38.3, 39.4, 40.5, 41.6, 42.6],
+          [4, 39.4, 40.5, 41.6, 42.7, 43.7],
+          [5, 40.3, 41.4, 42.5, 43.6, 44.6],
+          [6, 41.0, 42.1, 43.3, 44.4, 45.4],
+          [8, 42.2, 43.3, 44.5, 45.6, 46.6],
+          [10, 43.1, 44.2, 45.4, 46.5, 47.6],
+          [12, 43.8, 45.0, 46.1, 47.3, 48.3],
+          [18, 45.3, 46.5, 47.7, 48.9, 50.0],
+          [24, 46.3, 47.5, 48.7, 50.0, 51.1]
+        ]
+      },
+      girl: {
+        weight: [
+          [-2, 1.1, 1.4, 1.9, 2.4, 2.9],
+          [0, 2.4, 2.8, 3.2, 3.7, 4.2],
+          [1, 3.2, 3.6, 4.2, 4.8, 5.5],
+          [2, 3.9, 4.5, 5.1, 5.8, 6.6],
+          [3, 4.5, 5.2, 5.8, 6.6, 7.5],
+          [4, 5.0, 5.7, 6.4, 7.3, 8.2],
+          [5, 5.4, 6.1, 6.9, 7.8, 8.8],
+          [6, 5.7, 6.5, 7.3, 8.2, 9.3],
+          [8, 6.3, 7.0, 7.9, 9.0, 10.2],
+          [10, 6.7, 7.5, 8.5, 9.6, 10.9],
+          [12, 7.0, 7.9, 8.9, 10.1, 11.5],
+          [18, 8.1, 9.1, 10.2, 11.5, 13.0],
+          [24, 9.0, 10.2, 11.5, 13.0, 14.8]
+        ],
+        height: [
+          [-2, 37, 39, 42, 45, 47],
+          [0, 45.4, 47.3, 49.1, 51.0, 52.7],
+          [1, 49.8, 51.7, 53.7, 55.6, 57.6],
+          [2, 53.0, 55.0, 57.1, 59.1, 61.1],
+          [3, 55.6, 57.7, 59.8, 61.9, 64.0],
+          [4, 57.8, 59.9, 62.1, 64.2, 66.4],
+          [5, 59.6, 61.8, 64.0, 66.2, 68.5],
+          [6, 61.2, 63.5, 65.7, 68.0, 70.3],
+          [8, 64.0, 66.3, 68.7, 71.0, 73.4],
+          [10, 66.4, 68.8, 71.2, 73.6, 76.1],
+          [12, 68.5, 71.0, 73.5, 76.0, 78.5],
+          [18, 74.9, 77.8, 80.7, 83.6, 86.5],
+          [24, 80.0, 83.2, 86.4, 89.6, 92.9]
+        ],
+        head: [
+          [-2, 26.5, 28, 30, 32, 33.5],
+          [0, 31.5, 32.7, 33.9, 35.1, 36.2],
+          [1, 34.2, 35.4, 36.5, 37.7, 38.8],
+          [2, 36.0, 37.1, 38.3, 39.4, 40.5],
+          [3, 37.3, 38.4, 39.5, 40.6, 41.7],
+          [4, 38.3, 39.4, 40.6, 41.7, 42.8],
+          [5, 39.2, 40.3, 41.5, 42.6, 43.7],
+          [6, 39.9, 41.0, 42.2, 43.3, 44.4],
+          [8, 41.0, 42.2, 43.4, 44.5, 45.6],
+          [10, 41.9, 43.1, 44.3, 45.4, 46.5],
+          [12, 42.6, 43.8, 45.0, 46.2, 47.3],
+          [18, 44.2, 45.4, 46.6, 47.8, 48.9],
+          [24, 45.2, 46.4, 47.6, 48.9, 50.0]
+        ]
+      }
     };
-  };
 
-  const getCorrectedAgeAtDate = (measurementDateStr, dueDateStr) => {
-    if (!measurementDateStr || !dueDateStr) return 0;
-    const mDate = new Date(measurementDateStr);
-    const dDate = new Date(dueDateStr);
-    const diffDays = (mDate - dDate) / (1000 * 60 * 60 * 24);
-    return diffDays / 30.4375;
-  };
+    // Helper to sanitize date strings and fix typos like "202605-05-01"
+    const sanitizeDateStr = (str) => {
+      if (!str || typeof str !== 'string') return new Date().toISOString().slice(0, 10);
+      let cleaned = str.trim();
+      
+      // Fix double year concatenation typo (e.g., "202605-05-01" or "202605-01")
+      if (/^\d{6}-\d{2}-\d{2}$/.test(cleaned)) {
+        const year = cleaned.slice(0, 4);
+        const month = cleaned.slice(4, 6);
+        const day = cleaned.slice(10, 12);
+        cleaned = `${year}-${month}-${day}`;
+      } else if (/^\d{6}/.test(cleaned)) {
+        // Fallback for 6-digit year start
+        const year = cleaned.slice(0, 4);
+        cleaned = year + cleaned.slice(6);
+      }
 
-  const getChronoAgeAtDate = (measurementDateStr, birthDateStr) => {
-    if (!measurementDateStr || !birthDateStr) return 0;
-    const mDate = new Date(measurementDateStr);
-    const bDate = new Date(birthDateStr);
-    const diffDays = (mDate - bDate) / (1000 * 60 * 60 * 24);
-    return Math.max(0, diffDays / 30.4375);
-  };
+      // Validate Date object parsing
+      const dateObj = new Date(cleaned);
+      if (isNaN(dateObj.getTime())) {
+        return new Date().toISOString().slice(0, 10);
+      }
 
-  const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord }) => {
-    const [showRecordModal, setShowRecordModal] = React.useState(false);
-    const [recDate, setRecDate] = React.useState(new Date().toISOString().slice(0, 10));
-    const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
-    const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
-    const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
+      // Prevent astronomical years (> 2035 or < 2010)
+      const yr = dateObj.getFullYear();
+      if (yr > 2035 || yr < 2010) {
+        const now = new Date();
+        dateObj.setFullYear(now.getFullYear());
+      }
 
-    const metricConfig = {
-      weight: { label: '體重', unit: 'kg', minY: 0, maxY: 13, yTicks: [0, 2, 4, 6, 8, 10, 12] },
-      height: { label: '身長', unit: 'cm', minY: 35, maxY: 85, yTicks: [35, 45, 55, 65, 75, 85] },
-      head: { label: '頭圍', unit: 'cm', minY: 25, maxY: 50, yTicks: [25, 30, 35, 40, 45, 50] },
-    }[metric];
+      return dateObj.toISOString().slice(0, 10);
+    };
 
-    const refData = (WHO_GROWTH_DATA[gender] || WHO_GROWTH_DATA.boy)[metric];
+    const calculateAges = (birthDateStr, dueDateStr) => {
+      const cleanBirth = sanitizeDateStr(birthDateStr);
+      const cleanDue = sanitizeDateStr(dueDateStr);
 
-    // SVG Layout Dimensions
-    const width = 600;
-    const height = 340;
-    const padding = { top: 25, right: 35, bottom: 55, left: 45 };
+      if (!birthDateStr || !dueDateStr) {
+        return {
+          chronoText: '出生日期未設定',
+          correctedText: '請點擊「自訂/修改」設定生日與預產期',
+          chronoMonths: 0,
+          correctedMonths: 0,
+          isSet: false
+        };
+      }
 
-    const minX = -2; // Start from -2 corrected months
-    const maxX = 12; // Up to 12 corrected months
+      const now = new Date();
+      const birth = new Date(cleanBirth);
+      const due = new Date(cleanDue);
 
-    const xScale = (month) => padding.left + ((month - minX) / (maxX - minX)) * (width - padding.left - padding.right);
-    const yScale = (val) => height - padding.bottom - ((val - metricConfig.minY) / (metricConfig.maxY - metricConfig.minY)) * (height - padding.top - padding.bottom);
+      const chronoDays = Math.max(0, Math.floor((now - birth) / (1000 * 60 * 60 * 24)));
+      const chronoMonths = chronoDays / 30.4375;
+      const chronoMInt = Math.floor(chronoMonths);
+      const chronoDaysRemaining = Math.floor(chronoDays % 30.4375);
 
-    // Compute plot points for baby's history using CORRECTED AGE strictly
-    const babyPoints = growthHistory.map(item => {
-      const correctedAgeM = getCorrectedAgeAtDate(item.date, babyInfo.dueDate);
-      const val = parseFloat(item[metric]);
+      const correctedDays = Math.floor((now - due) / (1000 * 60 * 60 * 24));
+      const correctedMonths = correctedDays / 30.4375;
+
+      let correctedText = "";
+      if (correctedDays < 0) {
+        const remainingWeeks = Math.ceil(Math.abs(correctedDays) / 7);
+        correctedText = `尚未滿預產期 (差約 ${remainingWeeks} 週)`;
+      } else if (correctedMonths > 24) {
+        correctedText = "已滿 2 歲（建議參考常規兒童生長曲線）";
+      } else {
+        const correctedMInt = Math.floor(correctedDays / 30.4375);
+        const correctedDaysRemaining = Math.floor(correctedDays % 30.4375);
+        correctedText = `矯正 ${correctedMInt} 個月 ${correctedDaysRemaining} 天`;
+      }
+
       return {
-        id: item.id,
-        date: item.date,
-        correctedMonths: correctedAgeM,
-        chronoMonths: getChronoAgeAtDate(item.date, babyInfo.birthDate),
-        value: val,
-        x: xScale(correctedAgeM),
-        y: !isNaN(val) ? yScale(val) : null
+        chronoText: `實際 ${chronoMInt} 個月 ${chronoDaysRemaining} 天`,
+        correctedText,
+        chronoMonths,
+        correctedMonths,
+        isSet: true
       };
-    }).filter(p => p.y !== null && !isNaN(p.value));
+    };
 
-    // Sort by corrected months for path rendering
-    babyPoints.sort((a, b) => a.correctedMonths - b.correctedMonths);
+    const getCorrectedAgeAtDate = (measurementDateStr, dueDateStr, birthDateStr) => {
+      const cleanM = sanitizeDateStr(measurementDateStr);
+      const targetDue = dueDateStr ? sanitizeDateStr(dueDateStr) : (birthDateStr ? sanitizeDateStr(birthDateStr) : cleanM);
+      const mDate = new Date(cleanM);
+      const dDate = new Date(targetDue);
+      if (isNaN(mDate.getTime()) || isNaN(dDate.getTime())) return 0;
+      const diffDays = (mDate - dDate) / (1000 * 60 * 60 * 24);
+      return diffDays / 30.4375;
+    };
 
-    const percentileIndices = [1, 2, 3, 4, 5]; // P3, P15, P50, P85, P97
-    const percentileLabels = ['3%', '15%', '50%', '85%', '97%'];
-    const percentileColors = ['#cbd5e1', '#94a3b8', '#3b82f6', '#94a3b8', '#cbd5e1'];
+    const getChronoAgeAtDate = (measurementDateStr, birthDateStr) => {
+      const cleanM = sanitizeDateStr(measurementDateStr);
+      const cleanB = birthDateStr ? sanitizeDateStr(birthDateStr) : cleanM;
+      const mDate = new Date(cleanM);
+      const bDate = new Date(cleanB);
+      if (isNaN(mDate.getTime()) || isNaN(bDate.getTime())) return 0;
+      const diffDays = (mDate - bDate) / (1000 * 60 * 60 * 24);
+      return Math.max(0, diffDays / 30.4375);
+    };
 
-    // Complete array of month tick labels (-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
-    const monthTicks = [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord }) => {
+      const [showRecordModal, setShowRecordModal] = React.useState(false);
+      const [useChronoAxis, setUseChronoAxis] = React.useState(false); // Toggle between Corrected vs Chrono age
+      const [recDate, setRecDate] = React.useState(new Date().toISOString().slice(0, 10));
+      const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
+      const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
+      const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
 
-    const handleFormSubmit = (e) => {
-      e.preventDefault();
-      if (!recDate) return;
-      onAddGrowthRecord({
-        id: Date.now(),
-        date: recDate,
-        weight: recWeight,
-        height: recHeight,
-        head: recHead
+      const metricConfig = {
+        weight: { label: '體重', unit: 'kg', minY: 0, maxY: 15, yTicks: [0, 2, 4, 6, 8, 10, 12, 14] },
+        height: { label: '身長', unit: 'cm', minY: 35, maxY: 95, yTicks: [35, 45, 55, 65, 75, 85, 95] },
+        head: { label: '頭圍', unit: 'cm', minY: 25, maxY: 52, yTicks: [25, 30, 35, 40, 45, 50] },
+      }[metric];
+
+      const refData = (WHO_GROWTH_DATA[gender] || WHO_GROWTH_DATA.boy)[metric];
+
+      // SVG Dimensions
+      const width = 600;
+      const height = 340;
+      const padding = { top: 25, right: 35, bottom: 55, left: 45 };
+
+      // Filter and map baby points cleanly
+      const babyPoints = growthHistory.map(item => {
+        let val = parseFloat(item[metric]);
+        if (isNaN(val)) return null;
+
+        // Auto convert g -> kg if weight > 30 (e.g. 3200g)
+        if (metric === 'weight' && val > 30) {
+          val = val / 1000;
+        }
+
+        const cleanItemDate = sanitizeDateStr(item.date);
+        const correctedAgeM = getCorrectedAgeAtDate(cleanItemDate, babyInfo.dueDate, babyInfo.birthDate);
+        const chronoAgeM = getChronoAgeAtDate(cleanItemDate, babyInfo.birthDate);
+
+        const targetAgeM = useChronoAxis ? chronoAgeM : correctedAgeM;
+
+        return {
+          id: item.id,
+          date: cleanItemDate,
+          correctedMonths: correctedAgeM,
+          chronoMonths: chronoAgeM,
+          plotMonths: targetAgeM,
+          value: val,
+          isOver2Years: targetAgeM > 24
+        };
+      }).filter(p => p !== null && !isNaN(p.value));
+
+      const babyMonths = babyPoints.map(p => p.plotMonths);
+      const minBabyMonth = babyMonths.length > 0 ? Math.min(...babyMonths) : 0;
+      const maxBabyMonth = babyMonths.length > 0 ? Math.max(...babyMonths) : 12;
+
+      const minX = Math.min(-2, Math.floor(minBabyMonth - 0.5));
+      const maxX = Math.max(12, Math.ceil(Math.min(24, maxBabyMonth + 1)));
+
+      const xScale = (month) => padding.left + ((month - minX) / (maxX - minX)) * (width - padding.left - padding.right);
+      const yScale = (val) => height - padding.bottom - ((val - metricConfig.minY) / (metricConfig.maxY - metricConfig.minY)) * (height - padding.top - padding.bottom);
+
+      babyPoints.forEach(p => {
+        p.x = xScale(p.plotMonths);
+        p.y = yScale(p.value);
       });
-      setShowRecordModal(false);
-    };
 
-    return (
-      <div className="space-y-3">
-        {/* Banner highlighting Corrected Age Binding */}
-        <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex items-start gap-2 shadow-sm">
-          <Icon name="sparkles" className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold block text-amber-800">⚡️ 生長曲線 X 軸嚴格綁定【矯正月齡】：</span>
-            早產兒出生時發育尚未達到足月標準。圖表 X 軸以<span className="font-bold text-amber-700">【預產期即為 0 個月】</span>計算，數據點會落於預產期為基準的矯正月齡，垂直虛線向下引導至 X 軸月齡刻度！
-          </div>
-        </div>
+      babyPoints.sort((a, b) => a.plotMonths - b.plotMonths);
 
-        {/* Growth Chart SVG */}
-        <div className="relative bg-white rounded-2xl border p-3 shadow-inner overflow-hidden">
-          <div className="flex justify-between items-center mb-2 px-1">
-            <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-              <span>{gender === 'boy' ? '👦 男寶' : '👧 女寶'} WHO {metricConfig.label}生長曲線圖</span>
-              <span className="text-[10px] text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full font-bold">X軸 = 0, 1, 2... 12個月</span>
+      const percentileIndices = [1, 2, 3, 4, 5];
+      const percentileLabels = ['3%', '15%', '50%', '85%', '97%'];
+      const percentileColors = ['#cbd5e1', '#94a3b8', '#3b82f6', '#94a3b8', '#cbd5e1'];
+
+      const monthTicks = [];
+      const step = (maxX - minX) > 16 ? 2 : 1;
+      for (let m = minX; m <= maxX; m += step) {
+        monthTicks.push(m);
+      }
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        if (!recDate) return;
+
+        const cleanDate = sanitizeDateStr(recDate);
+
+        onAddGrowthRecord({
+          id: Date.now(),
+          date: cleanDate,
+          weight: recWeight,
+          height: recHeight,
+          head: recHead
+        });
+        setShowRecordModal(false);
+      };
+
+      return (
+        <div className="space-y-3">
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex items-start gap-2 shadow-sm">
+            <Icon name="sparkles" className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold block text-amber-800">⚡️ 生長曲線軸線設定：</span>
+              預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。
             </div>
             <button
-              onClick={() => setShowRecordModal(true)}
-              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
+              onClick={() => setUseChronoAxis(!useChronoAxis)}
+              className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition-colors border border-amber-300 shadow-sm"
             >
-              <Icon name="plus" className="w-3.5 h-3.5" />
-              <span>新增測量點</span>
+              切換為{useChronoAxis ? '【矯正月齡】' : '【實際月齡】'}
             </button>
           </div>
 
-          <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto text-xs select-none">
-            {/* Background Grid Lines & Y Axis Ticks */}
-            {metricConfig.yTicks.map((yVal) => (
-              <g key={`y-${yVal}`}>
-                <line
-                  x1={padding.left}
-                  y1={yScale(yVal)}
-                  x2={width - padding.right}
-                  y2={yScale(yVal)}
-                  stroke="#f1f5f9"
-                  strokeWidth="1"
-                />
-                <text
-                  x={padding.left - 6}
-                  y={yScale(yVal) + 4}
-                  textAnchor="end"
-                  className="fill-slate-400 font-mono text-[10px]"
-                >
-                  {yVal} {metricConfig.unit}
-                </text>
-              </g>
-            ))}
-
-            {/* X Axis Grid Lines & Month Ticks (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 個月) */}
-            {monthTicks.map((mVal) => {
-              const xPos = xScale(mVal);
-              const isZero = mVal === 0;
-              return (
-                <g key={`x-${mVal}`}>
-                  {/* Grid Line */}
-                  <line
-                    x1={xPos}
-                    y1={padding.top}
-                    x2={xPos}
-                    y2={height - padding.bottom}
-                    stroke={isZero ? "#f59e0b" : "#f1f5f9"}
-                    strokeWidth={isZero ? "2" : "1"}
-                    strokeDasharray={isZero ? "3,3" : "none"}
-                  />
-                  {/* Tick Mark at X Axis Line */}
-                  <line
-                    x1={xPos}
-                    y1={height - padding.bottom}
-                    x2={xPos}
-                    y2={height - padding.bottom + 5}
-                    stroke={isZero ? "#d97706" : "#cbd5e1"}
-                    strokeWidth={isZero ? "2" : "1"}
-                  />
-                  {/* X Axis Label */}
-                  <text
-                    x={xPos}
-                    y={height - padding.bottom + 17}
-                    textAnchor="middle"
-                    className={`font-mono text-[9px] ${isZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`}
-                  >
-                    {isZero ? '0個月' : `${mVal}個`}
-                  </text>
-                  {isZero && (
-                    <text
-                      x={xPos}
-                      y={height - padding.bottom + 28}
-                      textAnchor="middle"
-                      className="fill-amber-600 font-bold text-[8px]"
-                    >
-                      (預產期)
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-
-            {/* Horizontal X Axis Baseline */}
-            <line
-              x1={padding.left}
-              y1={height - padding.bottom}
-              x2={width - padding.right}
-              y2={height - padding.bottom}
-              stroke="#94a3b8"
-              strokeWidth="1.5"
-            />
-
-            {/* Render Percentile Standard Curves */}
-            {percentileIndices.map((pIndex, i) => {
-              const pathD = refData.map((d, idx) => {
-                const x = xScale(d[0]);
-                const y = yScale(d[pIndex]);
-                return `${idx === 0 ? 'M' : 'L'} ${x} ${y}`;
-              }).join(' ');
-
-              const lastPt = refData[refData.length - 1];
-              return (
-                <g key={`p-${i}`}>
-                  <path
-                    d={pathD}
-                    fill="none"
-                    stroke={percentileColors[i]}
-                    strokeWidth={pIndex === 3 ? "2" : "1"}
-                    strokeDasharray={pIndex === 3 ? "none" : "2,2"}
-                  />
-                  <text
-                    x={xScale(lastPt[0]) + 4}
-                    y={yScale(lastPt[pIndex]) + 3}
-                    className="fill-slate-400 text-[8px] font-bold"
-                  >
-                    {percentileLabels[i]}
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* Vertical Dashed Guidelines Extending Downward from Each Data Point to the X Axis */}
-            {babyPoints.map((p, i) => {
-              const correctedLabel = p.correctedMonths < 0
-                ? `${Math.round(p.correctedMonths * 30.4375)}天`
-                : `${p.correctedMonths.toFixed(1)}M`;
-
-              return (
-                <g key={`vline-${p.id || i}`}>
-                  {/* Vertical Orange Dashed Line extending straight DOWN to X Axis tick */}
-                  <line
-                    x1={p.x}
-                    y1={p.y}
-                    x2={p.x}
-                    y2={height - padding.bottom}
-                    stroke="#f59e0b"
-                    strokeWidth="2"
-                    strokeDasharray="3,3"
-                  />
-                  {/* Highlight dot on X Axis tick alignment */}
-                  <circle
-                    cx={p.x}
-                    cy={height - padding.bottom}
-                    r="4"
-                    className="fill-amber-500 stroke-white stroke-2"
-                  />
-                  {/* Precise corrected age badge at X axis baseline */}
-                  <rect
-                    x={p.x - 18}
-                    y={height - padding.bottom + 2}
-                    width="36"
-                    height="13"
-                    rx="4"
-                    className="fill-amber-500 shadow-sm"
-                  />
-                  <text
-                    x={p.x}
-                    y={height - padding.bottom + 11}
-                    textAnchor="middle"
-                    className="fill-white font-extrabold text-[8px] font-mono"
-                  >
-                    {correctedLabel}
-                  </text>
-                </g>
-              );
-            })}
-
-            {/* Render Baby's Actual Measurement Path & Points */}
-            {babyPoints.length > 1 && (
-              <path
-                d={babyPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')}
-                fill="none"
-                stroke="#f59e0b"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            )}
-
-            {babyPoints.map((p, i) => (
-              <g key={`pt-${p.id || i}`} className="group cursor-pointer">
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r="6"
-                  className="fill-amber-500 stroke-white stroke-2 shadow-md hover:r-8 transition-all"
-                />
-                <text
-                  x={p.x}
-                  y={p.y - 10}
-                  textAnchor="middle"
-                  className="fill-amber-900 font-bold text-[10px]"
-                >
-                  {p.value}{metricConfig.unit}
-                </text>
-              </g>
-            ))}
-
-            {/* X-axis Title */}
-            <text
-              x={width / 2}
-              y={height - 8}
-              textAnchor="middle"
-              className="fill-amber-700 text-[11px] font-bold"
-            >
-              矯正月齡刻度（以預產期為 0 個月對齊 X 軸）
-            </text>
-          </svg>
-
-          {babyPoints.length === 0 && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 backdrop-blur-[1px] p-4 text-center">
-              <p className="text-xs text-slate-500 mb-2">尚無【{metricConfig.label}】歷史測量點</p>
+          <div className="relative bg-white rounded-2xl border p-3 shadow-inner overflow-hidden">
+            <div className="flex justify-between items-center mb-2 px-1">
+              <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
+                <span>{gender === 'boy' ? '👦 男寶' : '👧 女寶'} WHO {metricConfig.label}生長曲線圖</span>
+                <span className="text-[10px] text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full font-bold">
+                  X軸 = {useChronoAxis ? '實際月齡' : '矯正月齡'}
+                </span>
+              </div>
               <button
                 onClick={() => setShowRecordModal(true)}
-                className="px-3 py-1.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow hover:bg-amber-600 transition-colors"
+                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
               >
-                新增第一個測量紀錄
+                <Icon name="plus" className="w-3.5 h-3.5" />
+                <span>新增測量點</span>
               </button>
             </div>
-          )}
-        </div>
 
-        {/* Growth Measurement History List */}
-        <div className="bg-white rounded-2xl border p-3 shadow-sm space-y-2">
-          <h4 className="font-bold text-xs text-slate-700 flex justify-between items-center">
-            <span>歷史測量列表 (綁定矯正月齡)</span>
-            <span className="text-[11px] text-slate-400 font-normal">共 {growthHistory.length} 筆</span>
-          </h4>
-          {growthHistory.length === 0 ? (
-            <div className="p-3 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
-              尚無紀錄，點擊上方「新增測量點」登記身高、體重與頭圍。
-            </div>
-          ) : (
-            <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 text-xs">
-              {growthHistory.map((rec) => {
-                const correctedM = getCorrectedAgeAtDate(rec.date, babyInfo.dueDate);
-                const correctedFormatted = correctedM > 24
-                  ? "已滿 2 歲（改看實際年齡）"
-                  : correctedM < 0
-                  ? `預產期前 ${Math.abs(Math.round(correctedM * 30.4375))} 天`
-                  : `矯正 ${Math.floor(correctedM)} 個月 ${Math.floor((correctedM % 1) * 30.4375)} 天`;
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto text-xs select-none">
+              {metricConfig.yTicks.map((yVal) => (
+                <g key={`y-${yVal}`}>
+                  <line x1={padding.left} y1={yScale(yVal)} x2={width - padding.right} y2={yScale(yVal)} stroke="#f1f5f9" strokeWidth="1" />
+                  <text x={padding.left - 6} y={yScale(yVal) + 4} textAnchor="end" className="fill-slate-400 font-mono text-[10px]">{yVal} {metricConfig.unit}</text>
+                </g>
+              ))}
 
+              {monthTicks.map((mVal) => {
+                const xPos = xScale(mVal);
+                const isZero = mVal === 0;
                 return (
-                  <div key={rec.id} className="p-2 border rounded-xl flex items-center justify-between bg-slate-50/70 hover:bg-amber-50/50 transition-colors">
-                    <div>
-                      <div className="font-bold text-slate-800 flex items-center gap-2">
-                        <span>{rec.date}</span>
-                        <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">
-                          {correctedFormatted}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-slate-500 mt-0.5 space-x-2">
-                        {rec.weight && <span>體重: <b className="text-slate-700">{rec.weight} kg</b></span>}
-                        {rec.height && <span>身長: <b className="text-slate-700">{rec.height} cm</b></span>}
-                        {rec.head && <span>頭圍: <b className="text-slate-700">{rec.head} cm</b></span>}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => onDeleteGrowthRecord(rec.id)}
-                      className="p-1 text-slate-400 hover:text-red-500 transition-colors"
-                      title="刪除紀錄"
-                    >
-                      <Icon name="trash" className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <g key={`x-${mVal}`}>
+                    <line x1={xPos} y1={padding.top} x2={xPos} y2={height - padding.bottom} stroke={isZero ? "#f59e0b" : "#f1f5f9"} strokeWidth={isZero ? "2" : "1"} strokeDasharray={isZero ? "3,3" : "none"} />
+                    <line x1={xPos} y1={height - padding.bottom} x2={xPos} y2={height - padding.bottom + 5} stroke={isZero ? "#d97706" : "#cbd5e1"} strokeWidth={isZero ? "2" : "1"} />
+                    <text x={xPos} y={height - padding.bottom + 17} textAnchor="middle" className={`font-mono text-[9px] ${isZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`}>
+                      {isZero ? '0個月' : `${mVal}個`}
+                    </text>
+                    {isZero && !useChronoAxis && (
+                      <text x={xPos} y={height - padding.bottom + 28} textAnchor="middle" className="fill-amber-600 font-bold text-[8px]">(預產期)</text>
+                    )}
+                  </g>
                 );
               })}
+
+              <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#94a3b8" strokeWidth="1.5" />
+
+              {/* WHO Percentile Reference Curves */}
+              {percentileIndices.map((pIndex, i) => {
+                const pathD = refData.map((d, idx) => `${idx === 0 ? 'M' : 'L'} ${xScale(d[0])} ${yScale(d[pIndex])}`).join(' ');
+                const lastPt = refData[refData.length - 1];
+                return (
+                  <g key={`p-${i}`}>
+                    <path d={pathD} fill="none" stroke={percentileColors[i]} strokeWidth={pIndex === 3 ? "2" : "1"} strokeDasharray={pIndex === 3 ? "none" : "2,2"} />
+                    {lastPt[0] <= maxX && (
+                      <text x={xScale(lastPt[0]) + 4} y={yScale(lastPt[pIndex]) + 3} className="fill-slate-400 text-[8px] font-bold">{percentileLabels[i]}</text>
+                    )}
+                  </g>
+                );
+              })}
+
+              {/* Baby Data Points - Vertical Dotted Lines */}
+              {babyPoints.map((p, i) => {
+                const labelText = p.plotMonths < 0
+                  ? `${Math.round(p.plotMonths * 30.4375)}天`
+                  : `${p.plotMonths.toFixed(1)}M`;
+
+                return (
+                  <g key={`vline-${p.id || i}`}>
+                    <line x1={p.x} y1={p.y} x2={p.x} y2={height - padding.bottom} stroke="#f59e0b" strokeWidth="2" strokeDasharray="3,3" />
+                    <circle cx={p.x} cy={height - padding.bottom} r="4" className="fill-amber-500 stroke-white stroke-2" />
+                    <rect x={p.x - 22} y={height - padding.bottom + 2} width="44" height="13" rx="4" className="fill-amber-500 shadow-sm" />
+                    <text x={p.x} y={height - padding.bottom + 11} textAnchor="middle" className="fill-white font-extrabold text-[8px] font-mono">{labelText}</text>
+                  </g>
+                );
+              })}
+
+              {/* Connecting Line between Baby Points */}
+              {babyPoints.length > 1 && (
+                <path d={babyPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')} fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" />
+              )}
+
+              {/* Interactive Baby Points Circles */}
+              {babyPoints.map((p, i) => (
+                <g key={`pt-${p.id || i}`} className="group cursor-pointer">
+                  <circle cx={p.x} cy={p.y} r="7" className="fill-amber-500 stroke-white stroke-2 shadow-lg hover:r-9 transition-all" />
+                  <rect x={p.x - 26} y={p.y - 22} width="52" height="15" rx="4" className="fill-slate-900/80 shadow" />
+                  <text x={p.x} y={p.y - 11} textAnchor="middle" className="fill-amber-300 font-extrabold text-[10px]">{p.value} {metricConfig.unit}</text>
+                </g>
+              ))}
+
+              <text x={width / 2} y={height - 8} textAnchor="middle" className="fill-amber-700 text-[11px] font-bold">
+                {useChronoAxis ? '實際出生月齡刻度' : '矯正月齡刻度（以預產期為 0 個月對齊 X 軸）'}
+              </text>
+            </svg>
+
+            {babyPoints.length === 0 && (
+              <div className="p-3 text-center text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl my-2">
+                ⚠️ 目前歷史列表中無【{metricConfig.label}】數據點，點擊上方「新增測量點」登記{metricConfig.label}。
+              </div>
+            )}
+          </div>
+
+          {/* History List Section */}
+          <div className="bg-white rounded-2xl border p-3 shadow-sm space-y-2">
+            <h4 className="font-bold text-xs text-slate-700 flex justify-between items-center">
+              <span>歷史測量列表</span>
+              <span className="text-[11px] text-slate-400 font-normal">共 {growthHistory.length} 筆紀錄</span>
+            </h4>
+            {growthHistory.length === 0 ? (
+              <div className="p-3 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
+                尚無紀錄，點擊上方「新增測量點」登記身高、體重與頭圍。
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1 text-xs">
+                {growthHistory.map((rec) => {
+                  const cleanDate = sanitizeDateStr(rec.date);
+                  const correctedM = getCorrectedAgeAtDate(cleanDate, babyInfo.dueDate, babyInfo.birthDate);
+                  
+                  let correctedFormatted = "";
+                  if (correctedM > 24) {
+                    correctedFormatted = "已滿 2 歲（改看實際年齡）";
+                  } else if (correctedM < 0) {
+                    correctedFormatted = `預產期前 ${Math.abs(Math.round(correctedM * 30.4375))} 天`;
+                  } else {
+                    const months = Math.floor(correctedM);
+                    const days = Math.floor((correctedM % 1) * 30.4375);
+                    correctedFormatted = `矯正 ${months} 個月 ${days} 天`;
+                  }
+
+                  return (
+                    <div key={rec.id} className="p-2 border rounded-xl flex items-center justify-between bg-slate-50/70 hover:bg-amber-50/50 transition-colors">
+                      <div>
+                        <div className="font-bold text-slate-800 flex items-center gap-2">
+                          <span>{cleanDate}</span>
+                          <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">
+                            {correctedFormatted}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 mt-0.5 space-x-2">
+                          {rec.weight && <span>體重: <b className="text-slate-700">{rec.weight} kg</b></span>}
+                          {rec.height && <span>身長: <b className="text-slate-700">{rec.height} cm</b></span>}
+                          {rec.head && <span>頭圍: <b className="text-slate-700">{rec.head} cm</b></span>}
+                        </div>
+                      </div>
+                      <button onClick={() => onDeleteGrowthRecord(rec.id)} className="p-1 text-slate-400 hover:text-red-500 transition-colors" title="刪除紀錄">
+                        <Icon name="trash" className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Add Record Modal */}
+          {showRecordModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-amber-700">新增生長數據紀錄</h3>
+                  <button onClick={() => setShowRecordModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+                <form onSubmit={handleFormSubmit} className="space-y-3 text-xs">
+                  <div>
+                    <label className="font-bold block mb-1">測量日期</label>
+                    <input
+                      type="date"
+                      required
+                      min="2020-01-01"
+                      max="2030-12-31"
+                      value={recDate}
+                      onChange={(e) => setRecDate(e.target.value)}
+                      className="w-full p-2 border rounded-xl"
+                    />
+                    {babyInfo.dueDate && (
+                      <div className="text-[11px] text-amber-600 mt-1 font-medium">
+                        對應矯正月齡：{
+                          getCorrectedAgeAtDate(recDate, babyInfo.dueDate, babyInfo.birthDate) > 24
+                            ? "已滿 2 歲"
+                            : getCorrectedAgeAtDate(recDate, babyInfo.dueDate, babyInfo.birthDate) < 0
+                            ? `預產期前`
+                            : `${getCorrectedAgeAtDate(recDate, babyInfo.dueDate, babyInfo.birthDate).toFixed(1)} 個月`
+                        }
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">體重(kg)</label>
+                      <input type="number" step="0.01" placeholder="3.2" value={recWeight} onChange={(e) => setRecWeight(e.target.value)} className="w-full p-2 border rounded-xl" />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">身長(cm)</label>
+                      <input type="number" step="0.1" placeholder="48" value={recHeight} onChange={(e) => setRecHeight(e.target.value)} className="w-full p-2 border rounded-xl" />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">頭圍(cm)</label>
+                      <input type="number" step="0.1" placeholder="34" value={recHead} onChange={(e) => setRecHead(e.target.value)} className="w-full p-2 border rounded-xl" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button type="button" onClick={() => setShowRecordModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
+                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存數據</button>
+                  </div>
+                </form>
+              </div>
             </div>
           )}
         </div>
+      );
+    };
 
-        {/* Modal: Add Growth Record */}
-        {showRecordModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
-              <div className="flex justify-between items-center border-b pb-2">
-                <h3 className="font-bold text-sm text-amber-700">新增生長數據紀錄</h3>
-                <button onClick={() => setShowRecordModal(false)} className="text-slate-400 hover:text-slate-600">
-                  <Icon name="x" className="w-4 h-4" />
-                </button>
-              </div>
-              <form onSubmit={handleFormSubmit} className="space-y-3 text-xs">
-                <div>
-                  <label className="font-bold block mb-1">測量日期</label>
-                  <input
-                    type="date"
-                    required
-                    value={recDate}
-                    onChange={(e) => setRecDate(e.target.value)}
-                    className="w-full p-2 border rounded-xl"
-                  />
-                  {babyInfo.dueDate && (
-                    <div className="text-[11px] text-amber-600 mt-1 font-medium">
-                      對應矯正月齡：{
-                        getCorrectedAgeAtDate(recDate, babyInfo.dueDate) > 24
-                          ? "已滿 2 歲（改看實際年齡）"
-                          : getCorrectedAgeAtDate(recDate, babyInfo.dueDate) < 0
-                          ? `預產期前`
-                          : `${getCorrectedAgeAtDate(recDate, babyInfo.dueDate).toFixed(1)} 個月`
-                      }
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="font-bold block mb-1">體重(kg)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      placeholder="如: 3.2"
-                      value={recWeight}
-                      onChange={(e) => setRecWeight(e.target.value)}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold block mb-1">身長(cm)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      placeholder="如: 48"
-                      value={recHeight}
-                      onChange={(e) => setRecHeight(e.target.value)}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold block mb-1">頭圍(cm)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      placeholder="如: 34"
-                      value={recHead}
-                      onChange={(e) => setRecHead(e.target.value)}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowRecordModal(false)}
-                    className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold"
-                  >
-                    取消
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
-                  >
-                    儲存數據
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+    function App() {
+      const [isNightMode, setIsNightMode] = React.useState(false);
+      const [activeTab, setActiveTab] = React.useState('dashboard');
+      const [showHelpModal, setShowHelpModal] = React.useState(false);
+      const [showBackupModal, setShowBackupModal] = React.useState(false);
+      const [isExporting, setIsExporting] = React.useState(false);
 
-  function App() {
-    const [isNightMode, setIsNightMode] = React.useState(false);
-    const [activeTab, setActiveTab] = React.useState('dashboard');
-    const [showHelpModal, setShowHelpModal] = React.useState(false);
-    const [isExporting, setIsExporting] = React.useState(false);
+      const [toastMsg, setToastMsg] = React.useState('');
 
-    // Selected Chart view options
-    const [selectedMetric, setSelectedMetric] = React.useState('weight');
-    const [selectedGender, setSelectedGender] = React.useState('boy');
-
-    const [babyInfo, setBabyInfo] = React.useState(() => {
-      const saved = localStorage.getItem('sun_baby_profile_v5');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-      return {
-        name: '',
-        gender: 'boy',
-        gestationalWeeks: '',
-        birthWeight: '',
-        birthDate: '',
-        dueDate: '',
-        currentWeight: '',
-        currentHeight: '',
-        currentHead: '',
-        targetDailyMilk: '',
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(''), 3000);
       };
-    });
 
-    // Historical growth data
-    const [growthHistory, setGrowthHistory] = React.useState(() => {
-      const saved = localStorage.getItem('sun_baby_growth_history_v1');
-      if (saved) {
-        try { return JSON.parse(saved); } catch (e) {}
-      }
-      return [
-        { id: 1, date: babyInfo.birthDate || new Date().toISOString().slice(0, 10), weight: babyInfo.birthWeight ? (parseFloat(babyInfo.birthWeight)/1000).toFixed(2) : '1.45', height: '42', head: '30' }
-      ];
-    });
+      const [selectedMetric, setSelectedMetric] = React.useState('weight');
+      const [selectedGender, setSelectedGender] = React.useState('boy');
 
-    const [showEditProfileModal, setShowEditProfileModal] = React.useState(false);
-    const [editFormData, setEditFormData] = React.useState({ ...babyInfo });
-
-    React.useEffect(() => {
-      if (babyInfo.gender) {
-        setSelectedGender(babyInfo.gender);
-      }
-    }, [babyInfo.gender]);
-
-    React.useEffect(() => {
-      localStorage.setItem('sun_baby_profile_v5', JSON.stringify(babyInfo));
-    }, [babyInfo]);
-
-    React.useEffect(() => {
-      localStorage.setItem('sun_baby_growth_history_v1', JSON.stringify(growthHistory));
-    }, [growthHistory]);
-
-    const handleOpenEditModal = () => {
-      setEditFormData({ ...babyInfo });
-      setShowEditProfileModal(true);
-    };
-
-    const handleSaveProfile = (e) => {
-      e.preventDefault();
-      setBabyInfo({ ...editFormData });
-      setShowEditProfileModal(false);
-
-      if (editFormData.currentWeight || editFormData.currentHeight || editFormData.currentHead) {
-        const todayStr = new Date().toISOString().slice(0, 10);
-        const existingTodayIndex = growthHistory.findIndex(g => g.date === todayStr);
-        if (existingTodayIndex >= 0) {
-          const updated = [...growthHistory];
-          updated[existingTodayIndex] = {
-            ...updated[existingTodayIndex],
-            weight: editFormData.currentWeight || updated[existingTodayIndex].weight,
-            height: editFormData.currentHeight || updated[existingTodayIndex].height,
-            head: editFormData.currentHead || updated[existingTodayIndex].head,
-          };
-          setGrowthHistory(updated);
-        } else {
-          setGrowthHistory([
-            ...growthHistory,
-            {
-              id: Date.now(),
-              date: todayStr,
-              weight: editFormData.currentWeight || '',
-              height: editFormData.currentHeight || '',
-              head: editFormData.currentHead || ''
-            }
-          ]);
+      // Initialize baby profile
+      const [babyInfo, setBabyInfo] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_profile_v5');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed.birthDate) parsed.birthDate = sanitizeDateStr(parsed.birthDate);
+            if (parsed.dueDate) parsed.dueDate = sanitizeDateStr(parsed.dueDate);
+            return parsed;
+          } catch (e) {}
         }
-      }
-    };
-
-    const handleAddGrowthRecord = (newRec) => {
-      setGrowthHistory([newRec, ...growthHistory]);
-      if (newRec.weight) setBabyInfo(prev => ({ ...prev, currentWeight: newRec.weight }));
-      if (newRec.height) setBabyInfo(prev => ({ ...prev, currentHeight: newRec.height }));
-      if (newRec.head) setBabyInfo(prev => ({ ...prev, currentHead: newRec.head }));
-    };
-
-    const handleDeleteGrowthRecord = (id) => {
-      setGrowthHistory(growthHistory.filter(item => item.id !== id));
-    };
-
-    const handleResetData = () => {
-      localStorage.removeItem('sun_baby_profile_v5');
-      localStorage.removeItem('sun_baby_growth_history_v1');
-      setBabyInfo({
-        name: '',
-        gender: 'boy',
-        gestationalWeeks: '',
-        birthWeight: '',
-        birthDate: '',
-        dueDate: '',
-        currentWeight: '',
-        currentHeight: '',
-        currentHead: '',
-        targetDailyMilk: '',
+        return {
+          name: '',
+          gender: 'boy',
+          gestationalWeeks: '',
+          birthWeight: '',
+          birthDate: '',
+          dueDate: '',
+          currentWeight: '',
+          currentHeight: '',
+          currentHead: '',
+          targetDailyMilk: '',
+        };
       });
-      setGrowthHistory([]);
-      setLogs([]);
-      setDoctorNotes([]);
-      setShowEditProfileModal(false);
-    };
 
-    const handleDownloadPDF = () => {
-      setIsExporting(true);
-      setTimeout(() => {
-        const element = document.getElementById('pdf-report-content');
-        if (!element) {
-          setIsExporting(false);
+      // Initialize growth history with auto date repair
+      const [growthHistory, setGrowthHistory] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_growth_history_v1');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              return parsed.map(item => ({
+                ...item,
+                date: sanitizeDateStr(item.date)
+              }));
+            }
+          } catch (e) {}
+        }
+        const initialDate = babyInfo.birthDate ? sanitizeDateStr(babyInfo.birthDate) : new Date().toISOString().slice(0, 10);
+        return [
+          { id: 1, date: initialDate, weight: babyInfo.birthWeight ? (parseFloat(babyInfo.birthWeight) > 30 ? (parseFloat(babyInfo.birthWeight)/1000).toFixed(2) : babyInfo.birthWeight) : '1.45', height: '42', head: '30' }
+        ];
+      });
+
+      const [logs, setLogs] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_logs_v1');
+        if (saved) {
+          try { return JSON.parse(saved); } catch (e) {}
+        }
+        return [];
+      });
+
+      const [doctorNotes, setDoctorNotes] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_doctor_notes_v1');
+        if (saved) {
+          try { return JSON.parse(saved); } catch (e) {}
+        }
+        return [];
+      });
+
+      const [milestones, setMilestones] = React.useState([
+        { id: 1, text: '俯臥（趴著）時能短暫抬起頭部 45 度 (矯正 1-2 個月)', done: false },
+        { id: 2, text: '眼神能跟隨視線移動或關注黑白卡 10 秒 (矯正 1-2 個月)', done: false },
+        { id: 3, text: '聽到大人溫柔說話會停止哭泣或發出咕嚕聲 (矯正 2 個月)', done: false },
+        { id: 4, text: '手掌能由緊握逐漸放鬆，雙手偶爾碰觸 (矯正 2-3 個月)', done: false },
+      ]);
+
+      const [showEditProfileModal, setShowEditProfileModal] = React.useState(false);
+      const [editFormData, setEditFormData] = React.useState({ ...babyInfo });
+      const [pastedJson, setPastedJson] = React.useState('');
+
+      React.useEffect(() => {
+        if (babyInfo.gender) setSelectedGender(babyInfo.gender);
+      }, [babyInfo.gender]);
+
+      React.useEffect(() => {
+        localStorage.setItem('sun_baby_profile_v5', JSON.stringify(babyInfo));
+      }, [babyInfo]);
+
+      React.useEffect(() => {
+        localStorage.setItem('sun_baby_growth_history_v1', JSON.stringify(growthHistory));
+      }, [growthHistory]);
+
+      React.useEffect(() => {
+        localStorage.setItem('sun_baby_logs_v1', JSON.stringify(logs));
+      }, [logs]);
+
+      React.useEffect(() => {
+        localStorage.setItem('sun_baby_doctor_notes_v1', JSON.stringify(doctorNotes));
+      }, [doctorNotes]);
+
+      // Auto-repair malformed dates in growthHistory when component mounts
+      React.useEffect(() => {
+        let hasFixed = false;
+        const cleaned = growthHistory.map(item => {
+          const sanitized = sanitizeDateStr(item.date);
+          if (sanitized !== item.date) {
+            hasFixed = true;
+          }
+          return { ...item, date: sanitized };
+        });
+        if (hasFixed) {
+          setGrowthHistory(cleaned);
+          showToast('🔧 已自動修正歷史數據中的日期格式！');
+        }
+      }, []);
+
+      const handleExportBackupJSON = () => {
+        const backupData = {
+          version: '1.1',
+          exportTimestamp: new Date().toISOString(),
+          babyInfo,
+          growthHistory,
+          logs,
+          doctorNotes,
+          milestones
+        };
+
+        const jsonString = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `巴掌小太陽_照護與歷史測量備份_${babyInfo.name || '寶寶'}_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        showToast('✅ JSON 備份檔案已成功下載！');
+      };
+
+      const handleCopyBackupToClipboard = () => {
+        const backupData = {
+          version: '1.1',
+          exportTimestamp: new Date().toISOString(),
+          babyInfo,
+          growthHistory,
+          logs,
+          doctorNotes,
+          milestones
+        };
+        const jsonString = JSON.stringify(backupData, null, 2);
+
+        const textarea = document.createElement('textarea');
+        textarea.value = jsonString;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast('📋 備份 JSON 文字已複製至剪貼簿！');
+      };
+
+      const handleImportBackupObj = (backupData) => {
+        if (!backupData || typeof backupData !== 'object') {
+          showToast('❌ 無效的備份檔案格式！');
           return;
         }
 
-        element.style.display = 'block';
-
-        const opt = {
-          margin: 10,
-          filename: `${babyInfo.name || '寶寶'}_門診照護與生長報告_${new Date().toISOString().slice(0, 10)}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        if (window.html2pdf) {
-          window.html2pdf().set(opt).from(element).save().then(() => {
-            element.style.display = 'none';
-            setIsExporting(false);
-          }).catch((err) => {
-            console.error(err);
-            element.style.display = 'none';
-            setIsExporting(false);
-          });
-        } else {
-          window.print();
-          element.style.display = 'none';
-          setIsExporting(false);
+        if (backupData.babyInfo) {
+          const cleanedProfile = { ...backupData.babyInfo };
+          if (cleanedProfile.birthDate) cleanedProfile.birthDate = sanitizeDateStr(cleanedProfile.birthDate);
+          if (cleanedProfile.dueDate) cleanedProfile.dueDate = sanitizeDateStr(cleanedProfile.dueDate);
+          setBabyInfo(cleanedProfile);
         }
-      }, 150);
-    };
 
-    const ageData = React.useMemo(() => {
-      return calculateAges(babyInfo.birthDate, babyInfo.dueDate);
-    }, [babyInfo.birthDate, babyInfo.dueDate]);
+        if (Array.isArray(backupData.growthHistory)) {
+          const cleanedHistory = backupData.growthHistory.map(item => ({
+            ...item,
+            date: sanitizeDateStr(item.date)
+          }));
+          setGrowthHistory(cleanedHistory);
+        }
 
-    const [logs, setLogs] = React.useState([]);
-    const [doctorNotes, setDoctorNotes] = React.useState([]);
-    const [newDoctorQuestion, setNewDoctorQuestion] = React.useState('');
+        if (Array.isArray(backupData.logs)) setLogs(backupData.logs);
+        if (Array.isArray(backupData.doctorNotes)) setDoctorNotes(backupData.doctorNotes);
+        if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
 
-    const [milestones, setMilestones] = React.useState([
-      { id: 1, text: '俯臥（趴著）時能短暫抬起頭部 45 度 (矯正 1-2 個月)', done: false },
-      { id: 2, text: '眼神能跟隨視線移動或關注黑白卡 10 秒 (矯正 1-2 個月)', done: false },
-      { id: 3, text: '聽到大人溫柔說話會停止哭泣或發出咕嚕聲 (矯正 2 個月)', done: false },
-      { id: 4, text: '手掌能由緊握逐漸放鬆，雙手偶爾碰觸 (矯正 2-3 個月)', done: false },
-    ]);
-
-    const [showAddLogModal, setShowAddLogModal] = React.useState(false);
-    const [newLogType, setNewLogType] = React.useState('feeding');
-    const [newLogDetail, setNewLogDetail] = React.useState('');
-    const [newLogAmount, setNewLogAmount] = React.useState('');
-
-    const [chatMessages, setChatMessages] = React.useState([
-      { sender: 'bot', text: '你好！我是巴掌小太陽的 AI 照護助手 ☀️。您可以詢問關於【矯正月齡生長曲線】計算、每日奶量評估、疫苗施打時間等問題喔！' }
-    ]);
-    const [inputMessage, setInputMessage] = React.useState('');
-
-    const todayTotalMilk = React.useMemo(() => {
-      return logs
-        .filter(l => l.type === 'feeding' && l.amount)
-        .reduce((sum, l) => sum + parseInt(l.amount || '0', 10), 0);
-    }, [logs]);
-
-    const targetMilkNum = parseInt(babyInfo.targetDailyMilk || '0', 10);
-    const milkPercent = targetMilkNum > 0 ? Math.min(100, Math.round((todayTotalMilk / targetMilkNum) * 100)) : 0;
-
-    const handleAddLog = (e) => {
-      e.preventDefault();
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      const newEntry = {
-        id: Date.now(),
-        type: newLogType,
-        time: timeStr,
-        detail: newLogDetail || (newLogType === 'feeding' ? '瓶餵母乳/配方奶' : '濕尿布'),
-        amount: newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null,
+        setShowBackupModal(false);
+        setPastedJson('');
+        showToast('🎉 設定檔與歷史測量列表已成功還原！');
       };
 
-      setLogs([newEntry, ...logs]);
-      setShowAddLogModal(false);
-      setNewLogDetail('');
-      setNewLogAmount('');
-    };
+      const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    const handleAddDoctorNote = (e) => {
-      e.preventDefault();
-      if (!newDoctorQuestion.trim()) return;
-      setDoctorNotes([
-        ...doctorNotes,
-        { id: Date.now(), question: newDoctorQuestion, answered: false, tag: '門診提問' }
-      ]);
-      setNewDoctorQuestion('');
-    };
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const parsed = JSON.parse(event.target.result);
+            handleImportBackupObj(parsed);
+          } catch (err) {
+            showToast('❌ 無法解析 JSON 檔案，請確認內容是否完整。');
+          }
+        };
+        reader.readAsText(file);
+      };
 
-    const handleSendMessage = (e) => {
-      e.preventDefault();
-      if (!inputMessage.trim()) return;
+      const handlePasteImport = () => {
+        if (!pastedJson.trim()) {
+          showToast('⚠️ 請先貼上 JSON 文字內容');
+          return;
+        }
+        try {
+          const parsed = JSON.parse(pastedJson);
+          handleImportBackupObj(parsed);
+        } catch (err) {
+          showToast('❌ JSON 格式不正確，還原失敗');
+        }
+      };
 
-      const userText = inputMessage;
-      setChatMessages(prev => [...prev, { sender: 'user', text: userText }]);
-      setInputMessage('');
+      const handleOpenEditModal = () => {
+        setEditFormData({ ...babyInfo });
+        setShowEditProfileModal(true);
+      };
 
-      setTimeout(() => {
-        let replyText = "早產兒請務必根據【矯正月齡】來對照生長與發展指標！每日體重增加建議約為 20~30 公克。特別提醒：AI 建議僅供參考，如有疑慮請及時諮詢兒科或新生兒科醫師。";
-        const babyName = babyInfo.name || '寶寶';
-        if (userText.includes('矯正') || userText.includes('算') || userText.includes('曲線') || userText.includes('X軸')) {
-          replyText = `評估 ${babyName} 的身高、體重與頭圍時，請統一查看【生長與發展】分頁的生長曲線圖，其 X 軸已鎖定預產期算的【矯正月齡】（目前為 ${ageData.correctedText}），不會因為提早出生而落後！`;
-        } else if (userText.includes('奶量') || userText.includes('喝')) {
-          const weight = parseFloat(babyInfo.currentWeight || '0');
-          if (weight > 0) {
-            const minMilk = Math.round(weight * 150);
-            const maxMilk = Math.round(weight * 180);
-            replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。以 ${babyName} 目前體重 ${weight}kg 計算，一天建議總奶量約為 ${minMilk}ml ~ ${maxMilk}ml。`;
+      const handleSaveProfile = (e) => {
+        e.preventDefault();
+        const cleanedForm = {
+          ...editFormData,
+          birthDate: sanitizeDateStr(editFormData.birthDate),
+          dueDate: sanitizeDateStr(editFormData.dueDate)
+        };
+
+        setBabyInfo(cleanedForm);
+        setShowEditProfileModal(false);
+
+        if (cleanedForm.currentWeight || cleanedForm.currentHeight || cleanedForm.currentHead) {
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const existingTodayIndex = growthHistory.findIndex(g => g.date === todayStr);
+          if (existingTodayIndex >= 0) {
+            const updated = [...growthHistory];
+            updated[existingTodayIndex] = {
+              ...updated[existingTodayIndex],
+              weight: cleanedForm.currentWeight || updated[existingTodayIndex].weight,
+              height: cleanedForm.currentHeight || updated[existingTodayIndex].height,
+              head: cleanedForm.currentHead || updated[existingTodayIndex].head,
+            };
+            setGrowthHistory(updated);
           } else {
-            replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。您可以先點擊「自訂/修改」填入寶寶體重來計算喔！`;
+            setGrowthHistory([
+              ...growthHistory,
+              {
+                id: Date.now(),
+                date: todayStr,
+                weight: cleanedForm.currentWeight || '',
+                height: cleanedForm.currentHeight || '',
+                head: cleanedForm.currentHead || ''
+              }
+            ]);
           }
         }
-        setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
-      }, 600);
-    };
+        showToast('💾 照護檔案設定已儲存！');
+      };
 
-    const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
-    const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
+      const handleAddGrowthRecord = (newRec) => {
+        const cleanedRec = {
+          ...newRec,
+          date: sanitizeDateStr(newRec.date)
+        };
+        setGrowthHistory([cleanedRec, ...growthHistory]);
+        if (cleanedRec.weight) setBabyInfo(prev => ({ ...prev, currentWeight: cleanedRec.weight }));
+        if (cleanedRec.height) setBabyInfo(prev => ({ ...prev, currentHeight: cleanedRec.height }));
+        if (cleanedRec.head) setBabyInfo(prev => ({ ...prev, currentHead: cleanedRec.head }));
+        showToast('📈 已新增測量數據點！');
+      };
 
-    return (
-      <div className={`min-h-screen font-sans ${themeBg} transition-colors duration-200`}>
-        {/* Header Bar */}
-        <header className={`sticky top-0 z-30 border-b ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`}>
-          <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-yellow-400 text-amber-900 rounded-full shadow-md">
-                <Icon name="sun" className="w-5 h-5 fill-current" />
-              </div>
-              <div>
-                <h1 className="font-bold text-base flex items-center gap-2">巴掌小太陽</h1>
-                <p className="text-[11px] opacity-90">早產兒矯正月齡生長曲線與照護助手</p>
-              </div>
+      const handleDeleteGrowthRecord = (id) => {
+        setGrowthHistory(growthHistory.filter(item => item.id !== id));
+        showToast('🗑️ 已刪除測量點');
+      };
+
+      const handleResetData = () => {
+        localStorage.removeItem('sun_baby_profile_v5');
+        localStorage.removeItem('sun_baby_growth_history_v1');
+        localStorage.removeItem('sun_baby_logs_v1');
+        localStorage.removeItem('sun_baby_doctor_notes_v1');
+        setBabyInfo({
+          name: '',
+          gender: 'boy',
+          gestationalWeeks: '',
+          birthWeight: '',
+          birthDate: '',
+          dueDate: '',
+          currentWeight: '',
+          currentHeight: '',
+          currentHead: '',
+          targetDailyMilk: '',
+        });
+        setGrowthHistory([]);
+        setLogs([]);
+        setDoctorNotes([]);
+        setShowEditProfileModal(false);
+        showToast('🧹 已重置清空所有本地資料');
+      };
+
+      const handleDownloadPDF = () => {
+        setIsExporting(true);
+        setTimeout(() => {
+          const element = document.getElementById('pdf-report-content');
+          if (!element) {
+            setIsExporting(false);
+            return;
+          }
+
+          element.style.display = 'block';
+
+          const opt = {
+            margin: 10,
+            filename: `${babyInfo.name || '寶寶'}_門診照護與生長報告_${new Date().toISOString().slice(0, 10)}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: false },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+
+          if (window.html2pdf) {
+            window.html2pdf().set(opt).from(element).save().then(() => {
+              element.style.display = 'none';
+              setIsExporting(false);
+            }).catch((err) => {
+              console.error(err);
+              element.style.display = 'none';
+              setIsExporting(false);
+            });
+          } else {
+            window.print();
+            element.style.display = 'none';
+            setIsExporting(false);
+          }
+        }, 150);
+      };
+
+      const ageData = React.useMemo(() => {
+        return calculateAges(babyInfo.birthDate, babyInfo.dueDate);
+      }, [babyInfo.birthDate, babyInfo.dueDate]);
+
+      const [newDoctorQuestion, setNewDoctorQuestion] = React.useState('');
+      const [showAddLogModal, setShowAddLogModal] = React.useState(false);
+      const [newLogType, setNewLogType] = React.useState('feeding');
+      const [newLogDetail, setNewLogDetail] = React.useState('');
+      const [newLogAmount, setNewLogAmount] = React.useState('');
+
+      const [chatMessages, setChatMessages] = React.useState([
+        { sender: 'bot', text: '你好！我是巴掌小太陽的 AI 照護助手 ☀️。您可以詢問關於【矯正月齡生長曲線】計算、每日奶量評估、資料同步備份與還原等問題喔！' }
+      ]);
+      const [inputMessage, setInputMessage] = React.useState('');
+
+      const todayTotalMilk = React.useMemo(() => {
+        return logs
+          .filter(l => l.type === 'feeding' && l.amount)
+          .reduce((sum, l) => sum + parseInt(l.amount || '0', 10), 0);
+      }, [logs]);
+
+      const targetMilkNum = parseInt(babyInfo.targetDailyMilk || '0', 10);
+      const milkPercent = targetMilkNum > 0 ? Math.min(100, Math.round((todayTotalMilk / targetMilkNum) * 100)) : 0;
+
+      const handleAddLog = (e) => {
+        e.preventDefault();
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        const newEntry = {
+          id: Date.now(),
+          type: newLogType,
+          time: timeStr,
+          detail: newLogDetail || (newLogType === 'feeding' ? '瓶餵母乳/配方奶' : '濕尿布'),
+          amount: newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null,
+        };
+
+        setLogs([newEntry, ...logs]);
+        setShowAddLogModal(false);
+        setNewLogDetail('');
+        setNewLogAmount('');
+        showToast('🍼 已上記錄！');
+      };
+
+      const handleAddDoctorNote = (e) => {
+        e.preventDefault();
+        if (!newDoctorQuestion.trim()) return;
+        setDoctorNotes([
+          ...doctorNotes,
+          { id: Date.now(), question: newDoctorQuestion, answered: false, tag: '門診提問' }
+        ]);
+        setNewDoctorQuestion('');
+        showToast('🏥 已新增看診問題！');
+      };
+
+      const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!inputMessage.trim()) return;
+
+        const userText = inputMessage;
+        setChatMessages(prev => [...prev, { sender: 'user', text: userText }]);
+        setInputMessage('');
+
+        setTimeout(() => {
+          let replyText = "早產兒請務必根據【矯正月齡】來對照生長與發展指標！若要跨裝置或備份資料，可隨時點擊右上角「備份/還原」匯出 JSON 檔。";
+          const babyName = babyInfo.name || '寶寶';
+          if (userText.includes('備份') || userText.includes('還原') || userText.includes('匯入') || userText.includes('匯出')) {
+            replyText = `點擊上方選單列的【備份/還原】按鈕，即可將 ${babyName} 的「基本設定檔」與「歷史測量列表」完整下載為 JSON 檔，或複製純文字備份碼。更換手機或瀏覽器時貼上即可秒速還原！`;
+          } else if (userText.includes('矯正') || userText.includes('算') || userText.includes('曲線')) {
+            replyText = `評估 ${babyName} 的身高、體重與頭圍時，請統一查看【生長與發展】分頁的生長曲線圖，其 X 軸已鎖定預產期算的【矯正月齡】（目前為 ${ageData.correctedText}）。`;
+          } else if (userText.includes('奶量') || userText.includes('喝')) {
+            const weight = parseFloat(babyInfo.currentWeight || '0');
+            if (weight > 0) {
+              const minMilk = Math.round(weight * 150);
+              const maxMilk = Math.round(weight * 180);
+              replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。以 ${babyName} 目前體重 ${weight}kg 計算，一天建議總奶量約為 ${minMilk}ml ~ ${maxMilk}ml。`;
+            } else {
+              replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。您可以先點擊「自訂/修改」填入寶寶體重來計算喔！`;
+            }
+          }
+          setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
+        }, 600);
+      };
+
+      const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
+      const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
+
+      return (
+        <div className={`min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`}>
+          {/* Toast Alert Box */}
+          {toastMsg && (
+            <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce">
+              <span>{toastMsg}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleDownloadPDF}
-                disabled={isExporting}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
-                title="匯出 PDF 照護與生長報告"
-              >
-                <Icon name="download" className="w-4 h-4" />
-                <span>{isExporting ? '匯出中...' : '匯出 PDF'}</span>
-              </button>
-              <button
-                onClick={() => setShowHelpModal(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
-                title="開啟使用說明"
-              >
-                <Icon name="info" className="w-4 h-4" />
-                <span>說明</span>
-              </button>
-              <button
-                onClick={() => setIsNightMode(!isNightMode)}
-                className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors"
-                title="切換夜間柔光模式"
-              >
-                <Icon name="moon" className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </header>
+          )}
 
-        <main className="max-w-2xl mx-auto px-4 pt-4 pb-16">
-          {/* Baby Info Card */}
-          <div className={`p-4 rounded-2xl border shadow-sm mb-4 ${cardBg}`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-full bg-amber-200 border-2 border-amber-400 flex items-center justify-center text-2xl shadow-inner">
-                  👶
+          {/* Header Bar */}
+          <header className={`sticky top-0 z-30 border-b ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`}>
+            <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-yellow-400 text-amber-900 rounded-full shadow-md">
+                  <Icon name="sun" className="w-5 h-5 fill-current" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold">
-                      {babyInfo.name ? `${babyInfo.name} 寶寶` : '小太陽寶寶'}
-                    </h2>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
-                      {babyInfo.gender === 'girl' ? '👧 女寶' : '👦 男寶'}
-                    </span>
-                    <button
-                      onClick={handleOpenEditModal}
-                      className="px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs flex items-center gap-1 font-semibold transition-colors"
-                    >
-                      <Icon name="edit" className="w-3 h-3" />
-                      <span>自訂/修改</span>
-                    </button>
-                  </div>
-                  <div className="text-xs font-bold text-amber-600 mt-0.5 flex items-center gap-1">
-                    <span>⚡️ {ageData.correctedText}</span>
-                    <span className="text-[10px] text-slate-400 font-normal">(圖表綁定)</span>
-                  </div>
-                  <div className="text-[11px] text-slate-400">
-                    {ageData.chronoText} {babyInfo.gestationalWeeks ? `(${babyInfo.gestationalWeeks}週出生)` : ''}
-                  </div>
+                  <h1 className="font-bold text-base flex items-center gap-2">巴掌小太陽</h1>
+                  <p className="text-[11px] opacity-90">早產兒照護小幫手</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-[11px] text-slate-400">當前體重</div>
-                <div className="text-xl font-black text-amber-600">
-                  {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '— kg'}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Tabs */}
-          <div className="flex space-x-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
-            {[
-              { id: 'dashboard', label: '☀️ 今日快照' },
-              { id: 'growth', label: '📈 矯正月齡生長曲線' },
-              { id: 'care', label: '🍼 照護日誌' },
-              { id: 'doctor', label: '🏥 看診備忘' },
-              { id: 'chat', label: '🤖 AI 諮詢' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-amber-500 text-white shadow-md'
-                    : 'bg-white border text-slate-600 hover:bg-amber-50'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Dashboard View */}
-          {activeTab === 'dashboard' && (
-            <div className="space-y-4">
-              <div className={`p-4 rounded-2xl border ${cardBg}`}>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="font-bold text-sm flex items-center gap-1.5">
-                    <Icon name="droplet" className="text-amber-500 w-4 h-4" />
-                    今日總奶量進度
-                  </span>
-                  <span className="text-base font-bold text-amber-600">
-                    {todayTotalMilk} / {babyInfo.targetDailyMilk || '0'} ml
-                  </span>
-                </div>
-                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${milkPercent}%` }}></div>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-2 text-right">
-                  {targetMilkNum > 0 ? `已達成每日目標的 ${milkPercent}%` : '未設定每日目標奶量 (可點擊「自訂/修改」設定)'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => { setNewLogType('feeding'); setShowAddLogModal(true); }}
-                  className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm"
+                  onClick={() => setShowBackupModal(true)}
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                  title="開啟資料備份與還原"
                 >
-                  🍼 記餵奶
+                  <Icon name="database" className="w-4 h-4" />
+                  <span>備份/還原</span>
                 </button>
-                <button
-                  onClick={() => { setNewLogType('diaper'); setShowAddLogModal(true); }}
-                  className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm"
-                >
-                  👶 記尿布
-                </button>
-              </div>
-
-              <div className={`p-4 rounded-2xl border ${cardBg}`}>
-                <h3 className="font-bold text-sm mb-2 flex items-center gap-1.5 text-amber-600">
-                  💡 矯正月齡重要提示
-                </h3>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  早產兒的體重、身高與頭圍發育，請一律對照<span className="font-bold text-amber-700">【矯正月齡】</span>（依預產期計算）。避免以實際出生月齡衡量，讓寶寶有足夠的時間自然追趕生長！
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Growth View - Bound strictly to Corrected Age */}
-          {activeTab === 'growth' && (
-            <div className={`p-4 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
-                <h3 className="font-bold text-base flex items-center gap-2">
-                  <Icon name="trendingUp" className="text-amber-500" />
-                  矯正月齡生長曲線圖表
-                </h3>
-                {/* Switch metric & gender selector */}
-                <div className="flex items-center gap-2">
-                  <div className="flex rounded-xl bg-slate-100 p-1 text-xs">
-                    {[
-                      { id: 'weight', label: '體重' },
-                      { id: 'height', label: '身長' },
-                      { id: 'head', label: '頭圍' },
-                    ].map((m) => (
-                      <button
-                        key={m.id}
-                        onClick={() => setSelectedMetric(m.id)}
-                        className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
-                          selectedMetric === m.id ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600'
-                        }`}
-                      >
-                        {m.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex rounded-xl bg-slate-100 p-1 text-xs">
-                    <button
-                      onClick={() => setSelectedGender('boy')}
-                      className={`px-2 py-1 rounded-lg font-bold transition-all ${selectedGender === 'boy' ? 'bg-blue-500 text-white' : 'text-slate-600'}`}
-                    >
-                      男
-                    </button>
-                    <button
-                      onClick={() => setSelectedGender('girl')}
-                      className={`px-2 py-1 rounded-lg font-bold transition-all ${selectedGender === 'girl' ? 'bg-pink-500 text-white' : 'text-slate-600'}`}
-                    >
-                      女
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Preterm Growth Chart SVG Component */}
-              <PretermGrowthChart
-                metric={selectedMetric}
-                gender={selectedGender}
-                babyInfo={babyInfo}
-                growthHistory={growthHistory}
-                onAddGrowthRecord={handleAddGrowthRecord}
-                onDeleteGrowthRecord={handleDeleteGrowthRecord}
-              />
-
-              {/* Development Milestones */}
-              <div className="space-y-2 pt-2 border-t">
-                <h4 className="font-bold text-xs text-slate-700">矯正月齡發展里程碑檢核</h4>
-                {milestones.map((m) => (
-                  <div
-                    key={m.id}
-                    onClick={() => setMilestones(milestones.map(item => item.id === m.id ? { ...item, done: !item.done } : item))}
-                    className="p-3 rounded-xl border flex items-center gap-3 cursor-pointer hover:bg-amber-50/50 transition-colors bg-white"
-                  >
-                    <input type="checkbox" checked={m.done} readOnly className="w-4 h-4 accent-amber-500 rounded" />
-                    <span className={`text-xs font-medium ${m.done ? 'line-through text-slate-400' : 'text-slate-700'}`}>{m.text}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Care Logs View */}
-          {activeTab === 'care' && (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center mb-1">
-                <h3 className="font-bold text-sm">今日照護紀錄</h3>
-                <button
-                  onClick={() => setShowAddLogModal(true)}
-                  className="px-3 py-1 bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm"
-                >
-                  <Icon name="plus" className="w-3.5 h-3.5" />
-                  新增紀錄
-                </button>
-              </div>
-              {logs.length === 0 ? (
-                <div className="p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50">
-                  尚無紀錄，點擊「+ 新增紀錄」開始記錄餵奶與尿布吧！
-                </div>
-              ) : (
-                logs.map((log) => (
-                  <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center ${cardBg}`}>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-amber-600">{log.time}</span>
-                      <span className="text-xs font-medium">{log.detail}</span>
-                    </div>
-                    {log.amount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{log.amount}</span>}
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* Doctor Notes View */}
-          {activeTab === 'doctor' && (
-            <div className={`p-4 rounded-2xl border space-y-4 ${cardBg}`}>
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-base flex items-center gap-2">
-                  <Icon name="stethoscope" className="text-amber-500" /> 看診備忘與門診提問
-                </h3>
                 <button
                   onClick={handleDownloadPDF}
                   disabled={isExporting}
-                  className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm disabled:opacity-50 transition-colors"
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
+                  title="下載完整記錄 PDF"
                 >
-                  <Icon name="download" className="w-3.5 h-3.5" />
-                  <span>{isExporting ? '產生 PDF 中...' : '下載看診 PDF 報告'}</span>
+                  <Icon name="download" className="w-4 h-4" />
+                  <span>{isExporting ? '匯出中...' : 'PDF'}</span>
+                </button>
+                <button
+                  onClick={() => setShowHelpModal(true)}
+                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+                  title="說明與特色"
+                >
+                  <Icon name="info" className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsNightMode(!isNightMode)}
+                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+                  title="切換夜間模式"
+                >
+                  <Icon name="moon" className="w-4 h-4" />
                 </button>
               </div>
-              <form onSubmit={handleAddDoctorNote} className="flex gap-2">
-                <input
-                  type="text"
-                  value={newDoctorQuestion}
-                  onChange={(e) => setNewDoctorQuestion(e.target.value)}
-                  placeholder="寫下想問 NICU 或主治醫師的問題..."
-                  className="flex-1 p-2.5 border rounded-xl text-xs"
+            </div>
+          </header>
+
+          <main className="max-w-2xl mx-auto px-4 pt-4 pb-16">
+            {/* Baby Info Card */}
+            <div className={`p-4 rounded-2xl border shadow-sm mb-4 ${cardBg}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-full bg-amber-200 border-2 border-amber-400 flex items-center justify-center text-2xl shadow-inner">
+                    👶
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold">
+                        {babyInfo.name ? `${babyInfo.name} 寶寶` : '小太陽寶寶'}
+                      </h2>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">
+                        {babyInfo.gender === 'girl' ? '👧 女寶' : '👦 男寶'}
+                      </span>
+                      <button
+                        onClick={handleOpenEditModal}
+                        className="px-2 py-0.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs flex items-center gap-1 font-semibold transition-colors"
+                      >
+                        <Icon name="edit" className="w-3 h-3" />
+                        <span>自訂/修改</span>
+                      </button>
+                    </div>
+                    <div className="text-xs font-bold text-amber-600 mt-0.5 flex items-center gap-1">
+                      <span>⚡️ {ageData.correctedText}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-400">
+                      {ageData.chronoText} {babyInfo.gestationalWeeks ? `(${babyInfo.gestationalWeeks}週出生)` : ''}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] text-slate-400">當前體重</div>
+                  <div className="text-xl font-black text-amber-600">
+                    {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '— kg'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="flex space-x-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
+              {[
+                { id: 'dashboard', label: '☀️ 今日快照' },
+                { id: 'growth', label: '📈 矯正月齡生長曲線' },
+                { id: 'care', label: '🍼 照護日誌' },
+                { id: 'doctor', label: '🏥 看診備忘' },
+                { id: 'chat', label: '🤖 AI 諮詢' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-amber-500 text-white shadow-md'
+                      : 'bg-white border text-slate-600 hover:bg-amber-50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab 1: Dashboard */}
+            {activeTab === 'dashboard' && (
+              <div className="space-y-4">
+                <div className={`p-4 rounded-2xl border ${cardBg}`}>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-bold text-sm flex items-center gap-1.5">
+                      <Icon name="droplet" className="text-amber-500 w-4 h-4" />
+                      今日總奶量進度
+                    </span>
+                    <span className="text-base font-bold text-amber-600">
+                      {todayTotalMilk} / {babyInfo.targetDailyMilk || '0'} ml
+                    </span>
+                  </div>
+                  <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-400 rounded-full transition-all duration-500" style={{ width: `${milkPercent}%` }}></div>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-2 text-right">
+                    {targetMilkNum > 0 ? `已達成每日目標的 ${milkPercent}%` : '未設定每日目標奶量 (可點擊「自訂/修改」設定)'}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => { setNewLogType('feeding'); setShowAddLogModal(true); }}
+                    className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm"
+                  >
+                    🍼 記餵奶
+                  </button>
+                  <button
+                    onClick={() => { setNewLogType('diaper'); setShowAddLogModal(true); }}
+                    className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm"
+                  >
+                    👶 記尿布
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Growth Chart */}
+            {activeTab === 'growth' && (
+              <div className={`p-4 rounded-2xl border space-y-4 ${cardBg}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+                  <h3 className="font-bold text-base flex items-center gap-2">
+                    <Icon name="trendingUp" className="text-amber-500" />
+                    矯正月齡生長曲線圖表
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <div className="flex rounded-xl bg-slate-100 p-1 text-xs">
+                      {[
+                        { id: 'weight', label: '體重' },
+                        { id: 'height', label: '身長' },
+                        { id: 'head', label: '頭圍' },
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => setSelectedMetric(m.id)}
+                          className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                            selectedMetric === m.id ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600'
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex rounded-xl bg-slate-100 p-1 text-xs">
+                      <button
+                        onClick={() => setSelectedGender('boy')}
+                        className={`px-2 py-1 rounded-lg font-bold transition-all ${selectedGender === 'boy' ? 'bg-blue-500 text-white' : 'text-slate-600'}`}
+                      >
+                        男
+                      </button>
+                      <button
+                        onClick={() => setSelectedGender('girl')}
+                        className={`px-2 py-1 rounded-lg font-bold transition-all ${selectedGender === 'girl' ? 'bg-pink-500 text-white' : 'text-slate-600'}`}
+                      >
+                        女
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <PretermGrowthChart
+                  metric={selectedMetric}
+                  gender={selectedGender}
+                  babyInfo={babyInfo}
+                  growthHistory={growthHistory}
+                  onAddGrowthRecord={handleAddGrowthRecord}
+                  onDeleteGrowthRecord={handleDeleteGrowthRecord}
                 />
-                <button type="submit" className="px-4 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm">新增</button>
-              </form>
-              <div className="space-y-2">
-                {doctorNotes.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
-                    尚無看診問題備忘
+
+                <div className="space-y-2 pt-2 border-t">
+                  <h4 className="font-bold text-xs text-slate-700">矯正月齡發展里程碑檢核</h4>
+                  {milestones.map((m) => (
+                    <div
+                      key={m.id}
+                      onClick={() => setMilestones(milestones.map(item => item.id === m.id ? { ...item, done: !item.done } : item))}
+                      className="p-3 rounded-xl border flex items-center gap-3 cursor-pointer hover:bg-amber-50/50 transition-colors bg-white"
+                    >
+                      <input type="checkbox" checked={m.done} readOnly className="w-4 h-4 accent-amber-500 rounded" />
+                      <span className={`text-xs font-medium ${m.done ? 'line-through text-slate-400' : 'text-slate-700'}`}>{m.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Care Logs */}
+            {activeTab === 'care' && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center mb-1">
+                  <h3 className="font-bold text-sm">今日照護紀錄</h3>
+                  <button
+                    onClick={() => setShowAddLogModal(true)}
+                    className="px-3 py-1 bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm"
+                  >
+                    <Icon name="plus" className="w-3.5 h-3.5" />
+                    新增紀錄
+                  </button>
+                </div>
+                {logs.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50">
+                    尚無紀錄，點擊「+ 新增紀錄」開始記錄餵奶與尿布吧！
                   </div>
                 ) : (
-                  doctorNotes.map((note) => (
-                    <div key={note.id} className="p-3 border rounded-xl text-xs space-y-1 bg-white">
-                      <div className="flex justify-between items-center">
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-bold">{note.tag}</span>
-                        <button
-                          onClick={() => setDoctorNotes(doctorNotes.map(n => n.id === note.id ? { ...n, answered: !n.answered } : n))}
-                          className={note.answered ? 'text-green-600 font-bold' : 'text-slate-400 hover:text-slate-600'}
-                        >
-                          {note.answered ? '✓ 醫師已解答' : '標記為已解答'}
-                        </button>
+                  logs.map((log) => (
+                    <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center ${cardBg}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-amber-600">{log.time}</span>
+                        <span className="text-xs font-medium">{log.detail}</span>
                       </div>
-                      <p className="font-medium text-slate-700">{note.question}</p>
+                      {log.amount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{log.amount}</span>}
                     </div>
                   ))
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* AI Chat View */}
-          {activeTab === 'chat' && (
-            <div className={`p-4 rounded-2xl border flex flex-col h-[30rem] ${cardBg}`}>
-              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm">
-                <Icon name="alertTriangle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-                <div className="leading-snug">
-                  <span className="font-bold text-rose-800 block text-xs mb-0.5">⚠️ 醫療諮詢重要聲明：</span>
-                  <p className="text-rose-700">
-                    本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。
-                  </p>
+            {/* Tab 4: Doctor Notes */}
+            {activeTab === 'doctor' && (
+              <div className={`p-4 rounded-2xl border space-y-4 ${cardBg}`}>
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-base flex items-center gap-2">
+                    <Icon name="stethoscope" className="text-amber-500" /> 看診備忘與門診提問
+                  </h3>
                 </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
-                {chatMessages.map((msg, idx) => (
-                  <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`}>
-                      {msg.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="詢問矯正月齡計算、奶量、疫苗..."
-                  className="flex-1 px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none"
-                />
-                <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors">送出</button>
-              </form>
-            </div>
-          )}
-        </main>
-
-        {/* Modal: Add Care Log */}
-        {showAddLogModal && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className={`w-full max-w-sm p-5 rounded-2xl border shadow-lg ${cardBg}`}>
-              <h3 className="font-bold text-base mb-3">新增照護紀錄</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-bold text-slate-600 mb-1 block">紀錄內容</label>
+                <form onSubmit={handleAddDoctorNote} className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="如：配方奶 / 濕尿布 / 母乳"
-                    value={newLogDetail}
-                    onChange={(e) => setNewLogDetail(e.target.value)}
-                    className="w-full p-2.5 border rounded-xl text-xs"
+                    value={newDoctorQuestion}
+                    onChange={(e) => setNewDoctorQuestion(e.target.value)}
+                    placeholder="寫下想問 NICU 或主治醫師的問題..."
+                    className="flex-1 p-2.5 border rounded-xl text-xs"
                   />
+                  <button type="submit" className="px-4 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm">新增</button>
+                </form>
+                <div className="space-y-2">
+                  {doctorNotes.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
+                      尚無看診問題備忘
+                    </div>
+                  ) : (
+                    doctorNotes.map((note) => (
+                      <div key={note.id} className="p-3 border rounded-xl text-xs space-y-1 bg-white">
+                        <div className="flex justify-between items-center">
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-bold">{note.tag}</span>
+                          <button
+                            onClick={() => setDoctorNotes(doctorNotes.map(n => n.id === note.id ? { ...n, answered: !n.answered } : n))}
+                            className={note.answered ? 'text-green-600 font-bold' : 'text-slate-400 hover:text-slate-600'}
+                          >
+                            {note.answered ? '✓ 醫師已解答' : '標記為已解答'}
+                          </button>
+                        </div>
+                        <p className="font-medium text-slate-700">{note.question}</p>
+                      </div>
+                    ))
+                  )}
                 </div>
-                {newLogType === 'feeding' && (
+              </div>
+            )}
+
+            {/* Tab 5: AI Consultation */}
+            {activeTab === 'chat' && (
+              <div className={`p-4 rounded-2xl border flex flex-col h-[30rem] ${cardBg}`}>
+                <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm">
+                  <Icon name="alertTriangle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <div className="leading-snug">
+                    <span className="font-bold text-rose-800 block text-xs mb-0.5">⚠️ 醫療諮詢重要聲明：</span>
+                    <p className="text-rose-700">
+                      本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
+                  {chatMessages.map((msg, idx) => (
+                    <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="詢問矯正月齡計算、奶量、資料備份..."
+                    className="flex-1 px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  />
+                  <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors">送出</button>
+                </form>
+              </div>
+            )}
+          </main>
+
+          {/* Modal: Backup & Restore */}
+          {showBackupModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[90vh] overflow-y-auto ${cardBg}`}>
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                  <h3 className="font-bold text-base text-amber-600 flex items-center gap-1.5">
+                    <Icon name="database" className="w-5 h-5" />
+                    自訂寶寶檔案 & 歷史測量 備份與還原
+                  </h3>
+                  <button onClick={() => setShowBackupModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  {/* Export Block */}
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
+                    <h4 className="font-bold text-amber-900 flex items-center gap-1 text-xs">
+                      <Icon name="download" className="w-4 h-4 text-amber-600" />
+                      1. 匯出備份 (Export)
+                    </h4>
+                    <p className="text-slate-600 leading-relaxed">
+                      一鍵打包【寶寶個人資料 + 預產期生日 + 歷史測量列表 + 照護日誌】，下載為標準 JSON 檔案保存。
+                    </p>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        onClick={handleExportBackupJSON}
+                        className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-sm flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <Icon name="download" className="w-3.5 h-3.5" />
+                        下載 JSON 備份檔
+                      </button>
+                      <button
+                        onClick={handleCopyBackupToClipboard}
+                        className="py-2 px-3 border border-amber-300 bg-white hover:bg-amber-100 text-amber-800 font-bold rounded-xl flex items-center justify-center gap-1 transition-colors"
+                      >
+                        <Icon name="copy" className="w-3.5 h-3.5" />
+                        複製文字碼
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Import Block */}
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-3">
+                    <h4 className="font-bold text-blue-900 flex items-center gap-1 text-xs">
+                      <Icon name="upload" className="w-4 h-4 text-blue-600" />
+                      2. 匯入與還原 (Import & Restore)
+                    </h4>
+                    <p className="text-slate-600 leading-relaxed">
+                      更換手機、瀏覽器或跨裝置時，可上傳先前下載的 JSON 備份檔，系統將<strong className="font-bold text-blue-900">自動同步綁定矯正月齡</strong>與所有歷史數據。
+                    </p>
+
+                    <div>
+                      <label className="font-bold text-slate-700 block mb-1">方法 A：選擇 JSON 備份檔案</label>
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleFileUpload}
+                        className="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
+                      />
+                    </div>
+
+                    <div className="border-t border-blue-200 pt-2">
+                      <label className="font-bold text-slate-700 block mb-1">方法 B：貼上 JSON 備份文字碼</label>
+                      <textarea
+                        rows="3"
+                        value={pastedJson}
+                        onChange={(e) => setPastedJson(e.target.value)}
+                        placeholder="在此貼上備份 JSON 文字碼..."
+                        className="w-full p-2 border rounded-xl font-mono text-[11px] bg-white"
+                      ></textarea>
+                      <button
+                        onClick={handlePasteImport}
+                        className="w-full mt-1.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors"
+                      >
+                        貼上文字並同步還原
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-2 border-t text-right">
+                  <button
+                    onClick={() => setShowBackupModal(false)}
+                    className="px-4 py-2 border rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50"
+                  >
+                    關閉
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Modal: Add Care Log */}
+          {showAddLogModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className={`w-full max-w-sm p-5 rounded-2xl border shadow-lg ${cardBg}`}>
+                <h3 className="font-bold text-base mb-3">新增照護紀錄</h3>
+                <div className="space-y-3">
                   <div>
-                    <label className="text-xs font-bold text-slate-600 mb-1 block">奶量 (ml)</label>
+                    <label className="text-xs font-bold text-slate-600 mb-1 block">紀錄內容</label>
                     <input
-                      type="number"
-                      placeholder="如：60"
-                      value={newLogAmount}
-                      onChange={(e) => setNewLogAmount(e.target.value)}
+                      type="text"
+                      placeholder="如：配方奶 / 濕尿布 / 母乳"
+                      value={newLogDetail}
+                      onChange={(e) => setNewLogDetail(e.target.value)}
                       className="w-full p-2.5 border rounded-xl text-xs"
                     />
                   </div>
-                )}
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button onClick={() => setShowAddLogModal(false)} className="flex-1 py-2 text-xs border rounded-xl font-bold text-slate-500">取消</button>
-                <button onClick={handleAddLog} className="flex-1 py-2 text-xs bg-amber-500 text-white font-bold rounded-xl shadow-md">儲存</button>
+                  {newLogType === 'feeding' && (
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 mb-1 block">奶量 (ml)</label>
+                      <input
+                        type="number"
+                        placeholder="60"
+                        value={newLogAmount}
+                        onChange={(e) => setNewLogAmount(e.target.value)}
+                        className="w-full p-2.5 border rounded-xl text-xs"
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setShowAddLogModal(false)} className="flex-1 py-2 text-xs border rounded-xl font-bold text-slate-500">取消</button>
+                  <button onClick={handleAddLog} className="flex-1 py-2 text-xs bg-amber-500 text-white font-bold rounded-xl shadow-md">儲存</button>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Modal: Edit Profile */}
-        {showEditProfileModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[90vh] overflow-y-auto ${cardBg}`}>
-              <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="font-bold text-base text-amber-600 flex items-center gap-1.5">
-                  <Icon name="user" className="w-5 h-5" />
-                  自訂寶寶照護檔案
-                </h3>
-                <button onClick={() => setShowEditProfileModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
-                  <Icon name="x" className="w-5 h-5" />
-                </button>
-              </div>
+          {/* Modal: Edit Profile */}
+          {showEditProfileModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[90vh] overflow-y-auto ${cardBg}`}>
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                  <h3 className="font-bold text-base text-amber-600 flex items-center gap-1.5">
+                    <Icon name="user" className="w-5 h-5" />
+                    自訂寶寶照護檔案
+                  </h3>
+                  <button onClick={() => setShowEditProfileModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                    <Icon name="x" className="w-5 h-5" />
+                  </button>
+                </div>
 
-              <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
-                <div className="grid grid-cols-2 gap-2">
+                <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">寶寶暱稱 / 姓名</label>
+                      <input
+                        type="text"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                        placeholder="小太陽"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">生理性別</label>
+                      <select
+                        value={editFormData.gender}
+                        onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      >
+                        <option value="boy">👦 男寶</option>
+                        <option value="girl">👧 女寶</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">出生週數 (週)</label>
+                      <input
+                        type="number"
+                        value={editFormData.gestationalWeeks}
+                        onChange={(e) => setEditFormData({ ...editFormData, gestationalWeeks: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                        placeholder="31"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">出生體重 (g)</label>
+                      <input
+                        type="number"
+                        value={editFormData.birthWeight}
+                        onChange={(e) => setEditFormData({ ...editFormData, birthWeight: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                        placeholder="1450"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">實際出生日期</label>
+                      <input
+                        type="date"
+                        min="2020-01-01"
+                        max="2030-12-31"
+                        value={editFormData.birthDate}
+                        onChange={(e) => setEditFormData({ ...editFormData, birthDate: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">預產期 (算矯正月齡關鍵)</label>
+                      <input
+                        type="date"
+                        min="2020-01-01"
+                        max="2030-12-31"
+                        value={editFormData.dueDate}
+                        onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-2 mt-2">
+                    <span className="font-bold text-amber-700 block mb-2">📈 最新測量數據 (將同時記錄至歷史曲線)</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="block mb-1">體重(kg)</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={editFormData.currentWeight}
+                          onChange={(e) => setEditFormData({ ...editFormData, currentWeight: e.target.value })}
+                          className="w-full p-2 border rounded-xl"
+                          placeholder="3.2"
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-1">身長(cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={editFormData.currentHeight}
+                          onChange={(e) => setEditFormData({ ...editFormData, currentHeight: e.target.value })}
+                          className="w-full p-2 border rounded-xl"
+                          placeholder="48"
+                        />
+                      </div>
+                      <div>
+                        <label className="block mb-1">頭圍(cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={editFormData.currentHead}
+                          onChange={(e) => setEditFormData({ ...editFormData, currentHead: e.target.value })}
+                          className="w-full p-2 border rounded-xl"
+                          placeholder="34"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div>
-                    <label className="font-bold block mb-1">寶寶暱稱 / 姓名</label>
+                    <label className="font-bold block mb-1">每日目標總奶量 (ml)</label>
                     <input
-                      type="text"
-                      value={editFormData.name}
-                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      type="number"
+                      value={editFormData.targetDailyMilk}
+                      onChange={(e) => setEditFormData({ ...editFormData, targetDailyMilk: e.target.value })}
                       className="w-full p-2 border rounded-xl"
-                      placeholder="例：小太陽"
+                      placeholder="450"
                     />
                   </div>
-                  <div>
-                    <label className="font-bold block mb-1">生理性別</label>
-                    <select
-                      value={editFormData.gender}
-                      onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
-                      className="w-full p-2 border rounded-xl"
+
+                  <div className="flex gap-2 pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowEditProfileModal(false)}
+                      className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold hover:bg-slate-50 transition-colors"
                     >
-                      <option value="boy">👦 男寶</option>
-                      <option value="girl">👧 女寶</option>
-                    </select>
+                      取消
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition-colors"
+                    >
+                      儲存設定
+                    </button>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="font-bold block mb-1">出生週數 (週)</label>
-                    <input
-                      type="number"
-                      value={editFormData.gestationalWeeks}
-                      onChange={(e) => setEditFormData({ ...editFormData, gestationalWeeks: e.target.value })}
-                      className="w-full p-2 border rounded-xl"
-                      placeholder="例：31"
-                    />
+                  <div className="pt-2 border-t text-center">
+                    <button
+                      type="button"
+                      onClick={handleResetData}
+                      className="text-[11px] text-red-500 hover:underline font-medium"
+                    >
+                      🧹 重置 / 清空所有資料
+                    </button>
                   </div>
-                  <div>
-                    <label className="font-bold block mb-1">出生體重 (g)</label>
-                    <input
-                      type="number"
-                      value={editFormData.birthWeight}
-                      onChange={(e) => setEditFormData({ ...editFormData, birthWeight: e.target.value })}
-                      className="w-full p-2 border rounded-xl"
-                      placeholder="例：1450"
-                    />
-                  </div>
-                </div>
+                </form>
+              </div>
+            </div>
+          )}
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="font-bold block mb-1">實際出生日期</label>
-                    <input
-                      type="date"
-                      value={editFormData.birthDate}
-                      onChange={(e) => setEditFormData({ ...editFormData, birthDate: e.target.value })}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-                  <div>
-                    <label className="font-bold block mb-1">預產期 (算矯正月齡關鍵)</label>
-                    <input
-                      type="date"
-                      value={editFormData.dueDate}
-                      onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t pt-2 mt-2">
-                  <span className="font-bold text-amber-700 block mb-2">📈 最新測量數據 (將同時記錄至歷史曲線)</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div>
-                      <label className="block mb-1">體重(kg)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={editFormData.currentWeight}
-                        onChange={(e) => setEditFormData({ ...editFormData, currentWeight: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                        placeholder="3.2"
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1">身長(cm)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editFormData.currentHeight}
-                        onChange={(e) => setEditFormData({ ...editFormData, currentHeight: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                        placeholder="48"
-                      />
-                    </div>
-                    <div>
-                      <label className="block mb-1">頭圍(cm)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={editFormData.currentHead}
-                        onChange={(e) => setEditFormData({ ...editFormData, currentHead: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                        placeholder="34"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="font-bold block mb-1">每日目標總奶量 (ml)</label>
-                  <input
-                    type="number"
-                    value={editFormData.targetDailyMilk}
-                    onChange={(e) => setEditFormData({ ...editFormData, targetDailyMilk: e.target.value })}
-                    className="w-full p-2 border rounded-xl"
-                    placeholder="例：450"
-                  />
-                </div>
-
-                <div className="flex gap-2 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditProfileModal(false)}
-                    className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold hover:bg-slate-50 transition-colors"
-                  >
-                    稍後再填
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition-colors"
-                  >
-                    儲存設定
+          {/* Modal: Help & Instructions */}
+          {showHelpModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[85vh] overflow-y-auto ${cardBg}`}>
+                <div className="flex justify-between items-center mb-4 border-b pb-2">
+                  <h3 className="font-bold text-base text-amber-600 flex items-center gap-1.5">
+                    <Icon name="info" className="w-5 h-5" />
+                    📖 「巴掌小太陽」關於與特色說明
+                  </h3>
+                  <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="pt-2 border-t text-center">
+                <div className="space-y-3.5 text-xs leading-relaxed text-slate-600">
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+                    <h4 className="font-bold text-amber-900 text-xs flex items-center gap-1">
+                      🌟 「巴掌小太陽」核心特色
+                    </h4>
+                    <p className="text-amber-800 text-[11px]">專為早產兒家庭量身打造的溫暖照護與記錄工具。</p>
+                  </div>
+
+                  <ul className="space-y-2.5">
+                    <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border">
+                      <span className="text-base flex-shrink-0">🍼</span>
+                      <div>
+                        <strong className="text-slate-800 block">日常照護與生長紀錄</strong>
+                        輕鬆記錄每日餵奶量、尿布情況與體重，掌握寶寶每一天的微小進步。
+                      </div>
+                    </li>
+
+                    <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border">
+                      <span className="text-base flex-shrink-0">🌱</span>
+                      <div>
+                        <strong className="text-slate-800 block">發展里程碑清單</strong>
+                        精選關鍵成長指標（如俯臥抬頭、視覺與聽覺反應等），幫助爸媽安心追蹤寶寶的發展。
+                      </div>
+                    </li>
+
+                    <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border">
+                      <span className="text-base flex-shrink-0">⚙️</span>
+                      <div>
+                        <strong className="text-slate-800 block">彈性雙月齡切換</strong>
+                        支援對齊【預產期】之矯正月齡與【實際出生日】之實際月齡，並可自由切換生長曲線圖表對照。
+                      </div>
+                    </li>
+
+                    <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border">
+                      <span className="text-base flex-shrink-0">📄</span>
+                      <div>
+                        <strong className="text-slate-800 block">一鍵匯出 PDF 報表</strong>
+                        看診或回診時，能直接將記錄匯出成整潔清晰的 PDF，方便與醫療團隊溝通。
+                      </div>
+                    </li>
+
+                    <li className="flex items-start gap-2 bg-slate-50 p-2.5 rounded-xl border">
+                      <span className="text-base flex-shrink-0">🤖</span>
+                      <div>
+                        <strong className="text-slate-800 block">暖心照護叮嚀與 AI 諮詢</strong>
+                        內建實用的照護小叮嚀與 AI 諮詢助手，隨時陪伴爸媽走過每個焦慮時刻。
+                      </div>
+                    </li>
+                  </ul>
+
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl space-y-1 text-slate-700">
+                    <h4 className="font-bold text-blue-900 text-xs flex items-center gap-1">
+                      📈 生長曲線與資料備份提示
+                    </h4>
+                    <p className="text-[11px] leading-relaxed">
+                      ・<strong>矯正月齡：</strong>早產發育均依「預產期」為 0 個月基準，生長曲線圖表與歷史數據皆即時對齊。<br />
+                      ・<strong>備份還原：</strong>點擊右上角「備份/還原」即可匯出 JSON 檔，跨裝置或換手機時可一鍵還原數據。
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 text-[11px] leading-relaxed space-y-1.5">
+                    <div className="font-bold flex items-center gap-1 text-xs text-rose-800">
+                      <span>☀️ 溫馨陪伴理念</span>
+                    </div>
+                    <p>
+                      這款工具不帶任何商業氣息與複雜條款，只希望能靜靜地陪伴需要的人。如果你身邊也有早產兒家庭，或是剛好需要這樣的記錄工具，歡迎直接取用。
+                    </p>
+                    <p className="font-bold text-rose-800 pt-1 border-t border-rose-200">
+                      願每一位像小太陽一樣勇敢的孩子，都能在大家的守護下健康平安地長大！ ❤️
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-5 text-center">
                   <button
-                    type="button"
-                    onClick={handleResetData}
-                    className="text-[11px] text-red-500 hover:underline font-medium"
+                    onClick={() => setShowHelpModal(false)}
+                    className="w-full py-2.5 bg-amber-500 text-white font-bold rounded-xl text-xs shadow-md hover:bg-amber-600 transition-colors"
                   >
-                    🧹 重置 / 清空所有資料
+                    了解，開始使用！
                   </button>
                 </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modal: Help & Instructions */}
-        {showHelpModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[85vh] overflow-y-auto ${cardBg}`}>
-              <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="font-bold text-base text-amber-600 flex items-center gap-1.5">
-                  <Icon name="info" className="w-5 h-5" />
-                  📖 巴掌小太陽 - 矯正月齡使用說明
-                </h3>
-                <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-slate-600">
-                  <Icon name="x" className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4 text-xs leading-relaxed text-slate-600">
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <h4 className="font-bold text-amber-800 text-xs mb-1">📈 1. 為什麼生長曲線 X 軸綁定矯正月齡？</h4>
-                  <p>早產寶寶提早離開母體，身體組織發育需依據原本的「預產期」（40週）為起跑點（0個月）。若用實際出生日比較會嚴重低估寶寶發育。本系統生長曲線圖 X 軸嚴格綁定【預產期即為 0 個月】，讓家長安心掌握追趕成長進度！</p>
-                </div>
-
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl">
-                  <h4 className="font-bold text-amber-800 text-xs mb-1">📄 2. 一鍵匯出 PDF 門診報告</h4>
-                  <p>點擊右上角「匯出 PDF」可將矯正月齡成長曲線紀錄、看診提問及每日照護摘要產出為完整 PDF 報告，帶給門診醫師診斷更有效率。</p>
-                </div>
-              </div>
-
-              <div className="mt-5 text-center">
-                <button
-                  onClick={() => setShowHelpModal(false)}
-                  className="w-full py-2.5 bg-amber-500 text-white font-bold rounded-xl text-xs shadow-md hover:bg-amber-600 transition-colors"
-                >
-                  了解，開始使用！
-                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Printable Off-screen PDF Template */}
-        <div id="pdf-report-content" style={{ display: 'none' }} className="p-8 bg-white text-slate-800 font-sans leading-relaxed text-sm max-w-2xl mx-auto">
-          <div className="border-b-2 border-amber-500 pb-4 mb-6 flex justify-between items-end">
-            <div>
-              <h1 className="text-xl font-bold text-amber-600">☀️ 巴掌小太陽 - 早產兒照護與矯正月齡生長報告</h1>
-              <p className="text-xs text-slate-500 mt-1">匯出日期：{new Date().toLocaleDateString('zh-TW')} {new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</p>
-            </div>
-          </div>
-
-          {/* Baby Info Section */}
-          <div className="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
-            <h2 className="text-sm font-bold text-amber-800 mb-2 border-b border-amber-200 pb-1">👶 寶寶基本資料</h2>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div><span className="font-bold text-slate-600">寶寶暱稱：</span>{babyInfo.name || '未填寫'} ({babyInfo.gender === 'girl' ? '女寶' : '男寶'})</div>
-              <div><span className="font-bold text-slate-600">出生週數：</span>{babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
-              <div><span className="font-bold text-slate-600">出生體重：</span>{babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'}</div>
-              <div><span className="font-bold text-slate-600">實際出生日：</span>{babyInfo.birthDate || '未填寫'}</div>
-              <div><span className="font-bold text-slate-600">預產期：</span>{babyInfo.dueDate || '未填寫'}</div>
-              <div><span className="font-bold text-slate-600">實際月齡：</span>{ageData.chronoText}</div>
-              <div className="col-span-2 text-amber-700 font-bold mt-1"><span className="text-slate-600">⚡️ 矯正年齡（圖表X軸）：</span>{ageData.correctedText}</div>
-            </div>
-          </div>
-
-          {/* Growth History Table */}
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">📈 歷史生長紀錄 (綁定矯正月齡)</h2>
-            {growthHistory.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">尚無生長紀錄。</p>
-            ) : (
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 border-b">
-                    <th className="p-1.5">測量日期</th>
-                    <th className="p-1.5">對應矯正月齡</th>
-                    <th className="p-1.5">體重 (kg)</th>
-                    <th className="p-1.5">身長 (cm)</th>
-                    <th className="p-1.5">頭圍 (cm)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {growthHistory.map((rec) => {
-                    const cM = getCorrectedAgeAtDate(rec.date, babyInfo.dueDate);
-                    const cText = cM > 24 ? "已滿 2 歲（改看實際年齡）" : cM < 0 ? `預產期前` : `矯正 ${cM.toFixed(1)} 個月`;
-                    return (
-                      <tr key={rec.id} className="border-b">
-                        <td className="p-1.5 font-bold">{rec.date}</td>
-                        <td className="p-1.5 font-bold text-amber-700">{cText}</td>
-                        <td className="p-1.5">{rec.weight || '—'}</td>
-                        <td className="p-1.5">{rec.height || '—'}</td>
-                        <td className="p-1.5">{rec.head || '—'}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          {/* Doctor Questions */}
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🏥 看診提問與醫師回覆紀錄</h2>
-            {doctorNotes.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">尚無提問備忘紀錄。</p>
-            ) : (
-              <div className="space-y-2 text-xs">
-                {doctorNotes.map((note, index) => (
-                  <div key={note.id || index} className="p-2 border rounded-lg bg-slate-50 flex justify-between items-center">
-                    <span className="font-medium text-slate-700">問題 {index + 1}：{note.question}</span>
-                    <span className={`font-bold ${note.answered ? 'text-green-600' : 'text-amber-600'}`}>
-                      {note.answered ? '[已獲得解答]' : '[待詢問/未解答]'}
-                    </span>
-                  </div>
-                ))}
+          {/* Printable Off-screen PDF Template */}
+          <div id="pdf-report-content" style={{ display: 'none' }} className="p-8 bg-white text-slate-800 font-sans leading-relaxed text-sm max-w-2xl mx-auto">
+            <div className="border-b-2 border-amber-500 pb-4 mb-6 flex justify-between items-end">
+              <div>
+                <h1 className="text-xl font-bold text-amber-600">☀️ 巴掌小太陽 - 早產兒照護與矯正月齡生長報告</h1>
+                <p className="text-xs text-slate-500 mt-1">匯出日期：{new Date().toLocaleDateString('zh-TW')} {new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}</p>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* Today's Care Summary */}
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🍼 今日照護紀錄摘要 (總奶量: {todayTotalMilk} ml)</h2>
-            {logs.length === 0 ? (
-              <p className="text-xs text-slate-400 italic">今日尚未新增照護紀錄。</p>
-            ) : (
-              <table className="w-full text-xs text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 border-b">
-                    <th className="p-1.5">時間</th>
-                    <th className="p-1.5">內容</th>
-                    <th className="p-1.5">份量</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.map((log) => (
-                    <tr key={log.id} className="border-b">
-                      <td className="p-1.5 font-bold text-amber-700">{log.time}</td>
-                      <td className="p-1.5">{log.detail}</td>
-                      <td className="p-1.5">{log.amount || '—'}</td>
+            <div className="mb-6 p-4 bg-amber-50 rounded-xl border border-amber-200">
+              <h2 className="text-sm font-bold text-amber-800 mb-2 border-b border-amber-200 pb-1">👶 寶寶基本資料</h2>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="font-bold text-slate-600">寶寶暱稱：</span>{babyInfo.name || '未填寫'} ({babyInfo.gender === 'girl' ? '女寶' : '男寶'})</div>
+                <div><span className="font-bold text-slate-600">出生週數：</span>{babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
+                <div><span className="font-bold text-slate-600">出生體重：</span>{babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'}</div>
+                <div><span className="font-bold text-slate-600">實際出生日：</span>{babyInfo.birthDate || '未填寫'}</div>
+                <div><span className="font-bold text-slate-600">預產期：</span>{babyInfo.dueDate || '未填寫'}</div>
+                <div><span className="font-bold text-slate-600">實際月齡：</span>{ageData.chronoText}</div>
+                <div className="col-span-2 text-amber-700 font-bold mt-1"><span className="text-slate-600">⚡️ 矯正年齡：</span>{ageData.correctedText}</div>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">📈 歷史生長紀錄 (綁定矯正月齡)</h2>
+              {growthHistory.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">尚無生長紀錄。</p>
+              ) : (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 border-b">
+                      <th className="p-1.5">測量日期</th>
+                      <th className="p-1.5">對應矯正月齡</th>
+                      <th className="p-1.5">體重 (kg)</th>
+                      <th className="p-1.5">身長 (cm)</th>
+                      <th className="p-1.5">頭圍 (cm)</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+                  </thead>
+                  <tbody>
+                    {growthHistory.map((rec) => {
+                      const cleanD = sanitizeDateStr(rec.date);
+                      const cM = getCorrectedAgeAtDate(cleanD, babyInfo.dueDate, babyInfo.birthDate);
+                      const cText = cM > 24 ? "已滿 2 歲" : cM < 0 ? `預產期前` : `矯正 ${cM.toFixed(1)} 個月`;
+                      return (
+                        <tr key={rec.id} className="border-b">
+                          <td className="p-1.5 font-bold">{cleanD}</td>
+                          <td className="p-1.5 font-bold text-amber-700">{cText}</td>
+                          <td className="p-1.5">{rec.weight || '—'}</td>
+                          <td className="p-1.5">{rec.height || '—'}</td>
+                          <td className="p-1.5">{rec.head || '—'}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
 
-          <div className="mt-8 pt-4 border-t text-center text-[10px] text-slate-400">
-            巴掌小太陽 - 早產兒照護與矯正月齡生長曲線小幫手 ☀️ | 看診時可提供給兒科與新生兒科醫師參考
+            <div className="mb-6">
+              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🏥 看診提問與醫師回覆紀錄</h2>
+              {doctorNotes.length === 0 ? (
+                <p className="text-xs text-slate-400 italic">尚無提問備忘紀錄。</p>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  {doctorNotes.map((note, index) => (
+                    <div key={note.id || index} className="p-2 border rounded-lg bg-slate-50 flex justify-between items-center">
+                      <span className="font-medium text-slate-700">問題 {index + 1}：{note.question}</span>
+                      <span className={`font-bold ${note.answered ? 'text-green-600' : 'text-amber-600'}`}>
+                        {note.answered ? '[已獲得解答]' : '[待詢問/未解答]'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 pt-4 border-t text-center text-[10px] text-slate-400">
+              巴掌小太陽 - 早產兒照護與矯正月齡生長曲線小幫手 ☀️
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  const root = ReactDOM.createRoot(document.getElementById('root'));
-  root.render(<App />);
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
   </script>
 </body>
 </html>
