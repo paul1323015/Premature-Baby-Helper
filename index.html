@@ -26,7 +26,7 @@
     const Icon = ({ name, className = "w-5 h-5", ...props }) => {
       const icons = {
         sun: <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" />,
-        edit: <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />,
+        edit: <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 2 2h14a2 2 0 0 2 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />,
         heart: <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />,
         calendar: <path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />,
         droplet: <path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 15.1 5 17 5 15a7 7 0 0 0 7 7z" />,
@@ -611,12 +611,13 @@
         };
       });
 
+      /* 【修正處】：使全新使用者或重新整理時，無資料狀態維持為乾淨的空陣列 [] */
       const [growthHistory, setGrowthHistory] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_growth_history_v1');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
               return parsed.map(item => ({
                 ...item,
                 date: sanitizeDateStr(item.date)
@@ -624,10 +625,7 @@
             }
           } catch (e) {}
         }
-        const initialDate = babyInfo.birthDate ? sanitizeDateStr(babyInfo.birthDate) : new Date().toISOString().slice(0, 10);
-        return [
-          { id: 1, date: initialDate, weight: babyInfo.birthWeight ? (parseFloat(babyInfo.birthWeight) > 30 ? (parseFloat(babyInfo.birthWeight)/1000).toFixed(2) : babyInfo.birthWeight) : '1.45', height: '42', head: '30' }
-        ];
+        return [];
       });
 
       const [logs, setLogs] = React.useState(() => {
