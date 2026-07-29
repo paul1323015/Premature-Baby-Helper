@@ -611,7 +611,6 @@
         };
       });
 
-      /* 【修正處】：使全新使用者或重新整理時，無資料狀態維持為乾淨的空陣列 [] */
       const [growthHistory, setGrowthHistory] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_growth_history_v1');
         if (saved) {
@@ -1707,6 +1706,22 @@
                     <p className="text-[11px] leading-relaxed">
                       ・<strong>矯正月齡：</strong>早產發育均依「預產期」為 0 個月基準，生長曲線圖表與歷史數據皆即時對齊。<br />
                       ・<strong>備份還原：</strong>點擊右上角「備份/還原」即可匯出 JSON 檔，跨裝置或換手機時可一鍵還原數據。
+                    </p>
+                  </div>
+
+                  {/* 🔒 獨立隱私權與資料安全保護聲明區塊 */}
+                  <div className="p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-xl text-emerald-900 text-[11px] leading-relaxed space-y-2 shadow-sm">
+                    <div className="font-bold flex items-center gap-1.5 text-xs text-emerald-800 border-b border-emerald-200/60 pb-1.5">
+                      <span>🔒 隱私權與資料安全保護聲明</span>
+                    </div>
+                    <p>
+                      <strong>巴掌小太陽承諾：</strong>我們無比重視您與寶寶的隱私。本應用程式（網頁）採用瀏覽器本地快取技術（Local Storage）。您所輸入的寶寶姓名、生日、預產期，以及每一筆體重、身高、頭圍等日常照護紀錄，全部都只會儲存在您自己的手機或電腦瀏覽器中。
+                    </p>
+                    <p>
+                      我們的網頁伺服器絕對不會收集、傳輸、或留存任何您填寫的隱私資料。整個操作過程完全在您的終端設備獨立執行，網路上沒有任何人能窺探您寶寶的成長數據。
+                    </p>
+                    <p>
+                      『巴掌小太陽』純粹為公益與照護輔助而生。沒有會員登入、沒有廣告追蹤，更沒有資料外洩的風險。您可以百分之百放心地將這裡當作專屬您與寶寶的安心育兒避風港。尊重隱私，請安心使用。
                     </p>
                   </div>
 
