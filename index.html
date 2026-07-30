@@ -856,6 +856,11 @@
       };
 
       const handleResetData = () => {
+        const confirmed = window.confirm(
+          "警告：此操作將清除所有寶寶照護資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？"
+        );
+        if (!confirmed) return;
+
         localStorage.removeItem('sun_baby_profile_v5');
         localStorage.removeItem('sun_baby_growth_history_v1');
         localStorage.removeItem('sun_baby_logs_v1');
@@ -1100,6 +1105,7 @@
               </div>
             </div>
 
+            {}
             {/* Navigation Tabs */}
             <div className="flex space-x-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
               {[
@@ -1340,6 +1346,7 @@
             )}
           </main>
 
+          {}
           {/* Modal: Backup & Restore */}
           {showBackupModal && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
