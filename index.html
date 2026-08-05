@@ -1641,6 +1641,7 @@
           )}
 
           {/* Modal: Help & Instructions */}
+          {}
           {showHelpModal && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[85vh] overflow-y-auto ${cardBg}`}>
@@ -1760,6 +1761,11 @@
                       本應用程式由早產兒創作者亮愷為公益個人開發，免費提供予所有早產兒家庭使用。
                     </p>
                   </div>
+
+                  {/* 另外只加入開發日期：2026/7/27 這行文字 */}
+                  <div className="text-[11px] text-slate-500 pt-2 text-center border-t border-slate-100 font-medium">
+                    開發日期：2026/7/27
+                  </div>
                 </div>
 
                 <div className="mt-5 text-center">
@@ -1791,60 +1797,74 @@
                 <div><span className="font-bold text-slate-600">出生體重：</span>{babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'}</div>
                 <div><span className="font-bold text-slate-600">實際出生日：</span>{babyInfo.birthDate || '未填寫'}</div>
                 <div><span className="font-bold text-slate-600">預產期：</span>{babyInfo.dueDate || '未填寫'}</div>
-                <div><span className="font-bold text-slate-600">實際月齡：</span>{ageData.chronoText}</div>
-                <div className="col-span-2 text-amber-700 font-bold mt-1"><span className="text-slate-600">⚡️ 矯正年齡：</span>{ageData.correctedText}</div>
+                <div><span className="font-bold text-slate-600">當前算得矯正月齡：</span>{ageData.correctedText}</div>
               </div>
             </div>
 
             <div className="mb-6">
-              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">📈 歷史生長紀錄 (綁定矯正月齡)</h2>
-              {growthHistory.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">尚無生長紀錄。</p>
-              ) : (
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-100 border-b">
-                      <th className="p-1.5">測量日期</th>
-                      <th className="p-1.5">對應矯正月齡</th>
-                      <th className="p-1.5">體重 (kg)</th>
-                      <th className="p-1.5">身長 (cm)</th>
-                      <th className="p-1.5">頭圍 (cm)</th>
+              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">📈 歷史測量紀錄數據點列表</h2>
+              <table className="w-full text-xs text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 border-b">
+                    <th className="p-2 border font-bold">測量日期</th>
+                    <th className="p-2 border font-bold">對應矯正月齡</th>
+                    <th className="p-2 border font-bold">體重 (kg)</th>
+                    <th className="p-2 border font-bold">身長 (cm)</th>
+                    <th className="p-2 border font-bold">頭圍 (cm)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {growthHistory.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="p-3 text-center text-slate-400 border">尚無歷史測量紀錄</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {growthHistory.map((rec) => {
-                      const cleanD = sanitizeDateStr(rec.date);
-                      const cM = getCorrectedAgeAtDate(cleanD, babyInfo.dueDate, babyInfo.birthDate);
-                      const cText = cM > 24 ? "已滿 2 歲" : cM < 0 ? `預產期前 ${Math.abs(Math.round(cM * 30.4375))} 天` : `矯正 ${Math.floor(cM)} 個月 ${Math.floor((cM % 1) * 30.4375)} 天`;
+                  ) : (
+                    growthHistory.map((item) => {
+                      const cleanDate = sanitizeDateStr(item.date);
+                      const correctedM = getCorrectedAgeAtDate(cleanDate, babyInfo.dueDate, babyInfo.birthDate);
+                      let corrFormatted = "";
+                      if (correctedM > 24) {
+                        corrFormatted = "已滿2歲";
+                      } else if (correctedM < 0) {
+                        corrFormatted = `預產期前${Math.abs(Math.round(correctedM * 30.4375))}天`;
+                      } else {
+                        corrFormatted = `矯正 ${Math.floor(correctedM)} 個月 ${Math.floor((correctedM % 1) * 30.4375)} 天`;
+                      }
+
                       return (
-                        <tr key={rec.id} className="border-b">
-                          <td className="p-1.5 font-medium">{cleanD}</td>
-                          <td className="p-1.5 text-amber-700 font-bold">{cText}</td>
-                          <td className="p-1.5">{rec.weight ? `${rec.weight} kg` : '-'}</td>
-                          <td className="p-1.5">{rec.height ? `${rec.height} cm` : '-'}</td>
-                          <td className="p-1.5">{rec.head ? `${rec.head} cm` : '-'}</td>
+                        <tr key={item.id} className="border-b">
+                          <td className="p-2 border">{cleanDate}</td>
+                          <td className="p-2 border">{corrFormatted}</td>
+                          <td className="p-2 border">{item.weight || '-'}</td>
+                          <td className="p-2 border">{item.height || '-'}</td>
+                          <td className="p-2 border">{item.head || '-'}</td>
                         </tr>
                       );
-                    })}
-                  </tbody>
-                </table>
-              )}
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
 
             <div className="mb-6">
-              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🏥 門診諮詢問題備忘</h2>
-              {doctorNotes.length === 0 ? (
-                <p className="text-xs text-slate-400 italic">尚無門診諮詢問題。</p>
-              ) : (
-                <ul className="list-disc pl-5 text-xs space-y-1">
-                  {doctorNotes.map(n => (
-                    <li key={n.id} className="text-slate-700">
-                      <span className={n.answered ? "line-through text-slate-400" : "font-medium"}>{n.question}</span>
-                      {n.answered && <span className="text-green-600 text-[10px] ml-2">(已解答)</span>}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <h2 className="text-sm font-bold text-slate-800 mb-2 border-b pb-1">🏥 看診備忘與問題紀錄</h2>
+              <div className="space-y-2 text-xs">
+                {doctorNotes.length === 0 ? (
+                  <p className="text-slate-400">尚無門診問題備忘</p>
+                ) : (
+                  doctorNotes.map((note, index) => (
+                    <div key={note.id} className="p-2 border rounded">
+                      <span className="font-bold">{index + 1}. [{note.tag}] </span>
+                      <span>{note.question}</span>
+                      <span className="ml-2 text-slate-400">({note.answered ? '已解答' : '待解答'})</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="text-[10px] text-slate-400 border-t pt-2 text-center">
+              本報告由「巴掌小太陽·早產兒照護小幫手」自動生成。數據僅供看診評估參考。
             </div>
           </div>
         </div>
