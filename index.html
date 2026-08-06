@@ -849,7 +849,7 @@
                 ...n,
                 category: noteCategory,
                 title: noteTitle.slice(0, 30).trim(),
-                content: noteContent.slice(0, 300).trim(),
+                content: noteContent.slice(0, 1000).trim(),
               };
             }
             return n;
@@ -859,8 +859,8 @@
           setNoteContent('');
           showToast('✏️ 已成功更新筆記！');
         } else {
-          if (notes.length >= 50) {
-            showToast('⚠️ 筆記總數已達 50 條上限，請先刪除舊筆記！');
+          if (notes.length >= 1000) {
+            showToast('⚠️ 筆記總數已達 1000 條上限，請先刪除舊筆記！');
             return;
           }
 
@@ -871,7 +871,7 @@
             id: Date.now(),
             category: noteCategory,
             title: noteTitle.slice(0, 30).trim(),
-            content: noteContent.slice(0, 300).trim(),
+            content: noteContent.slice(0, 1000).trim(),
             createdAt: dateStr
           };
 
@@ -999,10 +999,12 @@
 
       const handleDownloadPDF = () => {
         setIsExporting(true);
+        showToast('📄 正在生成 PDF 報告，請稍候...');
         setTimeout(() => {
           const element = document.getElementById('pdf-report-content');
           if (!element) {
             setIsExporting(false);
+            showToast('❌ 匯出失敗，無法找到 PDF 報告內容組件。');
             return;
           }
 
@@ -1010,7 +1012,7 @@
 
           const opt = {
             margin: 10,
-            filename: `${babyInfo.name || '寶寶'}_門診照護與生長報告_${new Date().toISOString().slice(0, 10)}.pdf`,
+            filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${new Date().toISOString().slice(0, 10)}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -1020,10 +1022,12 @@
             window.html2pdf().set(opt).from(element).save().then(() => {
               element.style.display = 'none';
               setIsExporting(false);
+              showToast('✅ PDF 報告已順利匯出下載！');
             }).catch((err) => {
               console.error(err);
               element.style.display = 'none';
               setIsExporting(false);
+              showToast('❌ PDF 產生過程中發生錯誤。');
             });
           } else {
             window.print();
@@ -1102,7 +1106,7 @@
           if (userText.includes('備份') || userText.includes('還原') || userText.includes('匯入') || userText.includes('匯出')) {
             replyText = `點擊上方選單列的【備份/還原】按鈕，即可將 ${babyName} 的「基本設定檔」、「歷史測量列表」以及「筆記本」完整下載為 JSON 檔。更換手機或瀏覽器時貼上即可秒速還原！`;
           } else if (userText.includes('筆記') || userText.includes('記')) {
-            replyText = `點擊頁面頂部的【筆記本】按鈕即可快速紀錄【回診提問】、【成長大事記】與【其他備忘】。單篇上限 300 字，最多可儲存 50 條筆記，並隨時支援編輯與覆蓋更新喔！`;
+            replyText = `點擊頁面頂部的【筆記本】按鈕即可快速紀錄【回診提問】、【成長大事記】與【其他備忘】。單篇上限 1000 字，最多可儲存 1000 條筆記，並隨時支援編輯與覆蓋更新喔！`;
           } else if (userText.includes('矯正') || userText.includes('算') || userText.includes('曲線')) {
             replyText = `評估 ${babyName} 的身高、體重與頭圍時，請統一查看【生長與發展】分頁的生長曲線圖，其 X 軸已鎖定預產期算的【矯正月齡】（目前為 ${ageData.correctedText}）。`;
           } else if (userText.includes('奶量') || userText.includes('喝')) {
@@ -1469,6 +1473,274 @@
             )}
           </main>
 
+          {/* Printable PDF Report Element (Hidden on screen, target for html2pdf) */}
+          <div id="pdf-report-content" className="hidden p-8 bg-white text-slate-800 space-y-6 font-sans">
+            <div className="border-b pb-4 flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-amber-700">巴掌小太陽·早產兒門診照護與生長報告</h1>
+                <p className="text-xs text-slate-500 mt-1">匯出日期：{new Date().toISOString().slice(0, 10)}</p>
+              </div>
+              <div className="text-right">
+                <span className="text-lg font-bold text-amber-800">{babyInfo.name || '小太陽'} 寶寶</span>
+                <p className="text-xs text-slate-500">{babyInfo.gender === 'girl' ? '👧 女寶' : '👦 男寶'} | {ageData.correctedText}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200">
+              <div><b>實際出生日：</b> {babyInfo.birthDate || '未填寫'}</div>
+              <div><b>預產期：</b> {babyInfo.dueDate || '未填寫'}</div>
+              <div><b>出生週數：</b> {babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
+              <div><b>出生體重：</b> {babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'}</div>
+              <div><b>實際月齡：</b> {ageData.chronoText}</div>
+              <div><b>當前體重/身長/頭圍：</b> {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / {babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'} / {babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}</div>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📈 歷史測量紀錄表</h3>
+              {growthHistory.length === 0 ? (
+                <p className="text-xs text-slate-400">尚無測量紀錄</p>
+              ) : (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 border-b">
+                      <th className="p-2 border-b">日期</th>
+                      <th className="p-2 border-b">體重 (kg)</th>
+                      <th className="p-2 border-b">身長 (cm)</th>
+                      <th className="p-2 border-b">頭圍 (cm)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {growthHistory.map((rec) => (
+                      <tr key={rec.id} className="border-b">
+                        <td className="p-2">{rec.date}</td>
+                        <td className="p-2">{rec.weight || '—'}</td>
+                        <td className="p-2">{rec.height || '—'}</td>
+                        <td className="p-2">{rec.head || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">🏥 看診備忘與門診提問</h3>
+              {doctorNotes.length === 0 ? (
+                <p className="text-xs text-slate-400">無門診提問紀錄</p>
+              ) : (
+                <ul className="space-y-1.5 text-xs">
+                  {doctorNotes.map(n => (
+                    <li key={n.id} className="p-2 bg-slate-50 border rounded-lg flex justify-between items-center">
+                      <span>• {n.question}</span>
+                      <span className="font-bold text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-700">{n.answered ? '✓ 醫師已解答' : '待詢問'}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📝 筆記本重點摘要</h3>
+              {notes.length === 0 ? (
+                <p className="text-xs text-slate-400">無筆記紀錄</p>
+              ) : (
+                <div className="space-y-2 text-xs">
+                  {notes.map(n => (
+                    <div key={n.id} className="p-2.5 bg-slate-50 border rounded-lg space-y-1">
+                      <div className="font-bold text-amber-800">【{n.category}】{n.title} <span className="text-[10px] font-normal text-slate-400">({n.createdAt})</span></div>
+                      {n.content && <p className="text-slate-600 whitespace-pre-wrap">{n.content}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="text-center text-[10px] text-slate-400 pt-6 border-t">
+              本報告由「巴掌小太陽 · 早產兒照護小幫手」自動生成，僅供看診時輔助醫療團隊參考。
+            </div>
+          </div>
+
+          {/* Edit Baby Profile Modal */}
+          {showEditProfileModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-amber-700">修改寶寶基本資料</h3>
+                  <button onClick={() => setShowEditProfileModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+                <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
+                  <div>
+                    <label className="font-bold block mb-1">寶寶暱稱</label>
+                    <input
+                      type="text"
+                      placeholder="例如：小太陽"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="w-full p-2 border rounded-xl"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">生理性別</label>
+                      <select
+                        value={editFormData.gender}
+                        onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
+                        className="w-full p-2 border rounded-xl bg-white"
+                      >
+                        <option value="boy">👦 男寶</option>
+                        <option value="girl">👧 女寶</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">出生週數(週)</label>
+                      <input
+                        type="number"
+                        placeholder="例如：30"
+                        value={editFormData.gestationalWeeks}
+                        onChange={(e) => setEditFormData({ ...editFormData, gestationalWeeks: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">實際出生日期</label>
+                      <input
+                        type="date"
+                        value={editFormData.birthDate}
+                        onChange={(e) => setEditFormData({ ...editFormData, birthDate: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">預產期 (算矯正月齡)</label>
+                      <input
+                        type="date"
+                        value={editFormData.dueDate}
+                        onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="font-bold block mb-1">最新體重(kg)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        placeholder="3.2"
+                        value={editFormData.currentWeight}
+                        onChange={(e) => setEditFormData({ ...editFormData, currentWeight: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">身長(cm)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        placeholder="48"
+                        value={editFormData.currentHeight}
+                        onChange={(e) => setEditFormData({ ...editFormData, currentHeight: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                    <div>
+                      <label className="font-bold block mb-1">頭圍(cm)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        placeholder="34"
+                        value={editFormData.currentHead}
+                        onChange={(e) => setEditFormData({ ...editFormData, currentHead: e.target.value })}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">每日目標總奶量 (ml)</label>
+                    <input
+                      type="number"
+                      placeholder="例如：450"
+                      value={editFormData.targetDailyMilk}
+                      onChange={(e) => setEditFormData({ ...editFormData, targetDailyMilk: e.target.value })}
+                      className="w-full p-2 border rounded-xl"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button type="button" onClick={() => setShowEditProfileModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
+                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存設定</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Add Care Log Modal */}
+          {showAddLogModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-amber-700">新增今日照護紀錄</h3>
+                  <button onClick={() => setShowAddLogModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+                <form onSubmit={handleAddLog} className="space-y-3 text-xs">
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewLogType('feeding')}
+                      className={`flex-1 py-2 rounded-xl font-bold border transition-colors ${newLogType === 'feeding' ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-50 text-slate-600'}`}
+                    >
+                      🍼 餵奶
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewLogType('diaper')}
+                      className={`flex-1 py-2 rounded-xl font-bold border transition-colors ${newLogType === 'diaper' ? 'bg-blue-500 text-white border-blue-500' : 'bg-slate-50 text-slate-600'}`}
+                    >
+                      👶 尿布
+                    </button>
+                  </div>
+
+                  {newLogType === 'feeding' && (
+                    <div>
+                      <label className="font-bold block mb-1">餵奶量 (ml)</label>
+                      <input
+                        type="number"
+                        required
+                        placeholder="例如：60"
+                        value={newLogAmount}
+                        onChange={(e) => setNewLogAmount(e.target.value)}
+                        className="w-full p-2 border rounded-xl"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="font-bold block mb-1">備註/細節</label>
+                    <input
+                      type="text"
+                      placeholder={newLogType === 'feeding' ? '母乳 / 配方奶 / 瓶餵' : '濕尿布 / 便便 / 量多'}
+                      value={newLogDetail}
+                      onChange={(e) => setNewLogDetail(e.target.value)}
+                      className="w-full p-2 border rounded-xl"
+                    />
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button type="button" onClick={() => setShowAddLogModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
+                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存紀錄</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Notebook Modal */}
           {showNotesModal && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className={`w-full max-w-lg p-5 rounded-2xl border shadow-xl max-h-[90vh] flex flex-col ${cardBg}`}>
@@ -1481,7 +1753,7 @@
                       <h3 className="font-bold text-base text-amber-800 flex items-center gap-2">
                         筆記本
                         <span className="text-[11px] font-normal px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">
-                          已存 {notes.length} / 50 條
+                          已存 {notes.length} / 1000 條
                         </span>
                       </h3>
                       <p className="text-[11px] text-slate-400">家長快速紀錄門診問題、大事記與備忘</p>
@@ -1545,130 +1817,94 @@
 
                     <div>
                       <label className="block text-[11px] font-bold text-slate-600 mb-1 flex justify-between">
-                        <span>筆記內容 (純文字，最多 300 字)</span>
-                        <span className={`text-[10px] ${noteContent.length >= 300 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
-                          {noteContent.length}/300
+                        <span>筆記內容 (純文字，最多 1000 字)</span>
+                        <span className={`text-[10px] ${noteContent.length >= 1000 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                          {noteContent.length}/1000
                         </span>
                       </label>
                       <textarea
                         rows={3}
-                        maxLength={300}
+                        maxLength={1000}
                         placeholder="在此輸入筆記細節..."
                         value={noteContent}
                         onChange={(e) => setNoteContent(e.target.value)}
-                        className="w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
-                      ></textarea>
+                        className="w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      />
                     </div>
 
-                    <div className="flex justify-between items-center pt-1">
-                      <span className="text-[10px] text-slate-400">
-                        {editingNoteId !== null
-                          ? '點擊按鈕後將直接覆蓋此條筆記'
-                          : notes.length >= 50
-                          ? '⚠️ 容量已滿，請先刪除舊筆記'
-                          : `還可以儲存 ${50 - notes.length} 條筆記`}
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        {editingNoteId !== null && (
-                          <button
-                            type="button"
-                            onClick={handleCancelEditNote}
-                            className="px-3 py-1.5 border border-slate-300 hover:bg-slate-100 text-slate-600 text-xs font-bold rounded-xl transition-colors"
-                          >
-                            取消編輯
-                          </button>
-                        )}
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-xs shadow-sm transition-colors"
+                      >
+                        {editingNoteId !== null ? '💾 儲存修改' : '➕ 新增筆記'}
+                      </button>
+                      {editingNoteId !== null && (
                         <button
-                          type="submit"
-                          disabled={editingNoteId === null && notes.length >= 50}
-                          className={`px-4 py-2 text-white text-xs font-bold rounded-xl shadow-md transition-colors flex items-center gap-1 ${
-                            editingNoteId !== null
-                              ? 'bg-blue-600 hover:bg-blue-700'
-                              : 'bg-amber-500 hover:bg-amber-600 disabled:opacity-50'
-                          }`}
+                          type="button"
+                          onClick={handleCancelEditNote}
+                          className="px-4 py-2 border border-slate-300 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors"
                         >
-                          {editingNoteId !== null ? (
-                            <>
-                              <Icon name="check" className="w-3.5 h-3.5" />
-                              <span>更新筆記</span>
-                            </>
-                          ) : (
-                            <>
-                              <Icon name="plus" className="w-3.5 h-3.5" />
-                              <span>新增筆記</span>
-                            </>
-                          )}
+                          取消
                         </button>
-                      </div>
+                      )}
                     </div>
                   </form>
 
-                  <div className="flex items-center gap-1.5 border-b pb-2">
-                    <span className="text-xs font-bold text-slate-500 mr-1">篩選：</span>
-                    {['全部', '回診提問', '成長大事記', '其他備忘'].map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setFilterNoteCategory(cat)}
-                        className={`px-2.5 py-1 text-xs rounded-lg font-bold transition-colors ${
-                          filterNoteCategory === cat
-                            ? 'bg-amber-500 text-white shadow-sm'
-                            : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2.5 max-h-[22rem] overflow-y-auto pr-1">
-                    {filteredNotes.length === 0 ? (
-                      <div className="p-8 text-center text-xs text-slate-400 border border-dashed rounded-2xl bg-slate-50">
-                        {notes.length === 0 ? '尚無任何筆記，上方可快速新增！' : '無符合此分類的筆記'}
-                      </div>
-                    ) : (
-                      filteredNotes.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`p-3 border rounded-xl bg-white hover:border-amber-300 transition-all shadow-sm space-y-1.5 ${
-                            editingNoteId === item.id ? 'ring-2 ring-blue-500 border-blue-400 bg-blue-50/30' : ''
+                  {/* Filter tabs */}
+                  <div className="flex items-center justify-between gap-2 pt-1">
+                    <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                      {['全部', '回診提問', '成長大事記', '其他備忘'].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setFilterNoteCategory(cat)}
+                          className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                            filterNoteCategory === cat
+                              ? 'bg-amber-500 text-white'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
                         >
-                          <div className="flex justify-between items-start">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${
-                                item.category === '回診提問'
-                                  ? 'bg-rose-100 text-rose-800'
-                                  : item.category === '成長大事記'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : 'bg-amber-100 text-amber-800'
-                              }`}>
-                                【{item.category}】
-                              </span>
-                              <h4 className="font-bold text-xs text-slate-800">{item.title}</h4>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-slate-400 font-mono mr-1">{item.createdAt}</span>
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Notes list */}
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {filteredNotes.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
+                        目前沒有{filterNoteCategory === '全部' ? '' : `【${filterNoteCategory}】`}相關筆記
+                      </div>
+                    ) : (
+                      filteredNotes.map((note) => (
+                        <div key={note.id} className="p-3 border rounded-xl bg-white shadow-sm space-y-1.5 hover:border-amber-300 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]">
+                              {note.category}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-slate-400">{note.createdAt}</span>
                               <button
-                                onClick={() => handleStartEditNote(item)}
-                                className="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded text-[11px] font-bold transition-colors flex items-center gap-0.5"
-                                title="編輯此筆記"
+                                onClick={() => handleStartEditNote(note)}
+                                className="text-amber-600 hover:text-amber-800 font-bold text-xs"
+                                title="編輯筆記"
                               >
-                                <Icon name="edit" className="w-3 h-3" />
-                                <span>編輯</span>
+                                <Icon name="edit" className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => handleDeleteNote(item.id)}
-                                className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                                onClick={() => handleDeleteNote(note.id)}
+                                className="text-slate-400 hover:text-red-500 text-xs"
                                 title="刪除筆記"
                               >
                                 <Icon name="trash" className="w-3.5 h-3.5" />
                               </button>
                             </div>
                           </div>
-                          {item.content && (
-                            <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50/70 p-2 rounded-lg border border-slate-100">
-                              {item.content}
+                          <h4 className="font-bold text-xs text-slate-800">{note.title}</h4>
+                          {note.content && (
+                            <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
+                              {note.content}
                             </p>
                           )}
                         </div>
@@ -1676,25 +1912,96 @@
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
 
-                <div className="mt-3 pt-2 border-t text-right">
+          {/* Backup Modal */}
+          {showBackupModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className="w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[90vh] overflow-y-auto text-xs">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-amber-700 flex items-center gap-1.5">
+                    <Icon name="database" className="w-4 h-4" />
+                    資料備份與還原
+                  </h3>
+                  <button onClick={() => setShowBackupModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900">
+                  <h4 className="font-bold text-xs">📤 匯出備份 (Export)</h4>
+                  <p className="text-[11px] leading-relaxed">
+                    將寶寶基本設定、生長測量歷史與所有筆記本匯出為 JSON 檔案或複製文字，以便跨裝置傳輸。
+                  </p>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={handleExportBackupJSON}
+                      className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold flex items-center justify-center gap-1 shadow-sm transition-colors"
+                    >
+                      <Icon name="download" className="w-3.5 h-3.5" />
+                      下載 JSON 備份檔
+                    </button>
+                    <button
+                      onClick={handleCopyBackupToClipboard}
+                      className="py-2 px-3 border border-amber-300 bg-white hover:bg-amber-100 text-amber-900 rounded-xl font-bold flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <Icon name="copy" className="w-3.5 h-3.5" />
+                      複製 JSON
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-900">
+                  <h4 className="font-bold text-xs">📥 還原資料 (Import)</h4>
+                  <p className="text-[11px] leading-relaxed">
+                    選取過去下載的 JSON 備份檔，或直接貼上 JSON 文字內容進行還原。
+                  </p>
+                  <div className="space-y-2 pt-1">
+                    <label className="block w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-center cursor-pointer shadow-sm transition-colors">
+                      <Icon name="upload" className="w-3.5 h-3.5 inline mr-1" />
+                      選擇 JSON 備份檔案
+                      <input type="file" accept=".json" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                    
+                    <div className="space-y-1">
+                      <textarea
+                        rows={2}
+                        placeholder="或貼上 JSON 文字內容..."
+                        value={pastedJson}
+                        onChange={(e) => setPastedJson(e.target.value)}
+                        className="w-full p-2 border rounded-xl text-[11px] font-mono bg-white"
+                      />
+                      <button
+                        onClick={handlePasteImport}
+                        className="w-full py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-colors"
+                      >
+                        貼上文字並還原
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t">
                   <button
-                    onClick={() => setShowNotesModal(false)}
-                    className="px-4 py-1.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
+                    onClick={handleResetData}
+                    className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-1 transition-colors"
                   >
-                    關閉
+                    <Icon name="trash" className="w-3.5 h-3.5" />
+                    清除所有本地資料 (重置)
                   </button>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Restored HTML Card Modal: About & Feature Description */}
           {showHelpModal && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className={`w-full max-w-xl p-5 rounded-2xl border shadow-2xl max-h-[90vh] flex flex-col ${cardBg}`}>
-                {/* Modal Header */}
+              <div className={`w-full max-w-xl p-5 rounded-2xl border shadow-xl max-h-[90vh] flex flex-col ${cardBg}`}>
                 <div className="flex justify-between items-center pb-3 border-b mb-3">
-                  <h3 className="font-bold text-base text-slate-800 flex items-center gap-1.5">
+                  <h3 className="font-bold text-base text-amber-800 flex items-center gap-2">
                     📖 「巴掌小太陽」關於與特色說明
                   </h3>
                   <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
@@ -1702,119 +2009,128 @@
                   </button>
                 </div>
 
-                {/* Modal Content - Scrollable Cards */}
-                <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 no-scrollbar text-xs">
-                  {/* Card 1 to 6 Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex-1 overflow-y-auto space-y-4 pr-1 no-scrollbar text-xs">
+                  {/* Grid of 6 Feature Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {/* Card 1 */}
-                    <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-1 shadow-sm hover:shadow transition-shadow">
-                      <div className="font-bold text-amber-900 flex items-center gap-1.5 text-xs">
-                        <span>🍼</span>
-                        <span>日常照護與生長紀錄</span>
+                    <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
+                      <div className="font-bold text-amber-900 text-sm flex items-center gap-1.5">
+                        🍼 日常照護與生長紀錄
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed">
                         輕鬆記錄每日餵奶量、尿布情況與體重，掌握寶寶每一天的微小進步。
                       </p>
                     </div>
 
                     {/* Card 2 */}
-                    <div className="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl space-y-1 shadow-sm hover:shadow transition-shadow">
-                      <div className="font-bold text-emerald-900 flex items-center gap-1.5 text-xs">
-                        <span>🌱</span>
-                        <span>發展里程碑清單</span>
+                    <div className="p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1">
+                      <div className="font-bold text-emerald-900 text-sm flex items-center gap-1.5">
+                        🌱 發展里程碑清單
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed">
                         精選關鍵成長指標，幫助爸媽安心追蹤寶寶的發展。
                       </p>
                     </div>
 
                     {/* Card 3 */}
-                    <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-xl space-y-1 shadow-sm hover:shadow transition-shadow">
-                      <div className="font-bold text-blue-900 flex items-center gap-1.5 text-xs">
-                        <span>⚙️</span>
-                        <span>彈性雙月齡切換</span>
+                    <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-1">
+                      <div className="font-bold text-blue-900 text-sm flex items-center gap-1.5">
+                        ⚙️ 彈性雙月齡切換
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed">
                         支援對齊【預產期】之矯正月齡與【實際出生日】之實際月齡，並可自由切換生長曲線圖表對照。
                       </p>
                     </div>
 
                     {/* Card 4 */}
-                    <div className="p-3.5 bg-indigo-50/70 border border-indigo-200/80 rounded-xl space-y-1 shadow-sm hover:shadow transition-shadow">
-                      <div className="font-bold text-indigo-900 flex items-center gap-1.5 text-xs">
-                        <span>📝</span>
-                        <span>隨手筆記本</span>
+                    <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1">
+                      <div className="font-bold text-purple-900 text-sm flex items-center gap-1.5">
+                        📝 隨手筆記本
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed">
                         快速記錄門診提問、成長大事記與照護備忘，支援分類篩選與編輯，讓照護資訊不遺漏。
                       </p>
                     </div>
 
                     {/* Card 5 */}
-                    <div className="p-3.5 bg-purple-50/70 border border-purple-200/80 rounded-xl space-y-1 shadow-sm hover:shadow transition-shadow">
-                      <div className="font-bold text-purple-900 flex items-center gap-1.5 text-xs">
-                        <span>📄</span>
-                        <span>一鍵匯出 PDF 報表</span>
+                    <div className="p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1">
+                      <div className="font-bold text-indigo-900 text-sm flex items-center gap-1.5">
+                        📄 一鍵匯出 PDF 報表
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed">
                         看診或回診時，能直接將記錄匯出成整潔清晰的 PDF，方便與醫療團隊溝通。
                       </p>
                     </div>
 
                     {/* Card 6 */}
-                    <div className="p-3.5 bg-rose-50/70 border border-rose-200/80 rounded-xl space-y-1 shadow-sm hover:shadow transition-shadow">
-                      <div className="font-bold text-rose-900 flex items-center gap-1.5 text-xs">
-                        <span>🤖</span>
-                        <span>暖心照護叮嚀與 AI 諮詢</span>
+                    <div className="p-3 bg-rose-50/70 border border-rose-200 rounded-xl space-y-1">
+                      <div className="font-bold text-rose-900 text-sm flex items-center gap-1.5">
+                        🤖 暖心照護叮嚀與 AI 諮詢
                       </div>
-                      <p className="text-slate-600 leading-relaxed text-[11px]">
+                      <p className="text-slate-600 leading-relaxed">
                         內建實用的照護小叮嚀與 AI 諮詢助手，隨時陪伴爸媽走過每個焦慮時刻。
                       </p>
                     </div>
                   </div>
 
-                  {/* Restored Concept Card */}
-                  <div className="p-4 bg-gradient-to-br from-pink-50 to-rose-50 border border-rose-200 rounded-xl space-y-1.5 shadow-sm">
-                    <h4 className="font-bold text-rose-800 flex items-center gap-1.5 text-xs">
-                      <span>🌸</span>
-                      <span>溫馨陪伴理念</span>
-                    </h4>
-                    <p className="text-slate-700 leading-relaxed text-[11px]">
-                      每一個巴掌小太陽都是勇敢的奇蹟生命。早產兒的照護這條路雖然漫長且充滿挑戰，但請記得您並不孤單！我們希望透過結構化且溫暖的紀錄工具，幫助爸爸媽媽穩步陪伴寶寶茁壯成長。
+                  {/* 🌸 溫馨陪伴理念卡片 */}
+                  <div className="p-3.5 bg-pink-50/80 border border-pink-200 rounded-xl space-y-1.5">
+                    <div className="font-bold text-pink-900 text-sm flex items-center gap-1.5">
+                      🌸 溫馨陪伴理念
+                    </div>
+                    <p className="text-slate-700 leading-relaxed">
+                      這款工具不帶任何商業盈利目的或複雜條款，只希望能像它的名字一樣，靜靜地陪伴、溫暖每一個需要的家庭。
+                    </p>
+                    <p className="text-slate-700 leading-relaxed">
+                      如果你身邊剛好有早產兒新手爸媽，或是你自己正經歷這段守護的旅程，歡迎直接點擊連結取用。願每一位像小太陽一樣勇敢的孩子，都能在大家的守護下，平安健康地長大！ ❤️
                     </p>
                   </div>
 
-                  {/* Restored Original Letter to Preterm Parents Card */}
-                  <div className="p-4 bg-amber-50/90 border-2 border-amber-300/80 rounded-xl space-y-2 shadow-sm relative">
-                    <div className="flex items-center gap-2 border-b border-amber-200/80 pb-2">
-                      <span className="text-base">☀️</span>
-                      <h4 className="font-bold text-amber-900 text-xs">給早產兒爸媽的一封信</h4>
+                  {/* ☀️ 給早產兒爸媽的一封信卡片 */}
+                  <div className="p-4 bg-amber-50 border border-amber-300 rounded-xl space-y-2.5 text-amber-950 shadow-sm">
+                    <div className="font-bold text-amber-900 text-sm flex items-center gap-1.5 border-b border-amber-200 pb-2">
+                      ☀️ 給早產兒爸媽的一封信
                     </div>
-                    <div className="text-slate-700 leading-relaxed text-[11px] space-y-2">
-                      <p>各位辛苦的爸爸媽媽們好，我是亮愷。</p>
-                      <p>
-                        我是一名在 30 週、僅 1450 公克時出生的早產兒（也就是大家常說的「巴掌仙子」）。一路走來，我深深明白早產兒家庭在育兒起步時，常要面對許多焦慮、手忙腳亂，以及繁瑣的成長紀錄。
-                      </p>
-                      <p>
-                        因此，我利用空閒時間，運用工程師的背景，從無到有打造了一款完全免費、無商業氣息的網頁工具——「巴掌小太陽」，希望能給予這群辛苦的爸媽們一些最實質的陪伴與幫助。
-                      </p>
-                    </div>
-                    <div className="pt-2 border-t border-amber-200/60 text-right text-[11px] font-bold text-amber-900">
+                    <p className="leading-relaxed">
+                      各位辛苦的爸爸媽媽們好，我是亮愷。
+                    </p>
+                    <p className="leading-relaxed">
+                      我是一名在 30 週、僅 1450 公克時出生的早產兒（也就是大家常說的「巴掌仙子」）。一路走來，我深深明白早產兒家庭在育兒起步時，常要面對許多焦慮、手忙腳亂，以及繁瑣的成長紀錄。
+                    </p>
+                    <p className="leading-relaxed">
+                      因此，我利用空閒時間，運用工程師的背景，從無到有打造了一款完全免費、無商業氣息的網頁工具——「巴掌小太陽」，希望能給予這群辛苦的爸媽們一些最實質的陪伴與幫助。
+                    </p>
+                    <p className="leading-relaxed font-semibold pt-1 border-t border-amber-200/60 text-amber-900">
                       本應用程式由早產兒亮愷為公益個人開發，免費提供予所有早產兒家庭使用。
+                    </p>
+                  </div>
+
+                  {/* 🔒 隱私權與資料安全保護聲明 */}
+                  <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+                    <div className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                      🔒 隱私權與資料安全保護聲明
                     </div>
+                    <p className="text-slate-600 leading-relaxed">
+                      巴掌小太陽承諾：我們無比重視您與寶寶的隱私。本應用程式（網頁）採用瀏覽器本地快取技術（Local Storage）。您所輸入的寶寶姓名、生日、預產期，以及每一筆體重、身高、頭圍等日常照護紀錄，全部都只會儲存在您自己的手機或電腦瀏覽器中。
+                    </p>
+                    <p className="text-slate-600 leading-relaxed">
+                      我們的網頁伺服器絕對不會收集、傳輸、或留存任何您填寫的隱私資料。整個操作過程完全在您的終端設備獨立執行，網路上沒有任何人能窺探您寶寶的成長數據。
+                    </p>
+                    <p className="text-slate-600 leading-relaxed">
+                      『巴掌小太陽』純粹為公益與照護輔助而生。沒有會員登入、沒有廣告追蹤，更沒有資料外洩的風險。您可以百分之百放心地將這裡當作專屬您與寶寶的安心育兒避風港。尊重隱私，請安心使用。
+                    </p>
+                  </div>
+
+                  {/* 開發日期 */}
+                  <div className="text-center text-[11px] text-slate-400 font-medium pt-1">
+                    開發日期：2026/7/27
                   </div>
                 </div>
 
-                {/* Restored Development Date */}
-                <div className="mt-2 text-center text-[11px] text-slate-400 font-medium">
-                  開發日期：2026/7/27
-                </div>
-
-                {/* Modal Footer */}
-                <div className="mt-2 pt-2 border-t text-center">
+                <div className="pt-3 border-t mt-3 flex justify-end">
                   <button
                     onClick={() => setShowHelpModal(false)}
-                    className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md transition-colors text-xs"
+                    className="w-full sm:w-auto px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-md transition-colors"
                   >
                     了解，開始使用！
                   </button>
@@ -1822,404 +2138,6 @@
               </div>
             </div>
           )}
-
-          {showBackupModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl max-h-[90vh] overflow-y-auto ${cardBg}`}>
-                <div className="flex justify-between items-center mb-4 border-b pb-2">
-                  <h3 className="font-bold text-base text-amber-600 flex items-center gap-1.5">
-                    <Icon name="database" className="w-5 h-5" />
-                    自訂寶寶檔案 & 歷史測量 備份與還原
-                  </h3>
-                  <button onClick={() => setShowBackupModal(false)} className="text-slate-400 hover:text-slate-600">
-                    <Icon name="x" className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="space-y-4 text-xs">
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-2">
-                    <h4 className="font-bold text-amber-900 flex items-center gap-1 text-xs">
-                      <Icon name="download" className="w-4 h-4 text-amber-600" />
-                      1. 匯出備份 (Export)
-                    </h4>
-                    <p className="text-slate-600 leading-relaxed">
-                      一鍵打包【寶寶個人資料 + 預產期生日 + 歷史測量列表 + 照護日誌 + 筆記本】，下載為標準 JSON 檔案保存。
-                    </p>
-                    <div className="flex gap-2 pt-1">
-                      <button
-                        onClick={handleExportBackupJSON}
-                        className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-sm flex items-center justify-center gap-1 transition-colors"
-                      >
-                        <Icon name="download" className="w-3.5 h-3.5" />
-                        下載 JSON 備份檔
-                      </button>
-                      <button
-                        onClick={handleCopyBackupToClipboard}
-                        className="py-2 px-3 border border-amber-300 bg-white hover:bg-amber-100 text-amber-800 font-bold rounded-xl flex items-center justify-center gap-1 transition-colors"
-                      >
-                        <Icon name="copy" className="w-3.5 h-3.5" />
-                        複製文字碼
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 2. 還原備份 */}
-                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-                    <h4 className="font-bold text-slate-800 flex items-center gap-1 text-xs">
-                      <Icon name="upload" className="w-4 h-4 text-slate-600" />
-                      2. 匯入還原 (Import)
-                    </h4>
-                    <p className="text-slate-500 leading-relaxed">
-                      選擇先前的 JSON 備份檔，或直接貼上 JSON 文字內容來還原所有照護與生長資料。
-                    </p>
-                    <input
-                      type="file"
-                      accept=".json"
-                      onChange={handleFileUpload}
-                      className="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-500 file:text-white hover:file:bg-amber-600"
-                    />
-                    <div className="space-y-1 pt-1">
-                      <textarea
-                        rows={3}
-                        placeholder="或在此貼上備份 JSON 文字..."
-                        value={pastedJson}
-                        onChange={(e) => setPastedJson(e.target.value)}
-                        className="w-full p-2 border rounded-xl text-[11px] font-mono resize-none"
-                      ></textarea>
-                      <button
-                        onClick={handlePasteImport}
-                        className="w-full py-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition-colors"
-                      >
-                        還原貼上之 JSON
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-3 border-t flex justify-between items-center">
-                  <button
-                    onClick={handleResetData}
-                    className="px-3 py-1.5 text-xs text-red-500 hover:text-red-700 font-bold hover:underline flex items-center gap-1"
-                  >
-                    <Icon name="trash" className="w-3.5 h-3.5" />
-                    清空所有本地資料
-                  </button>
-                  <button
-                    onClick={() => setShowBackupModal(false)}
-                    className="px-4 py-1.5 border rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50"
-                  >
-                    關閉
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Edit Profile Modal */}
-          {showEditProfileModal && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-amber-700">自訂 / 修改寶寶檔案與目標</h3>
-                  <button onClick={() => setShowEditProfileModal(false)} className="text-slate-400 hover:text-slate-600">
-                    <Icon name="x" className="w-4 h-4" />
-                  </button>
-                </div>
-                <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-bold block mb-1">寶寶暱稱</label>
-                      <input
-                        type="text"
-                        placeholder="小太陽"
-                        value={editFormData.name}
-                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-bold block mb-1">生理性別</label>
-                      <select
-                        value={editFormData.gender}
-                        onChange={(e) => setEditFormData({ ...editFormData, gender: e.target.value })}
-                        className="w-full p-2 border rounded-xl bg-white"
-                      >
-                        <option value="boy">男寶 (Boy)</option>
-                        <option value="girl">女寶 (Girl)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-bold block mb-1">出生週數 (週)</label>
-                      <input
-                        type="number"
-                        placeholder="28"
-                        value={editFormData.gestationalWeeks}
-                        onChange={(e) => setEditFormData({ ...editFormData, gestationalWeeks: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-bold block mb-1">出生體重 (g)</label>
-                      <input
-                        type="number"
-                        placeholder="1100"
-                        value={editFormData.birthWeight}
-                        onChange={(e) => setEditFormData({ ...editFormData, birthWeight: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="font-bold block mb-1">實際出生日期</label>
-                      <input
-                        type="date"
-                        value={editFormData.birthDate}
-                        onChange={(e) => setEditFormData({ ...editFormData, birthDate: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-bold block mb-1">預估預產期 (0個月)</label>
-                      <input
-                        type="date"
-                        value={editFormData.dueDate}
-                        onChange={(e) => setEditFormData({ ...editFormData, dueDate: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 border-t pt-2">
-                    <div>
-                      <label className="font-bold block mb-1">最新體重(kg)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder="3.5"
-                        value={editFormData.currentWeight}
-                        onChange={(e) => setEditFormData({ ...editFormData, currentWeight: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-bold block mb-1">最新身長(cm)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        placeholder="50"
-                        value={editFormData.currentHeight}
-                        onChange={(e) => setEditFormData({ ...editFormData, currentHeight: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                    <div>
-                      <label className="font-bold block mb-1">最新頭圍(cm)</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        placeholder="36"
-                        value={editFormData.currentHead}
-                        onChange={(e) => setEditFormData({ ...editFormData, currentHead: e.target.value })}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="font-bold block mb-1">目標每日總奶量 (ml)</label>
-                    <input
-                      type="number"
-                      placeholder="500"
-                      value={editFormData.targetDailyMilk}
-                      onChange={(e) => setEditFormData({ ...editFormData, targetDailyMilk: e.target.value })}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button type="button" onClick={() => setShowEditProfileModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
-                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存設定</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Add Log Modal */}
-          {showAddLogModal && (
-            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-amber-700">新增照護紀錄</h3>
-                  <button onClick={() => setShowAddLogModal(false)} className="text-slate-400 hover:text-slate-600">
-                    <Icon name="x" className="w-4 h-4" />
-                  </button>
-                </div>
-                <form onSubmit={handleAddLog} className="space-y-3 text-xs">
-                  <div>
-                    <label className="font-bold block mb-1">紀錄類型</label>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setNewLogType('feeding')}
-                        className={`flex-1 py-2 rounded-xl font-bold border ${newLogType === 'feeding' ? 'bg-amber-500 text-white border-amber-500' : 'bg-slate-50 text-slate-600'}`}
-                      >
-                        🍼 餵奶
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNewLogType('diaper')}
-                        className={`flex-1 py-2 rounded-xl font-bold border ${newLogType === 'diaper' ? 'bg-blue-500 text-white border-blue-500' : 'bg-slate-50 text-slate-600'}`}
-                      >
-                        👶 尿布
-                      </button>
-                    </div>
-                  </div>
-
-                  {newLogType === 'feeding' && (
-                    <div>
-                      <label className="font-bold block mb-1">奶量 (ml)</label>
-                      <input
-                        type="number"
-                        placeholder="例如 60"
-                        value={newLogAmount}
-                        onChange={(e) => setNewLogAmount(e.target.value)}
-                        className="w-full p-2 border rounded-xl"
-                      />
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="font-bold block mb-1">備註說明</label>
-                    <input
-                      type="text"
-                      placeholder={newLogType === 'feeding' ? '母乳 / 配方奶 / 混餵' : '濕尿布 / 便便'}
-                      value={newLogDetail}
-                      onChange={(e) => setNewLogDetail(e.target.value)}
-                      className="w-full p-2 border rounded-xl"
-                    />
-                  </div>
-
-                  <div className="flex gap-2 pt-2">
-                    <button type="button" onClick={() => setShowAddLogModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
-                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存紀錄</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
-
-          {/* Printable Report Content for PDF export */}
-          <div id="pdf-report-content" className="hidden bg-white p-8 text-slate-800 text-xs font-sans max-w-2xl mx-auto space-y-6">
-            <div className="border-b-2 border-amber-500 pb-4 flex justify-between items-end">
-              <div>
-                <h1 className="text-2xl font-bold text-amber-600">巴掌小太陽 · 早產兒門診照護與生長報告</h1>
-                <p className="text-slate-500 text-xs mt-1">匯出日期：{new Date().toISOString().slice(0, 10)}</p>
-              </div>
-              <div className="text-right">
-                <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full font-bold text-xs">
-                  {babyInfo.gender === 'girl' ? '👧 女寶' : '👦 男寶'}
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 bg-amber-50/50 p-4 rounded-xl border border-amber-100">
-              <div>
-                <p className="font-bold text-amber-900 text-sm">{babyInfo.name || '小太陽'} 寶寶</p>
-                <p className="text-slate-600 mt-1">實際出生日期：{babyInfo.birthDate || '未設定'}</p>
-                <p className="text-slate-600">預估預產期：{babyInfo.dueDate || '未設定'}</p>
-                <p className="text-slate-600">出生週數/體重：{babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks}週` : '未設定'} / {babyInfo.birthWeight ? `${babyInfo.birthWeight}g` : '未設定'}</p>
-              </div>
-              <div className="space-y-1 text-right">
-                <p className="font-bold text-amber-700">{ageData.correctedText}</p>
-                <p className="text-slate-500">{ageData.chronoText}</p>
-                <div className="pt-2">
-                  <p className="text-slate-600">最新體重：<b className="text-slate-800">{babyInfo.currentWeight || '—'} kg</b></p>
-                  <p className="text-slate-600">最新身長：<b className="text-slate-800">{babyInfo.currentHeight || '—'} cm</b></p>
-                  <p className="text-slate-600">最新頭圍：<b className="text-slate-800">{babyInfo.currentHead || '—'} cm</b></p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📈 歷史生長測量紀錄</h3>
-              {growthHistory.length === 0 ? (
-                <p className="text-slate-400 py-2">無歷史紀錄</p>
-              ) : (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b bg-slate-50 text-slate-600 text-[11px]">
-                      <th className="py-2 px-2">測量日期</th>
-                      <th className="py-2 px-2">對應月齡</th>
-                      <th className="py-2 px-2">體重 (kg)</th>
-                      <th className="py-2 px-2">身長 (cm)</th>
-                      <th className="py-2 px-2">頭圍 (cm)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {growthHistory.map((rec) => {
-                      const cleanDate = sanitizeDateStr(rec.date);
-                      const correctedM = getCorrectedAgeAtDate(cleanDate, babyInfo.dueDate, babyInfo.birthDate);
-                      let ageLabel = "";
-                      if (correctedM > 24) ageLabel = "滿2歲";
-                      else if (correctedM < 0) ageLabel = `預產前${Math.abs(Math.round(correctedM * 30.4375))}天`;
-                      else ageLabel = `矯正${Math.floor(correctedM)}月${Math.floor((correctedM % 1) * 30.4375)}天`;
-
-                      return (
-                        <tr key={rec.id} className="border-b text-xs">
-                          <td className="py-1.5 px-2">{cleanDate}</td>
-                          <td className="py-1.5 px-2 text-amber-700 font-medium">{ageLabel}</td>
-                          <td className="py-1.5 px-2">{rec.weight || '—'}</td>
-                          <td className="py-1.5 px-2">{rec.height || '—'}</td>
-                          <td className="py-1.5 px-2">{rec.head || '—'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">🏥 門診提問與醫師解答</h3>
-              {doctorNotes.length === 0 ? (
-                <p className="text-slate-400 py-2">無提問紀錄</p>
-              ) : (
-                <div className="space-y-2">
-                  {doctorNotes.map((n) => (
-                    <div key={n.id} className="p-2 border rounded-lg bg-slate-50">
-                      <p className="font-bold text-slate-700">問：{n.question}</p>
-                      <p className="text-slate-500 mt-0.5">狀態：{n.answered ? '✓ 醫師已解答' : '尚未解答'}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📝 隨手筆記本內容</h3>
-              {notes.length === 0 ? (
-                <p className="text-slate-400 py-2">無筆記紀錄</p>
-              ) : (
-                <div className="space-y-2">
-                  {notes.map((n) => (
-                    <div key={n.id} className="p-2 border rounded-lg bg-slate-50">
-                      <div className="flex justify-between items-center text-[10px] text-slate-400 mb-1">
-                        <span className="font-bold text-amber-800">【{n.category}】{n.title}</span>
-                        <span>{n.createdAt}</span>
-                      </div>
-                      {n.content && <p className="text-slate-700 whitespace-pre-wrap">{n.content}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       );
     }
