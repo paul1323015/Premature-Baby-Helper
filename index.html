@@ -249,10 +249,64 @@
       return getLocalDateString(dateObj);
     };
 
-    const calculateAges = (birthDateStr, dueDateStr) => {
-      const cleanBirth = sanitizeDateStr(birthDateStr);
-      const cleanDue = sanitizeDateStr(dueDateStr);
+    // Helper: calculate ages for a given measurement date
+    const getAgesForDate = (measurementDateStr, birthDateStr, dueDateStr) => {
+      const MS_PER_DAY = 1000 * 60 * 60 * 24;
+      const measurementClean = measurementDateStr ? sanitizeDateStr(measurementDateStr) : getLocalDateString();
+      const measurementDate = parseDateOnly(measurementClean);
+      const birthClean = birthDateStr ? sanitizeDateStr(birthDateStr) : null;
+      const dueClean = dueDateStr ? sanitizeDateStr(dueDateStr) : null;
+      const birthDate = birthClean ? parseDateOnly(birthClean) : null;
+      const dueDate = dueClean ? parseDateOnly(dueClean) : null;
 
+      // Chronological age (measurement - birth)
+      let chronoDays = 0;
+      if (birthDate && measurementDate) {
+        chronoDays = Math.floor((measurementDate - birthDate) / MS_PER_DAY);
+        if (chronoDays < 0) chronoDays = 0;
+      }
+
+      // Corrected age (measurement - due)
+      let correctedDays = 0;
+      if (dueDate && measurementDate) {
+        correctedDays = Math.floor((measurementDate - dueDate) / MS_PER_DAY);
+      } else {
+        correctedDays = chronoDays; // fallback
+      }
+
+      const chronoMonths = chronoDays / 30.4375;
+      const correctedMonths = correctedDays / 30.4375;
+
+      const chronoMInt = Math.floor(chronoMonths);
+      const chronoDaysRemaining = Math.floor(chronoDays % 30.4375);
+
+      let correctedText = '';
+      if (dueDate && correctedDays < 0) {
+        const remainingWeeks = Math.ceil(Math.abs(correctedDays) / 7);
+        correctedText = `尚未滿預產期 (差約 ${remainingWeeks} 週)`;
+      } else if (correctedMonths > 24) {
+        correctedText = '已滿 2 歲（建議參考常規兒童生長曲線）';
+      } else {
+        const correctedMInt = Math.floor(correctedDays / 30.4375);
+        const correctedDaysRemaining = Math.floor(correctedDays % 30.4375);
+        correctedText = `矯正 ${correctedMInt} 個月 ${correctedDaysRemaining} 天`;
+      }
+
+      return {
+        measurementStr: measurementClean,
+        measurementDate,
+        chronoDays,
+        chronoMonths,
+        correctedDays,
+        correctedMonths,
+        chronoText: `實際 ${chronoMInt} 個月 ${chronoDaysRemaining} 天`,
+        correctedText,
+        isSet: !!birthDate && !!dueDate,
+        inconsistent: typeof chronoDays === 'number' && typeof correctedDays === 'number' && chronoDays < correctedDays
+      };
+    };
+
+    const calculateAges = (birthDateStr, dueDateStr) => {
       if (!birthDateStr || !dueDateStr) {
         return {
           chronoText: '出生日期未設定',
@@ -264,31 +318,12 @@
       }
 
       const todayStr = getLocalDateString();
-      const chronoDays = Math.max(0, getAgeInDaysFromDates(todayStr, cleanBirth));
-      const chronoMonths = chronoDays / 30.4375;
-      const chronoMInt = Math.floor(chronoMonths);
-      const chronoDaysRemaining = Math.floor(chronoDays % 30.4375);
-
-      const correctedDays = getAgeInDaysFromDates(todayStr, cleanDue);
-      const correctedMonths = correctedDays / 30.4375;
-
-      let correctedText = "";
-      if (correctedDays < 0) {
-        const remainingWeeks = Math.ceil(Math.abs(correctedDays) / 7);
-        correctedText = `尚未滿預產期 (差約 ${remainingWeeks} 週)`;
-      } else if (correctedMonths > 24) {
-        correctedText = "已滿 2 歲（建議參考常規兒童生長曲線）";
-      } else {
-        const correctedMInt = Math.floor(correctedDays / 30.4375);
-        const correctedDaysRemaining = Math.floor(correctedDays % 30.4375);
-        correctedText = `矯正 ${correctedMInt} 個月 ${correctedDaysRemaining} 天`;
-      }
-
+      const ages = getAgesForDate(todayStr, birthDateStr, dueDateStr);
       return {
-        chronoText: `實際 ${chronoMInt} 個月 ${chronoDaysRemaining} 天`,
-        correctedText,
-        chronoMonths,
-        correctedMonths,
+        chronoText: ages.chronoText,
+        correctedText: ages.correctedText,
+        chronoMonths: ages.chronoMonths,
+        correctedMonths: ages.correctedMonths,
         isSet: true
       };
     };
@@ -306,12 +341,14 @@
       return getAgeInDaysFromDates(measurementDateStr, baseDateStr) / 30.4375;
     };
 
-    const getCorrectedAgeAtDate = (measurementDateStr, dueDateStr, birthDateStr) => {
-      return getAgeInMonthsFromDates(measurementDateStr, dueDateStr || birthDateStr);
+    const getCorrectedAgeAtDate = (measurementDateStr, birthDateStr, dueDateStr) => {
+      const ages = getAgesForDate(measurementDateStr, birthDateStr, dueDateStr);
+      return ages.correctedMonths;
     };
 
     const getChronoAgeAtDate = (measurementDateStr, birthDateStr) => {
-      return Math.max(0, getAgeInDaysFromDates(measurementDateStr, birthDateStr)) / 30.4375;
+      const ages = getAgesForDate(measurementDateStr, birthDateStr, null);
+      return ages.chronoMonths;
     };
 
     const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord }) => {
@@ -335,26 +372,46 @@
       const height = 340;
       const padding = { top: 25, right: 35, bottom: 55, left: 45 };
 
+      const MS_PER_DAY = 1000 * 60 * 60 * 24;
       const babyPoints = growthHistory.map(item => {
+        // parse numeric value; if empty or invalid, skip plotting
         let val = parseFloat(item[metric]);
         if (isNaN(val)) return null;
 
         if (metric === 'weight' && val > 30) {
+          // some weight entries were stored in grams; convert large numbers to kg
           val = val / 1000;
         }
 
-        const cleanItemDate = sanitizeDateStr(item.date);
-        const correctedAgeDays = getAgeInDaysFromDates(cleanItemDate, babyInfo.dueDate || babyInfo.birthDate);
-        const chronoAgeDays = Math.max(0, getAgeInDaysFromDates(cleanItemDate, babyInfo.birthDate));
-        const correctedAgeM = correctedAgeDays / 30.4375;
-        const chronoAgeM = chronoAgeDays / 30.4375;
+        // Parse dates explicitly to avoid sanitize fallback to "today"
+        const measurementStr = sanitizeDateStr(item.date);
+        const measurementDate = parseDateOnly(measurementStr);
+
+        const birthStr = babyInfo.birthDate ? sanitizeDateStr(babyInfo.birthDate) : null;
+        const dueStr = babyInfo.dueDate ? sanitizeDateStr(babyInfo.dueDate) : null;
+        const birthDate = birthStr ? parseDateOnly(birthStr) : null;
+        const dueDate = dueStr ? parseDateOnly(dueStr) : null;
+
+        if (!measurementDate) return null; // invalid measurement date
+
+        // Use centralized helper to compute ages for this measurement date
+        const ages = getAgesForDate(measurementStr, babyInfo.birthDate, babyInfo.dueDate);
+        const chronoAgeDays = ages.chronoDays;
+        const correctedAgeDays = ages.correctedDays;
+        const chronoAgeM = ages.chronoMonths;
+        const correctedAgeM = ages.correctedMonths;
+
+        if (ages.inconsistent) {
+          // Log inconsistency but DO NOT swap values; keep computed results and surface warning in console
+          console.warn('Age inconsistency detected for measurement', measurementStr, '— chronoDays < correctedDays. Please verify birthDate/dueDate inputs.');
+        }
 
         const targetAgeDays = useChronoAxis ? chronoAgeDays : correctedAgeDays;
         const targetAgeM = targetAgeDays / 30.4375;
 
         return {
           id: item.id,
-          date: cleanItemDate,
+          date: measurementStr,
           correctedMonths: correctedAgeM,
           chronoMonths: chronoAgeM,
           correctedDays: correctedAgeDays,
@@ -375,10 +432,36 @@
       const xScale = (month) => padding.left + ((month - minX) / (maxX - minX)) * (width - padding.left - padding.right);
       const yScale = (val) => height - padding.bottom - ((val - metricConfig.minY) / (metricConfig.maxY - metricConfig.minY)) * (height - padding.top - padding.bottom);
 
+      // Determine whether the 0-month baseline (出生 or 預產期) is within the plotted X range
+      const zeroInRange = 0 >= minX && 0 <= maxX;
+      const zeroX = xScale(0);
+
       babyPoints.forEach(p => {
         p.x = xScale(p.plotMonths);
         p.y = yScale(p.value);
       });
+
+      // Debug enable check: show debug button only when ?debug=true or localStorage.debug === 'true'
+      let debugEnabled = false;
+      try {
+        if (typeof window !== 'undefined') {
+          const qp = new URLSearchParams(window.location.search);
+          debugEnabled = qp.get('debug') === 'true' || localStorage.getItem('debug') === 'true';
+        }
+      } catch (e) {
+        debugEnabled = false;
+      }
+
+      // Prepare debug rows for optional manual export (button-triggered)
+      const debugRows = babyPoints.map(p => ({
+        Date: p.date,
+        'Chrono Days': p.chronoDays,
+        'Chrono Months': Number(p.chronoMonths.toFixed(3)),
+        'Corrected Days': p.correctedDays,
+        'Corrected Months': Number(p.correctedMonths.toFixed(3)),
+        'Plot Months': Number(p.plotMonths.toFixed(3)),
+        'Pixel X': Number(p.x.toFixed(1))
+      }));
 
       babyPoints.sort((a, b) => a.plotMonths - b.plotMonths);
 
@@ -419,8 +502,9 @@
             <button
               onClick={() => setUseChronoAxis(!useChronoAxis)}
               className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition-colors border border-amber-300 shadow-sm"
+              title={useChronoAxis ? '目前顯示：實際月齡。點擊切換為 矯正月齡。' : '目前顯示：矯正月齡。點擊切換為 實際月齡。'}
             >
-              切換為{useChronoAxis ? '【矯正月齡】' : '【實際月齡】'}
+              {useChronoAxis ? '顯示：實際月齡（點擊切換為 矯正月齡）' : '顯示：矯正月齡（點擊切換為 實際月齡）'}
             </button>
           </div>
 
@@ -445,6 +529,21 @@
                   <span className={`w-2 h-2 rounded-full ${showPercentiles ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
                   <span>百分位曲線：{showPercentiles ? '顯示' : '隱藏'}</span>
                 </button>
+                {debugEnabled && (
+                  <button
+                    onClick={() => {
+                      try {
+                        console.groupCollapsed(`PretermGrowthChart Debug - X axis = ${useChronoAxis ? 'Chronological (實際)' : 'Corrected (矯正)'} mode`);
+                        console.table(debugRows);
+                        console.groupEnd();
+                      } catch (e) {}
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors"
+                    title="在 Console 中輸出 Debug 表格（只於按下時執行）"
+                  >
+                    <span>輸出 Debug</span>
+                  </button>
+                )}
                 <button
                   onClick={() => setShowRecordModal(true)}
                   className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
@@ -480,6 +579,18 @@
                 );
               })}
 
+              {/* Emphasize the 0-month baseline (出生/預產期) with a prominent reference line and labels */}
+              {zeroInRange && (
+                <g key="zero-ref">
+                  <line x1={zeroX} y1={padding.top} x2={zeroX} y2={height - padding.bottom} stroke="#d97706" strokeWidth="3" strokeDasharray="6,3" opacity="0.95" />
+                  <circle cx={zeroX} cy={height - padding.bottom} r="5" className="fill-amber-600 stroke-white stroke-1" />
+                  <text x={zeroX} y={padding.top - 6} textAnchor="middle" className="fill-amber-700 font-bold text-[10px]">基準 0 個月</text>
+                  <text x={zeroX} y={height - padding.bottom + 33} textAnchor="middle" className="fill-amber-700 font-bold text-[9px]">
+                    {useChronoAxis ? '（出生日）' : '（預產期）'}
+                  </text>
+                </g>
+              )}
+
               <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#94a3b8" strokeWidth="1.5" />
 
               {showPercentiles && percentileIndices.map((pIndex, i) => {
@@ -503,9 +614,10 @@
                   .replace(/^實際\s*/, '')
                   .replace(/個月/g, '月')
                   .replace(/天/g, '天');
-                const labelY = height - padding.bottom + 11;
-                const labelRectX = p.x - 24;
-                const labelRectWidth = 48;
+                // Move the small orange date label above the bottom axis to avoid overlapping ticks
+                const labelY = height - padding.bottom - 10;
+                const labelRectX = p.x - 28;
+                const labelRectWidth = 56;
 
                 return (
                   <g key={`vline-${p.id || i}`}>
@@ -554,8 +666,7 @@
               <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1 text-xs">
                 {growthHistory.map((rec) => {
                   const cleanDate = sanitizeDateStr(rec.date);
-                  const correctedM = getCorrectedAgeAtDate(cleanDate, babyInfo.dueDate, babyInfo.birthDate);
-                  const correctedFormatted = formatAgeText(correctedM, '矯正');
+                  const ages = getAgesForDate(cleanDate, babyInfo.birthDate, babyInfo.dueDate);
 
                   return (
                     <div key={rec.id} className="p-2 border rounded-xl flex items-center justify-between bg-slate-50/70 hover:bg-amber-50/50 transition-colors">
@@ -563,8 +674,14 @@
                         <div className="font-bold text-slate-800 flex items-center gap-2">
                           <span>{cleanDate}</span>
                           <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">
-                            {correctedFormatted}
+                            {ages.correctedText} / {ages.chronoText}
                           </span>
+                          {ages.inconsistent && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-red-600 font-bold text-[11px]">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M21 12A9 9 0 1 1 3 12a9 9 0 0 1 18 0z"/></svg>
+                              資料異常
+                            </span>
+                          )}
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5 space-x-2">
                           {rec.weight && <span>體重: <b className="text-slate-700">{rec.weight} kg</b></span>}
@@ -606,11 +723,11 @@
                     {babyInfo.dueDate && (
                       <div className="text-[11px] text-amber-600 mt-1 font-medium">
                         對應矯正月齡：{
-                          getCorrectedAgeAtDate(recDate, babyInfo.dueDate, babyInfo.birthDate) > 24
+                          getCorrectedAgeAtDate(recDate, babyInfo.birthDate, babyInfo.dueDate) > 24
                             ? "已滿 2 歲"
-                            : getCorrectedAgeAtDate(recDate, babyInfo.dueDate, babyInfo.birthDate) < 0
+                            : getCorrectedAgeAtDate(recDate, babyInfo.birthDate, babyInfo.dueDate) < 0
                             ? `預產期前`
-                            : `${getCorrectedAgeAtDate(recDate, babyInfo.dueDate, babyInfo.birthDate).toFixed(1)} 個月`
+                            : `${getCorrectedAgeAtDate(recDate, babyInfo.birthDate, babyInfo.dueDate).toFixed(1)} 個月`
                         }
                       </div>
                     )}
@@ -667,6 +784,26 @@
             const parsed = JSON.parse(saved);
             if (parsed.birthDate) parsed.birthDate = sanitizeDateStr(parsed.birthDate);
             if (parsed.dueDate) parsed.dueDate = sanitizeDateStr(parsed.dueDate);
+
+            // Validate birthDate <= dueDate. If reversed, attempt to fix by swapping and persist the correction.
+            try {
+              const pb = parsed.birthDate ? parseDateOnly(parsed.birthDate) : null;
+              const pd = parsed.dueDate ? parseDateOnly(parsed.dueDate) : null;
+              if (pb && pd && pb.getTime() > pd.getTime()) {
+                // Detected inconsistent stored profile where birthDate is later than dueDate.
+                // Swap to correct order assuming values were entered reversed.
+                const corrected = { ...parsed, birthDate: parsed.dueDate, dueDate: parsed.birthDate };
+                try {
+                  localStorage.setItem('sun_baby_profile_v5', JSON.stringify(corrected));
+                  // set a transient flag so we can notify user after mount
+                  if (typeof window !== 'undefined') window.__sun_profile_fix_notice = '🔧 已自動修正寶寶出生日期與預產期的順序（偵測到顛倒）';
+                } catch (e) {}
+                return corrected;
+              }
+            } catch (e) {
+              // ignore parse errors and fall back to parsed
+            }
+
             return parsed;
           } catch (e) {}
         }
@@ -745,6 +882,16 @@
       React.useEffect(() => {
         if (babyInfo.gender) setSelectedGender(babyInfo.gender);
       }, [babyInfo.gender]);
+
+      // If initializer set a transient fix notice, show it once after mount
+      React.useEffect(() => {
+        try {
+          if (typeof window !== 'undefined' && window.__sun_profile_fix_notice) {
+            showToast(window.__sun_profile_fix_notice);
+            try { delete window.__sun_profile_fix_notice; } catch (e) { window.__sun_profile_fix_notice = null; }
+          }
+        } catch (e) {}
+      }, []);
 
       React.useEffect(() => {
         localStorage.setItem('sun_baby_profile_v5', JSON.stringify(babyInfo));
@@ -972,22 +1119,29 @@
           dueDate: sanitizeDateStr(editFormData.dueDate)
         };
 
+        // Update babyInfo immediately with the cleaned form
         setBabyInfo(cleanedForm);
         setShowEditProfileModal(false);
 
-        if (cleanedForm.currentWeight || cleanedForm.currentHeight || cleanedForm.currentHead) {
-          const todayStr = new Date().toISOString().slice(0, 10);
-          const existingTodayIndex = growthHistory.findIndex(g => g.date === todayStr);
-          if (existingTodayIndex >= 0) {
-            const updated = [...growthHistory];
-            updated[existingTodayIndex] = {
-              ...updated[existingTodayIndex],
-              weight: cleanedForm.currentWeight || updated[existingTodayIndex].weight,
-              height: cleanedForm.currentHeight || updated[existingTodayIndex].height,
-              head: cleanedForm.currentHead || updated[existingTodayIndex].head,
-            };
-            setGrowthHistory(updated);
-          } else {
+        // Update today's growth record if it exists (explicitly allow empty string to overwrite previous values)
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const existingTodayIndex = growthHistory.findIndex(g => g.date === todayStr);
+        if (existingTodayIndex >= 0) {
+          const updated = [...growthHistory];
+          updated[existingTodayIndex] = {
+            ...updated[existingTodayIndex],
+            // Use explicit checks so an empty string from the form overwrites previous values
+            weight: typeof cleanedForm.currentWeight !== 'undefined' ? cleanedForm.currentWeight : updated[existingTodayIndex].weight,
+            height: typeof cleanedForm.currentHeight !== 'undefined' ? cleanedForm.currentHeight : updated[existingTodayIndex].height,
+            head: typeof cleanedForm.currentHead !== 'undefined' ? cleanedForm.currentHead : updated[existingTodayIndex].head,
+          };
+          setGrowthHistory(updated);
+        } else {
+          // Only create a new today record if at least one current value is set (non-empty)
+          const hasAnyValue = (typeof cleanedForm.currentWeight !== 'undefined' && cleanedForm.currentWeight !== '') ||
+                              (typeof cleanedForm.currentHeight !== 'undefined' && cleanedForm.currentHeight !== '') ||
+                              (typeof cleanedForm.currentHead !== 'undefined' && cleanedForm.currentHead !== '');
+          if (hasAnyValue) {
             setGrowthHistory([
               ...growthHistory,
               {
@@ -1000,6 +1154,7 @@
             ]);
           }
         }
+
         showToast('💾 照護檔案設定已儲存！');
       };
 
@@ -1009,9 +1164,10 @@
           date: sanitizeDateStr(newRec.date)
         };
         setGrowthHistory([cleanedRec, ...growthHistory]);
-        if (cleanedRec.weight) setBabyInfo(prev => ({ ...prev, currentWeight: cleanedRec.weight }));
-        if (cleanedRec.height) setBabyInfo(prev => ({ ...prev, currentHeight: cleanedRec.height }));
-        if (cleanedRec.head) setBabyInfo(prev => ({ ...prev, currentHead: cleanedRec.head }));
+        // When a new record is added, update babyInfo fields even if the new value is an empty string
+        if (typeof cleanedRec.weight !== 'undefined') setBabyInfo(prev => ({ ...prev, currentWeight: cleanedRec.weight }));
+        if (typeof cleanedRec.height !== 'undefined') setBabyInfo(prev => ({ ...prev, currentHeight: cleanedRec.height }));
+        if (typeof cleanedRec.head !== 'undefined') setBabyInfo(prev => ({ ...prev, currentHead: cleanedRec.head }));
         showToast('📈 已新增測量數據點！');
       };
 
@@ -1136,7 +1292,8 @@
       const latestWeightDisplay = React.useMemo(() => {
         const latestEntry = [...growthHistory]
           .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
-          .find(item => item.weight);
+          // Treat an explicitly-set empty string as a valid value (so clearing a value shows as "—")
+          .find(item => typeof item.weight !== 'undefined' && item.weight !== null);
         return latestEntry ? latestEntry.weight : '';
       }, [growthHistory]);
 
