@@ -1,0 +1,965 @@
+{
+  "generatedAt": "2026-08-13T08:19:46.578Z",
+  "entries": [
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE",
+      "localPath": "/external/github.com/LICENSE"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE",
+      "localPath": "/external/github.com/LICENSE"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://foo.com"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://foo.com/"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://babeljs.io/docs/plugins/external-helpers/"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://babeljs.io/docs/plugins/transform-react-jsx/"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://babeljs.io/docs/plugins/#modules"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://babeljs.io/docs/plugins/preset-react/"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://babeljs.io/docs/plugins/#presets"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/en/babel-core/#options"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/en/options#filename"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/thlorenz/convert-source-map#upgrading",
+      "localPath": "/external/github.com/convert-source-map"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/thlorenz/convert-source-map#upgrading",
+      "localPath": "/external/github.com/convert-source-map"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-async-do-expressions",
+      "localPath": "/external/github.com/babel-plugin-syntax-async-do-expressions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-decimal"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-decorators",
+      "localPath": "/external/github.com/babel-plugin-syntax-decorators"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-decorators",
+      "localPath": "/external/github.com/babel-plugin-proposal-decorators"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-do-expressions",
+      "localPath": "/external/github.com/babel-plugin-syntax-do-expressions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-do-expressions",
+      "localPath": "/external/github.com/babel-plugin-proposal-do-expressions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-export-default-from",
+      "localPath": "/external/github.com/babel-plugin-syntax-export-default-from"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-export-default-from",
+      "localPath": "/external/github.com/babel-plugin-proposal-export-default-from"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-flow",
+      "localPath": "/external/github.com/babel-plugin-syntax-flow"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-preset-flow",
+      "localPath": "/external/github.com/babel-preset-flow"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-function-bind",
+      "localPath": "/external/github.com/babel-plugin-syntax-function-bind"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-function-bind",
+      "localPath": "/external/github.com/babel-plugin-proposal-function-bind"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-function-sent",
+      "localPath": "/external/github.com/babel-plugin-syntax-function-sent"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-function-sent",
+      "localPath": "/external/github.com/babel-plugin-proposal-function-sent"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-jsx",
+      "localPath": "/external/github.com/babel-plugin-syntax-jsx"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-preset-react",
+      "localPath": "/external/github.com/babel-preset-react"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-pipeline-operator",
+      "localPath": "/external/github.com/babel-plugin-syntax-pipeline-operator"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-pipeline-operator",
+      "localPath": "/external/github.com/babel-plugin-proposal-pipeline-operator"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-record-and-tuple"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-throw-expressions",
+      "localPath": "/external/github.com/babel-plugin-syntax-throw-expressions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-throw-expressions",
+      "localPath": "/external/github.com/babel-plugin-proposal-throw-expressions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-typescript",
+      "localPath": "/external/github.com/babel-plugin-syntax-typescript"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-preset-typescript",
+      "localPath": "/external/github.com/babel-preset-typescript"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/configuration#print-effective-configs",
+      "localPath": "/external/babeljs.io/configuration"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/en/babel-plugin-proposal-pipeline-operator"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/babel/babel/issues."
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/configuration#print-effective-configs",
+      "localPath": "/external/babeljs.io/configuration"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/en/babel-plugin-transform-typescript"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/en/babel-plugin-transform-typescript"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://babeljs.io/docs/setup/"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://www.chartjs.org",
+      "localPath": "/external/www.chartjs.org/index"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/kurkle/color#readme",
+      "localPath": "/external/github.com/color"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1998/Math/MathML"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.min.js",
+      "localPath": "/external/cdnjs.cloudflare.com/pdfobject.min.js"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://jspdf.default.namespaceuri/"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://reactjs.org/docs/error-decoder.html?invariant="
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1998/Math/MathML"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xlink"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/XML/1998/namespace"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/1999/xlink"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#configure-content-sources",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/content-configuration#discarding-classes"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#prefix-cannot-be-a-function",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://evilmartians.com/chronicles/postcss-8-plugin-migration`"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://www.w3ctech.com/topic/2226`"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#remove-dark-mode-configuration",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com`}"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/content-configuration#safelisting-classes"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/content-configuration#safelisting-classes"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/content-configuration"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/content-configuration#pattern-recommendations"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#replace-variants-with-layer",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/content-configuration"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/using-with-preprocessors#nesting"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/browserslist/browserslist#readme",
+      "localPath": "/external/github.com/browserslist"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://twitter.com/browserslist"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/postcss/autoprefixer#readme",
+      "localPath": "/external/github.com/autoprefixer"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/browserslist/browserslist#readme",
+      "localPath": "/external/github.com/browserslist"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://tailwindcss.com/docs/installation"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/jonschlinkert/fill-range",
+      "localPath": "/external/github.com/fill-range"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/jonschlinkert/is-number",
+      "localPath": "/external/github.com/is-number"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://github.com/micromatch/to-regex-range",
+      "localPath": "/external/github.com/to-regex-range"
+    },
+    {
+      "file": "/external-resources.json",
+      "url": "https://mths.be/cssesc"
+    },
+    {
+      "file": "/js/app.bundle.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/app.bundle.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/app.jsx",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/app.jsx",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE",
+      "localPath": "/external/github.com/LICENSE"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE",
+      "localPath": "/external/github.com/LICENSE"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://foo.com"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://foo.com/"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://babeljs.io/docs/plugins/external-helpers/"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://babeljs.io/docs/plugins/transform-react-jsx/"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://babeljs.io/docs/plugins/#modules"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://babeljs.io/docs/plugins/preset-react/"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "http://babeljs.io/docs/plugins/#presets"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/en/babel-core/#options"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/en/options#filename"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/thlorenz/convert-source-map#upgrading",
+      "localPath": "/external/github.com/convert-source-map"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/thlorenz/convert-source-map#upgrading",
+      "localPath": "/external/github.com/convert-source-map"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-async-do-expressions",
+      "localPath": "/external/github.com/babel-plugin-syntax-async-do-expressions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-decimal"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-decorators",
+      "localPath": "/external/github.com/babel-plugin-syntax-decorators"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-decorators",
+      "localPath": "/external/github.com/babel-plugin-proposal-decorators"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-do-expressions",
+      "localPath": "/external/github.com/babel-plugin-syntax-do-expressions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-do-expressions",
+      "localPath": "/external/github.com/babel-plugin-proposal-do-expressions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-export-default-from",
+      "localPath": "/external/github.com/babel-plugin-syntax-export-default-from"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-export-default-from",
+      "localPath": "/external/github.com/babel-plugin-proposal-export-default-from"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-flow",
+      "localPath": "/external/github.com/babel-plugin-syntax-flow"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-preset-flow",
+      "localPath": "/external/github.com/babel-preset-flow"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-function-bind",
+      "localPath": "/external/github.com/babel-plugin-syntax-function-bind"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-function-bind",
+      "localPath": "/external/github.com/babel-plugin-proposal-function-bind"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-function-sent",
+      "localPath": "/external/github.com/babel-plugin-syntax-function-sent"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-function-sent",
+      "localPath": "/external/github.com/babel-plugin-proposal-function-sent"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-jsx",
+      "localPath": "/external/github.com/babel-plugin-syntax-jsx"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-preset-react",
+      "localPath": "/external/github.com/babel-preset-react"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-pipeline-operator",
+      "localPath": "/external/github.com/babel-plugin-syntax-pipeline-operator"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-pipeline-operator",
+      "localPath": "/external/github.com/babel-plugin-proposal-pipeline-operator"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-record-and-tuple"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-throw-expressions",
+      "localPath": "/external/github.com/babel-plugin-syntax-throw-expressions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-proposal-throw-expressions",
+      "localPath": "/external/github.com/babel-plugin-proposal-throw-expressions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-plugin-syntax-typescript",
+      "localPath": "/external/github.com/babel-plugin-syntax-typescript"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/tree/main/packages/babel-preset-typescript",
+      "localPath": "/external/github.com/babel-preset-typescript"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/configuration#print-effective-configs",
+      "localPath": "/external/babeljs.io/configuration"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/en/babel-plugin-proposal-pipeline-operator"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://github.com/babel/babel/issues."
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/configuration#print-effective-configs",
+      "localPath": "/external/babeljs.io/configuration"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/en/babel-plugin-transform-typescript"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/en/babel-plugin-transform-typescript"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/assumptions"
+    },
+    {
+      "file": "/js/babel.min.js",
+      "url": "https://babeljs.io/docs/setup/"
+    },
+    {
+      "file": "/js/chart.min.js",
+      "url": "https://www.chartjs.org",
+      "localPath": "/external/www.chartjs.org/index"
+    },
+    {
+      "file": "/js/chart.min.js",
+      "url": "https://github.com/kurkle/color#readme",
+      "localPath": "/external/github.com/color"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://www.w3.org/1998/Math/MathML"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.1.1/pdfobject.min.js",
+      "localPath": "/external/cdnjs.cloudflare.com/pdfobject.min.js"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "url": "http://jspdf.default.namespaceuri/"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "https://reactjs.org/docs/error-decoder.html?invariant="
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1998/Math/MathML"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xhtml"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xlink"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/XML/1998/namespace"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/1999/xlink"
+    },
+    {
+      "file": "/js/react-dom.production.min.js",
+      "url": "http://www.w3.org/2000/svg"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#configure-content-sources",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/content-configuration#discarding-classes"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#prefix-cannot-be-a-function",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://evilmartians.com/chronicles/postcss-8-plugin-migration`"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://www.w3ctech.com/topic/2226`"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#remove-dark-mode-configuration",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com`}"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/content-configuration#safelisting-classes"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/content-configuration#safelisting-classes"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/content-configuration"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/content-configuration#pattern-recommendations"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/upgrade-guide#replace-variants-with-layer",
+      "localPath": "/external/tailwindcss.com/upgrade-guide"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/content-configuration"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/using-with-preprocessors#nesting"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://github.com/browserslist/browserslist#readme",
+      "localPath": "/external/github.com/browserslist"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://twitter.com/browserslist"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://github.com/postcss/autoprefixer#readme",
+      "localPath": "/external/github.com/autoprefixer"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://github.com/browserslist/browserslist#readme",
+      "localPath": "/external/github.com/browserslist"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://tailwindcss.com/docs/installation"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://github.com/jonschlinkert/fill-range",
+      "localPath": "/external/github.com/fill-range"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://github.com/jonschlinkert/is-number",
+      "localPath": "/external/github.com/is-number"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://github.com/micromatch/to-regex-range",
+      "localPath": "/external/github.com/to-regex-range"
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "url": "https://mths.be/cssesc"
+    }
+  ]
+}

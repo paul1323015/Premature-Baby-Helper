@@ -1,0 +1,12 @@
+{
+  "name": "premature-baby-helper",
+  "version": "1.0.0",
+  "description": "Offline-capable Premature Baby Helper",
+  "scripts": {
+    "generate-cache": "node generate-cache-list.js",
+    "scan-external": "node scan-external-resources.js",
+    "scan-external:download": "node scan-external-resources.js --download"
+  },
+  "author": "",
+  "license": "MIT"
+}

@@ -1,0 +1,22 @@
+{
+  "generatedAt": "2026-08-13T08:55:17.078Z",
+  "replacements": [
+    {
+      "file": "/js/babel.min.js",
+      "replaced": 27
+    },
+    {
+      "file": "/js/chart.min.js",
+      "replaced": 2
+    },
+    {
+      "file": "/js/html2pdf.bundle.min.js",
+      "replaced": 1
+    },
+    {
+      "file": "/js/tailwind.min.js",
+      "replaced": 10
+    }
+  ],
+  "totalReplacements": 40
+}
