@@ -1,59 +1,26 @@
 const CACHE_NAME = 'pbh-cache-v1786611415686';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/external/babeljs.io/configuration',
-  '/external/cdnjs.cloudflare.com/pdfobject.min.js',
-  '/external/github.com/LICENSE',
-  '/external/github.com/autoprefixer',
-  '/external/github.com/babel-plugin-proposal-decorators',
-  '/external/github.com/babel-plugin-proposal-do-expressions',
-  '/external/github.com/babel-plugin-proposal-export-default-from',
-  '/external/github.com/babel-plugin-proposal-function-bind',
-  '/external/github.com/babel-plugin-proposal-function-sent',
-  '/external/github.com/babel-plugin-proposal-pipeline-operator',
-  '/external/github.com/babel-plugin-proposal-throw-expressions',
-  '/external/github.com/babel-plugin-syntax-async-do-expressions',
-  '/external/github.com/babel-plugin-syntax-decorators',
-  '/external/github.com/babel-plugin-syntax-do-expressions',
-  '/external/github.com/babel-plugin-syntax-export-default-from',
-  '/external/github.com/babel-plugin-syntax-flow',
-  '/external/github.com/babel-plugin-syntax-function-bind',
-  '/external/github.com/babel-plugin-syntax-function-sent',
-  '/external/github.com/babel-plugin-syntax-jsx',
-  '/external/github.com/babel-plugin-syntax-pipeline-operator',
-  '/external/github.com/babel-plugin-syntax-throw-expressions',
-  '/external/github.com/babel-plugin-syntax-typescript',
-  '/external/github.com/babel-preset-flow',
-  '/external/github.com/babel-preset-react',
-  '/external/github.com/babel-preset-typescript',
-  '/external/github.com/browserslist',
-  '/external/github.com/color',
-  '/external/github.com/convert-source-map',
-  '/external/github.com/fill-range',
-  '/external/github.com/is-number',
-  '/external/github.com/to-regex-range',
-  '/external/tailwindcss.com/upgrade-guide',
-  '/external/www.chartjs.org/index',
-  '/index.html',
-  '/js/app.bundle.js',
-  '/js/app.jsx',
-  '/js/babel.min.js',
-  '/js/chart.min.js',
-  '/js/html2pdf.bundle.min.js',
-  '/js/react-dom.production.min.js',
-  '/js/react.production.min.js',
-  '/js/tailwind.min.js',
-  '/service-worker.js'
+  './',
+  './index.html',
+  './js/app.bundle.js',
+  './js/app.jsx',
+  './js/babel.min.js',
+  './js/chart.min.js',
+  './js/html2pdf.bundle.min.js',
+  './js/react-dom.production.min.js',
+  './js/react.production.min.js',
+  './js/tailwind.min.js',
+  './service-worker.js'
 ];
 
 const CRITICAL_ASSETS = [
-  '/index.html',
-  '/js/app.bundle.js',
-  '/js/react.production.min.js',
-  '/js/react-dom.production.min.js',
-  '/js/tailwind.min.js',
-  '/js/chart.min.js',
-  '/js/html2pdf.bundle.min.js'
+  './index.html',
+  './js/app.bundle.js',
+  './js/react.production.min.js',
+  './js/react-dom.production.min.js',
+  './js/tailwind.min.js',
+  './js/chart.min.js',
+  './js/html2pdf.bundle.min.js'
 ];
 
 self.addEventListener('install', event => {
@@ -119,7 +86,7 @@ self.addEventListener('install', event => {
       optionalCount: optionalAssets.length
     };
     try {
-      await cache.put('/install-report.json', new Response(JSON.stringify(report, null, 2), { headers: { 'Content-Type': 'application/json' } }));
+      await cache.put('./install-report.json', new Response(JSON.stringify(report, null, 2), { headers: { 'Content-Type': 'application/json' } }));
     } catch (err) {
       console.warn('Failed to write install report to cache:', err && err.message ? err.message : err);
     }
@@ -152,7 +119,7 @@ self.addEventListener('fetch', event => {
         return response;
       }).catch(() => {
         // Fallback: return cached index.html for navigation requests
-        if (event.request.mode === 'navigate') return caches.match('/index.html');
+        if (event.request.mode === 'navigate') return caches.match('./index.html');
       });
     })
   );
