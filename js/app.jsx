@@ -469,15 +469,17 @@
 
       return (
         <div className="space-y-3">
-          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex items-start gap-2 shadow-sm">
-            <Icon name="sparkles" className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <span className="font-bold block text-amber-800">⚡️ 生長曲線軸線設定：</span>
-              預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex flex-col gap-2 shadow-sm sm:flex-row sm:items-start">
+            <div className="flex items-start gap-2 flex-1 min-w-0">
+              <Icon name="sparkles" className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <span className="font-bold block text-amber-800">⚡️ 生長曲線軸線設定：</span>
+                <span className="block">預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。</span>
+              </div>
             </div>
             <button
               onClick={() => setUseChronoAxis(!useChronoAxis)}
-              className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-xs font-bold transition-colors border border-amber-300 shadow-sm"
+              className="w-full px-2.5 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-[11px] sm:text-xs font-bold transition-colors border border-amber-300 shadow-sm sm:w-auto"
               title={useChronoAxis ? '目前顯示：實際月齡。點擊切換為 矯正月齡。' : '目前顯示：矯正月齡。點擊切換為 實際月齡。'}
             >
               {useChronoAxis ? '顯示：實際月齡（點擊切換為 矯正月齡）' : '顯示：矯正月齡（點擊切換為 實際月齡）'}
@@ -485,17 +487,17 @@
           </div>
 
           <div className="relative bg-white rounded-2xl border p-3 shadow-inner overflow-hidden">
-            <div className="flex justify-between items-center mb-2 px-1">
+            <div className="flex flex-col gap-2 mb-2 px-1 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
                 <span>{gender === 'boy' ? '👦 男寶' : '👧 女寶'} WHO {metricConfig.label}生長曲線圖</span>
                 <span className="text-[10px] text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full font-bold">
                   X軸 = {useChronoAxis ? '實際月齡' : '矯正月齡'}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setShowPercentiles(!showPercentiles)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${
                     showPercentiles
                       ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200'
                       : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'
@@ -503,7 +505,7 @@
                   title="切換顯示/隱藏背景 WHO 百分位參考虛線"
                 >
                   <span className={`w-2 h-2 rounded-full ${showPercentiles ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
-                  <span>百分位曲線：{showPercentiles ? '顯示' : '隱藏'}</span>
+                  <span className="whitespace-nowrap">百分位曲線：{showPercentiles ? '顯示' : '隱藏'}</span>
                 </button>
                 {debugEnabled && (
                   <button
@@ -514,7 +516,7 @@
                         console.groupEnd();
                       } catch (e) {}
                     }}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors"
+                    className="px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors"
                     title="在 Console 中輸出 Debug 表格（只於按下時執行）"
                   >
                     <span>輸出 Debug</span>
@@ -522,10 +524,10 @@
                 )}
                 <button
                   onClick={() => setShowRecordModal(true)}
-                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
+                  className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
                 >
                   <Icon name="plus" className="w-3.5 h-3.5" />
-                  <span>新增測量點</span>
+                  <span className="whitespace-nowrap">新增測量點</span>
                 </button>
               </div>
             </div>
@@ -1370,20 +1372,20 @@
 
           {/* Header Bar */}
           <header className={`sticky top-0 z-30 border-b ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`}>
-            <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 bg-yellow-400 text-amber-900 rounded-full shadow-md">
+            <div className="max-w-5xl mx-auto px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center space-x-2 min-w-0">
+                <div className="p-2 bg-yellow-400 text-amber-900 rounded-full shadow-md shrink-0">
                   <Icon name="sun" className="w-5 h-5 fill-current" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h1 className="font-bold text-base flex items-center gap-2">巴掌小太陽</h1>
                   <p className="text-[11px] opacity-90">早產兒照護小幫手</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 justify-end overflow-x-auto no-scrollbar whitespace-nowrap min-w-0 w-full sm:w-auto">
                 <button
                   onClick={() => setShowNotesModal(true)}
-                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
                   title="開啟筆記本"
                 >
                   <Icon name="book" className="w-4 h-4" />
@@ -1391,7 +1393,7 @@
                 </button>
                 <button
                   onClick={() => setShowBackupModal(true)}
-                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
                   title="開啟資料備份與還原"
                 >
                   <Icon name="database" className="w-4 h-4" />
@@ -1399,7 +1401,7 @@
                 </button>
                 <button
                   onClick={() => setShowDataMgmtModal(true)}
-                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm"
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
                   title="開啟資料管理"
                 >
                   <Icon name="trash" className="w-4 h-4" />
@@ -1408,7 +1410,7 @@
                 <button
                   onClick={handleDownloadPDF}
                   disabled={isExporting}
-                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50"
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50 flex-shrink-0"
                   title="下載完整記錄 PDF"
                 >
                   <Icon name="download" className="w-4 h-4" />
@@ -1416,14 +1418,14 @@
                 </button>
                 <button
                   onClick={() => setShowHelpModal(true)}
-                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
                   title="說明與特色"
                 >
                   <Icon name="info" className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setIsNightMode(!isNightMode)}
-                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors"
+                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
                   title="切換夜間模式"
                 >
                   <Icon name="moon" className="w-4 h-4" />
@@ -1432,16 +1434,16 @@
             </div>
           </header>
 
-          <main className="max-w-2xl mx-auto px-4 pt-4 pb-16">
+          <main className="max-w-5xl mx-auto px-3 pt-4 pb-20 sm:px-4 md:px-6 lg:px-8 xl:px-10" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
             {/* Baby Info Card */}
-            <div className={`p-4 rounded-2xl border shadow-sm mb-4 ${cardBg}`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-amber-200 border-2 border-amber-400 flex items-center justify-center text-2xl shadow-inner">
+            <div className={`p-4 rounded-2xl border shadow-sm mb-4 md:p-5 ${cardBg}`}>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-12 h-12 rounded-full bg-amber-200 border-2 border-amber-400 flex items-center justify-center text-2xl shadow-inner shrink-0">
                     👶
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-lg font-bold">
                         {babyInfo.name ? `${babyInfo.name} 寶寶` : '小太陽寶寶'}
                       </h2>
@@ -1464,7 +1466,7 @@
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="text-left sm:text-right">
                   <div className="text-[11px] text-slate-400">當前體重</div>
                   <div className="text-xl font-black text-amber-600">
                     {latestWeightDisplay ? `${latestWeightDisplay} kg` : '— kg'}
@@ -1474,7 +1476,7 @@
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex space-x-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-4 no-scrollbar">
               {[
                 { id: 'dashboard', label: '☀️ 今日快照' },
                 { id: 'growth', label: '📈 矯正月齡生長曲線' },
@@ -1485,7 +1487,7 @@
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                  className={`px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all ${
                     activeTab === tab.id
                       ? 'bg-amber-500 text-white shadow-md'
                       : 'bg-white border text-slate-600 hover:bg-amber-50'
@@ -1517,16 +1519,16 @@
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                   <button
                     onClick={() => { setNewLogType('feeding'); setShowAddLogModal(true); }}
-                    className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm"
+                    className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm md:p-5"
                   >
                     🍼 記餵奶
                   </button>
                   <button
                     onClick={() => { setNewLogType('diaper'); setShowAddLogModal(true); }}
-                    className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm"
+                    className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm md:p-5"
                   >
                     👶 記尿布
                   </button>
@@ -1536,13 +1538,13 @@
 
             {/* Tab 2: Growth Chart */}
             {activeTab === 'growth' && (
-              <div className={`p-4 rounded-2xl border space-y-4 ${cardBg}`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+              <div className={`p-4 rounded-2xl border space-y-4 md:p-5 ${cardBg}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 md:gap-3">
                   <h3 className="font-bold text-base flex items-center gap-2">
                     <Icon name="trendingUp" className="text-amber-500" />
                     矯正月齡生長曲線圖表
                   </h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <div className="flex rounded-xl bg-slate-100 p-1 text-xs">
                       {[
                         { id: 'weight', label: '體重' },
@@ -1726,13 +1728,13 @@
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200">
+            <div className="grid grid-cols-1 gap-3 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200 sm:grid-cols-2">
               <div><b>實際出生日：</b> {babyInfo.birthDate || '未填寫'}</div>
               <div><b>預產期：</b> {babyInfo.dueDate || '未填寫'}</div>
               <div><b>出生週數：</b> {babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
               <div><b>出生體重：</b> {babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'}</div>
               <div><b>實際月齡：</b> {ageData.chronoText}</div>
-              <div><b>當前體重/身長/頭圍：</b> {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / {babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'} / {babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}</div>
+              <div className="sm:col-span-2"><b>當前體重/身長/頭圍：</b> {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / {babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'} / {babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}</div>
             </div>
 
             <div className="space-y-2">
@@ -1821,7 +1823,7 @@
                       className="w-full p-2 border rounded-xl"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
                       <label className="font-bold block mb-1">生理性別</label>
                       <select
@@ -1844,7 +1846,7 @@
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <div>
                       <label className="font-bold block mb-1">實際出生日期</label>
                       <input
@@ -1864,7 +1866,7 @@
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div>
                       <label className="font-bold block mb-1">出生體重(kg)</label>
                       <input
@@ -2037,8 +2039,8 @@
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <div className="w-1/3">
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <div className="w-full sm:w-1/3">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">標籤分類</label>
                         <select
                           value={noteCategory}
@@ -2050,7 +2052,7 @@
                           <option value="其他備忘">【其他備忘】</option>
                         </select>
                       </div>
-                      <div className="w-2/3">
+                      <div className="w-full sm:w-2/3">
                         <label className="block text-[11px] font-bold text-slate-600 mb-1 flex justify-between">
                           <span>標題 (最多 30 字)</span>
                           <span className="text-[10px] text-slate-400">{noteTitle.length}/30</span>
