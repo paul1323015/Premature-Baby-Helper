@@ -193,20 +193,10 @@
           wrapper.style.marginTop = '12px';
           wrapper.style.width = '100%';
 
-          const intro = document.createElement('div');
-          intro.style.fontSize = '11px';
-          intro.style.lineHeight = '1.6';
-          intro.style.color = '#374151';
-          intro.style.background = '#f8fafc';
-          intro.style.border = '1px solid #dbeafe';
-          intro.style.borderRadius = '8px';
-          intro.style.padding = '8px 10px';
-          intro.innerHTML = '<div><strong>本地快照</strong>：自動保留最近本機版本，適合快速回復。</div><div><strong>備份檔案</strong>：手動匯出備份檔案，適合長期保存與跨裝置轉移。</div>';
-
           // Download snapshot button
           dlBtn = document.createElement('button');
           dlBtn.id = 'local-snapshot-download-btn';
-          dlBtn.innerText = '下載本地快照備份檔案';
+          dlBtn.innerText = '下載快照檔案';
           dlBtn.style.padding = '10px 16px';
           dlBtn.style.borderRadius = '6px';
           dlBtn.style.border = '1px solid #2b6cb0';
@@ -225,7 +215,7 @@
           // Import snapshot button
           const importBtn = document.createElement('button');
           importBtn.id = 'local-snapshot-import-btn';
-          importBtn.innerText = '匯入本地快照檔案';
+          importBtn.innerText = '匯入快照檔案';
           importBtn.style.padding = '10px 16px';
           importBtn.style.borderRadius = '6px';
           importBtn.style.border = '1px solid #38a169';
@@ -254,7 +244,7 @@
                   fr.readAsText(file, 'utf-8');
                 });
                 let parsed;
-                try{ parsed = JSON.parse(text); }catch(err){ alert('檔案格式錯誤，無法解析備份內容'); return; }
+                try{ parsed = JSON.parse(text); }catch(err){ alert('檔案格式錯誤，無法解析 JSON'); return; }
 
                 // Basic validation
                 const localKeys = parsed && parsed.data ? Object.keys(parsed.data).length : 0;
@@ -299,7 +289,7 @@
           // Restore button
           btn = document.createElement('button');
           btn.id = 'local-snapshot-modal-btn';
-          btn.innerText = '還原上一版本地快照';
+          btn.innerText = '還原上一版';
           btn.style.padding = '10px 16px';
           btn.style.borderRadius = '6px';
           btn.style.border = '1px solid #f0ad4e';
@@ -317,7 +307,6 @@
           };
 
           try{
-            wrapper.appendChild(intro);
             wrapper.appendChild(dlBtn);
             wrapper.appendChild(importBtn);
             wrapper.appendChild(btn);
