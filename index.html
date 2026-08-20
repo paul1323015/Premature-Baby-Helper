@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -20,7 +20,8 @@
 <body class="bg-amber-50/50 text-slate-800 antialiased min-h-screen">
   <div id="root"></div>
 
-  <script src="./js/app.bundle.js"></script>
+  <script src="./js/local-snapshot.js" defer></script>
+<script src="./js/app.bundle.js"></script>
 
   <script>
     // Register service worker to enable offline caching (works on localhost or HTTPS only)
@@ -30,6 +31,7 @@
         .catch(err => console.warn('Service Worker registration failed:', err));
     }
   </script>
-
 </body>
 </html>
+
+
