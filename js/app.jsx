@@ -2184,7 +2184,12 @@
                 </div>
 
                 <div className="space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900">
-                  <h4 className="font-bold text-xs">📤 匯出備份</h4>
+                  <h4 className="font-bold text-xs">本地快照 vs 備份檔案</h4>
+                  <p className="text-[11px] leading-relaxed">
+                    <span className="font-bold">本地快照</span>：適合日常保護。程式會自動保留最新本機版本，遇到誤刪、意外關閉或資料遺失時，可快速回復，操作最快。<br />
+                    <span className="font-bold">備份檔案</span>：適合長期保管與跨裝置轉移。會輸出備份檔案，適合保存歷史版本、做離線備份或轉移到另一台裝置。
+                  </p>
+                  <h4 className="font-bold text-xs mt-2">📤 匯出備份</h4>
                   <p className="text-[11px] leading-relaxed">
                     可以把寶寶的基本資料、成長紀錄、照護日記與筆記內容一起備份起來。當您換手機、換新裝置，或想把寶寶資料安全帶走時，這個功能很方便。
                   </p>
