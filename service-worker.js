@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pbh-cache-v1786611415686';
+const CACHE_NAME = 'pbh-cache-v1786612200000';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

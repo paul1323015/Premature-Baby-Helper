@@ -856,6 +856,103 @@
       const [showEditProfileModal, setShowEditProfileModal] = React.useState(false);
       const [editFormData, setEditFormData] = React.useState({ ...babyInfo });
       const [pastedJson, setPastedJson] = React.useState('');
+      const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
+      const APP_STORAGE_KEYS = [
+        'sun_baby_profile_v5',
+        'sun_baby_growth_history_v1',
+        'sun_baby_logs_v1',
+        'sun_baby_doctor_notes_v1',
+        'sun_baby_notes_v1',
+        'sun_baby_emergency_snapshot_v1',
+        AUTO_BACKUP_STORAGE_KEY
+      ];
+
+      const readRecentAutoBackups = () => {
+        try {
+          const saved = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY);
+          if (!saved) return [];
+          const parsed = JSON.parse(saved);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+          console.error('Failed to read recent auto backups:', error);
+          return [];
+        }
+      };
+
+      const [recentAutoBackups, setRecentAutoBackups] = React.useState(() => readRecentAutoBackups());
+      const [showStorageRecoveryModal, setShowStorageRecoveryModal] = React.useState(false);
+      const [storageRecoveryMeta, setStorageRecoveryMeta] = React.useState({
+        title: '儲存空間不足',
+        message: '本地儲存空間不足，資料還原已暫停，請先清理或另行備份。',
+        backupData: null
+      });
+
+      const persistRecentAutoBackups = (entries) => {
+        const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
+        setRecentAutoBackups(trimmed);
+        try {
+          if (trimmed.length > 0) {
+            localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify(trimmed));
+          } else {
+            localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY);
+          }
+        } catch (error) {
+          console.error('Failed to persist recent auto backups:', error);
+          setStorageRecoveryMeta({
+            title: '儲存空間不足',
+            message: '進階還原紀錄無法寫入本機儲存空間，已暫停保存。請先清理或下載備份檔案後再繼續。',
+            backupData: createBackupPayload()
+          });
+          setShowStorageRecoveryModal(true);
+        }
+      };
+
+      const clearRecentAutoBackups = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將清除所有進階還原紀錄。清除後將無法再從最近 3 筆自動備份中還原。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+
+        persistRecentAutoBackups([]);
+        showToast('🗑️ 已清除所有自動備份紀錄');
+      };
+
+      const clearAppStorageData = () => {
+        APP_STORAGE_KEYS.forEach((key) => {
+          try { localStorage.removeItem(key); } catch (error) { console.error('Failed to remove key:', key, error); }
+        });
+      };
+
+      const safeSetStorageItem = (key, value) => {
+        try {
+          localStorage.setItem(key, value);
+          return true;
+        } catch (error) {
+          console.error('Storage quota exceeded while saving', key, error);
+          setStorageRecoveryMeta({
+            title: '本機儲存空間不足',
+            message: '目前空間不足，資料已暫停儲存以避免頁面當機。請先清理本機資料，或先下載備份檔案再繼續。',
+            backupData: createBackupPayload()
+          });
+          setShowStorageRecoveryModal(true);
+          return false;
+        }
+      };
+
+      const handleStorageRecoveryChoice = (choice) => {
+        setShowStorageRecoveryModal(false);
+
+        if (choice === 'clear') {
+          clearAppStorageData();
+          showToast('🧹 已清理本機儲存空間，請重新嘗試。');
+          return;
+        }
+
+        const backupData = createBackupPayload();
+        const fileName = `巴掌小太陽_緊急備份_${(babyInfo.name || '寶寶').replace(/[\\/:*?\"<>|]/g, '').trim() || '寶寶'}_${formatLocalDateTimeForFileName()}.json`;
+        downloadBackupPayload('緊急備份', fileName);
+        showToast('💾 已下載緊急備份，請先保留備份後再重新操作。');
+      };
 
       React.useEffect(() => {
         if (babyInfo.gender) setSelectedGender(babyInfo.gender);
@@ -872,23 +969,23 @@
       }, []);
 
       React.useEffect(() => {
-        localStorage.setItem('sun_baby_profile_v5', JSON.stringify(babyInfo));
+        safeSetStorageItem('sun_baby_profile_v5', JSON.stringify(babyInfo));
       }, [babyInfo]);
 
       React.useEffect(() => {
-        localStorage.setItem('sun_baby_growth_history_v1', JSON.stringify(growthHistory));
+        safeSetStorageItem('sun_baby_growth_history_v1', JSON.stringify(growthHistory));
       }, [growthHistory]);
 
       React.useEffect(() => {
-        localStorage.setItem('sun_baby_logs_v1', JSON.stringify(logs));
+        safeSetStorageItem('sun_baby_logs_v1', JSON.stringify(logs));
       }, [logs]);
 
       React.useEffect(() => {
-        localStorage.setItem('sun_baby_doctor_notes_v1', JSON.stringify(doctorNotes));
+        safeSetStorageItem('sun_baby_doctor_notes_v1', JSON.stringify(doctorNotes));
       }, [doctorNotes]);
 
       React.useEffect(() => {
-        localStorage.setItem('sun_baby_notes_v1', JSON.stringify(notes));
+        safeSetStorageItem('sun_baby_notes_v1', JSON.stringify(notes));
       }, [notes]);
 
       React.useEffect(() => {
@@ -906,42 +1003,110 @@
         }
       }, []);
 
-      const handleExportBackupJSON = () => {
-        const backupData = {
-          version: '1.2',
-          exportTimestamp: new Date().toISOString(),
-          babyInfo,
-          growthHistory,
-          logs,
-          doctorNotes,
-          milestones,
-          notes
-        };
+      const buildBackupFileName = (label = '備份') => {
+        const safeName = (babyInfo.name || '寶寶').replace(/[\\/:*?"<>|]/g, '').trim() || '寶寶';
+        return `巴掌小太陽_照護與歷史測量${label}_${safeName}_${formatLocalDateTimeForFileName()}.json`;
+      };
 
+      const createBackupPayload = () => ({
+        version: '1.3',
+        exportTimestamp: new Date().toISOString(),
+        babyInfo,
+        growthHistory,
+        logs,
+        doctorNotes,
+        milestones,
+        notes,
+        notebook: notes,
+        notebookNotes: notes,
+        doctorQuestions: doctorNotes
+      });
+
+      const downloadBackupPayload = (label = '備份', customFileName = null) => {
+        const backupData = createBackupPayload();
         const jsonString = JSON.stringify(backupData, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `巴掌小太陽_照護與歷史測量備份_${babyInfo.name || '寶寶'}_${formatLocalDateTimeForFileName()}.json`;
+        a.download = customFileName || buildBackupFileName(label);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        return backupData;
+      };
 
+      const recordBackupHistoryEntry = (label, fileName, payload) => {
+        if (!payload || typeof payload !== 'object') return null;
+
+        const entry = {
+          id: `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          label,
+          fileName: fileName || `${label}_${formatLocalDateTimeForFileName()}.json`,
+          timestamp: payload.exportTimestamp || new Date().toISOString(),
+          payload
+        };
+
+        const nextEntries = [entry, ...readRecentAutoBackups()].slice(0, 3);
+        persistRecentAutoBackups(nextEntries);
+        return entry;
+      };
+
+      const autoBackupCurrentDataBeforeRestore = () => {
+        try {
+          const safeName = (babyInfo.name || '寶寶').replace(/[\\/:*?"<>|]/g, '').trim() || '寶寶';
+          const fileName = `巴掌小太陽_還原前自動備份_${safeName}_${formatLocalDateTimeForFileName()}.json`;
+          const backupData = downloadBackupPayload('還原前自動備份', fileName);
+          recordBackupHistoryEntry('還原前自動備份', fileName, backupData);
+          showToast('📦 已先自動備份目前資料，將在還原前下載。');
+          return true;
+        } catch (error) {
+          console.error('Auto backup before restore failed:', error);
+          showToast('⚠️ 自動備份目前資料失敗，但仍可繼續還原。');
+          return false;
+        }
+      };
+
+      const handleExportBackupJSON = () => {
+        const backupData = downloadBackupPayload('備份');
+        const fileName = buildBackupFileName('備份');
+        recordBackupHistoryEntry('手動備份', fileName, backupData);
         showToast('✅ 備份檔案已成功下載！');
+      };
+
+      const handleRestoreRecentAutoBackup = (entry) => {
+        if (!entry || !entry.payload) {
+          showToast('⚠️ 此備份資料遺失，無法還原。');
+          return;
+        }
+
+        const restoredAt = entry.timestamp ? new Date(entry.timestamp) : new Date();
+        const timeText = !isNaN(restoredAt.getTime()) ? formatLocalDateTime(restoredAt) : '未知時間';
+        const confirmed = window.confirm(
+          `即將載入最近自動備份（建立時間：${timeText}）。\n\n此動作將覆蓋目前所有資料，請確認是否繼續？`
+        );
+        if (!confirmed) {
+          showToast('⚠️ 已取消還原最近自動備份。');
+          return;
+        }
+
+        handleImportBackupObj(entry.payload);
       };
 
       const handleCopyBackupToClipboard = () => {
         const backupData = {
-          version: '1.2',
+          version: '1.3',
           exportTimestamp: new Date().toISOString(),
           babyInfo,
           growthHistory,
           logs,
           doctorNotes,
           milestones,
-          notes
+          notes,
+          notebook: notes,
+          notebookNotes: notes,
+          doctorQuestions: doctorNotes
         };
         const jsonString = JSON.stringify(backupData, null, 2);
 
@@ -960,6 +1125,30 @@
           return;
         }
 
+        const backupTimestamp = backupData.exportTimestamp ? new Date(backupData.exportTimestamp) : null;
+        const isValidDate = backupTimestamp && !isNaN(backupTimestamp.getTime());
+        const backupTimeText = isValidDate
+          ? formatLocalDateTime(backupTimestamp)
+          : '未知時間';
+
+        const restoreMessage = `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n系統將先自動下載一份目前資料的備份檔案，避免還原後遺失現有紀錄。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？`;
+        const confirmed = window.confirm(restoreMessage);
+        if (!confirmed) {
+          setPastedJson('');
+          showToast('⚠️ 已取消還原，未覆蓋目前資料。');
+          return;
+        }
+
+        const emergencySnapshot = createBackupPayload();
+        const snapshotPersisted = safeSetStorageItem('sun_baby_emergency_snapshot_v1', JSON.stringify(emergencySnapshot));
+        if (!snapshotPersisted) {
+          setPastedJson('');
+          showToast('⚠️ 本機儲存空間不足，還原已暫停。');
+          return;
+        }
+
+        autoBackupCurrentDataBeforeRestore();
+
         if (backupData.babyInfo) {
           const cleanedProfile = { ...backupData.babyInfo };
           if (cleanedProfile.birthDate) cleanedProfile.birthDate = sanitizeDateStr(cleanedProfile.birthDate);
@@ -976,13 +1165,37 @@
         }
 
         if (Array.isArray(backupData.logs)) setLogs(backupData.logs);
-        if (Array.isArray(backupData.doctorNotes)) setDoctorNotes(backupData.doctorNotes);
+
+        if (Array.isArray(backupData.doctorNotes) || Array.isArray(backupData.doctorQuestions)) {
+          setDoctorNotes(Array.isArray(backupData.doctorNotes) ? backupData.doctorNotes : backupData.doctorQuestions);
+        } else if (Object.prototype.hasOwnProperty.call(backupData, 'doctorNotes') || Object.prototype.hasOwnProperty.call(backupData, 'doctorQuestions')) {
+          setDoctorNotes([]);
+        }
+
         if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
-        if (Array.isArray(backupData.notes)) setNotes(backupData.notes);
+
+        const importedNotebookNotes = Array.isArray(backupData.notes)
+          ? backupData.notes
+          : Array.isArray(backupData.notebook)
+            ? backupData.notebook
+            : Array.isArray(backupData.notebookNotes)
+              ? backupData.notebookNotes
+              : [];
+
+        if (Array.isArray(backupData.notes) || Array.isArray(backupData.notebook) || Array.isArray(backupData.notebookNotes) || Object.prototype.hasOwnProperty.call(backupData, 'notes') || Object.prototype.hasOwnProperty.call(backupData, 'notebook') || Object.prototype.hasOwnProperty.call(backupData, 'notebookNotes')) {
+          setNotes(importedNotebookNotes);
+        }
+
+        const restoredSections = [];
+        if (backupData.notes || backupData.notebook || backupData.notebookNotes) restoredSections.push('筆記本');
+        if (backupData.babyInfo) restoredSections.push('今日快照');
+        if (backupData.growthHistory) restoredSections.push('歷史測量列表');
+        if (backupData.logs) restoredSections.push('照護日誌');
+        if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
 
         setShowBackupModal(false);
         setPastedJson('');
-        showToast('🎉 備份檔案已還原成功！');
+        showToast(`🎉 已還原：${restoredSections.join(' / ') || '資料'}`);
       };
 
       const handleFileUpload = (e) => {
@@ -1372,7 +1585,7 @@
 
           {/* Header Bar */}
           <header className={`sticky top-0 z-30 border-b ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`}>
-            <div className="max-w-5xl mx-auto px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-4xl mx-auto px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center space-x-2 min-w-0">
                 <div className="p-2 bg-yellow-400 text-amber-900 rounded-full shadow-md shrink-0">
                   <Icon name="sun" className="w-5 h-5 fill-current" />
@@ -1382,7 +1595,7 @@
                   <p className="text-[11px] opacity-90">早產兒照護小幫手</p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 justify-end overflow-x-auto no-scrollbar whitespace-nowrap min-w-0 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center justify-end gap-1.5 min-w-0 w-full sm:w-auto">
                 <button
                   onClick={() => setShowNotesModal(true)}
                   className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
@@ -1434,7 +1647,7 @@
             </div>
           </header>
 
-          <main className="max-w-5xl mx-auto px-3 pt-4 pb-20 sm:px-4 md:px-6 lg:px-8 xl:px-10" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
+          <main className="max-w-4xl mx-auto px-3 pt-4 pb-20 sm:px-4 md:px-6 lg:px-8 xl:px-10" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
             {/* Baby Info Card */}
             <div className={`p-4 rounded-2xl border shadow-sm mb-4 md:p-5 ${cardBg}`}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between md:gap-4">
@@ -2169,6 +2382,35 @@
             </div>
           )}
 
+          {showStorageRecoveryModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+              <div className="w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-lg shrink-0">⚠️</div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-sm text-red-700">{storageRecoveryMeta.title}</h3>
+                    <p className="text-[11px] leading-relaxed text-slate-600 mt-1">{storageRecoveryMeta.message}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handleStorageRecoveryChoice('clear')}
+                    className="w-full py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold text-xs shadow-sm transition-colors"
+                  >
+                    清理
+                  </button>
+                  <button
+                    onClick={() => handleStorageRecoveryChoice('backup')}
+                    className="w-full py-2.5 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                  >
+                    其他方案
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Backup Modal */}
           {showBackupModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -2186,7 +2428,7 @@
                 <div className="space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900">
                   <h4 className="font-bold text-xs">📤 匯出備份</h4>
                   <p className="text-[11px] leading-relaxed">
-                    可以把寶寶的基本資料、成長紀錄、照護日記與筆記內容一起備份起來。當您換手機、換新裝置，或想把寶寶資料安全帶走時，這個功能很方便。
+                    更換裝置或備份資料時使用，可以匯出完整的紀錄檔。
                   </p>
                   <div className="flex gap-2 pt-1">
                     <button
@@ -2209,7 +2451,7 @@
                 <div className="space-y-2 bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-900">
                   <h4 className="font-bold text-xs">📥 還原資料</h4>
                   <p className="text-[11px] leading-relaxed">
-                    您可以選擇先前下載的備份檔案，或直接貼上備份文字內容來把資料還原回來。建議先備份目前資料，再進行還原，避免覆蓋掉想保留的內容。
+                    更換裝置或備份資料時使用，可以還原完整的紀錄檔。
                   </p>
                   <div className="space-y-2 pt-1">
                     <label className="block w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-center cursor-pointer shadow-sm transition-colors">
@@ -2234,6 +2476,46 @@
                       </button>
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-2 bg-violet-50 p-3 rounded-xl border border-violet-200 text-violet-900">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-xs">📦 進階還原（最近 3 筆備份紀錄）</h4>
+                    <button
+                      onClick={clearRecentAutoBackups}
+                      className="text-[10px] font-bold text-violet-700 hover:text-violet-900 underline-offset-2 hover:underline"
+                    >
+                      清除所有紀錄
+                    </button>
+                  </div>
+                  {recentAutoBackups.length === 0 ? (
+                    <div className="p-3 rounded-xl border border-dashed border-violet-300 bg-white text-[11px] text-violet-700 leading-relaxed">
+                      目前尚無備份紀錄。進行「匯出備份」或「還原前自動備份」後，這裡會自動顯示最近 3 筆可還原的紀錄。
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {recentAutoBackups.map((entry) => {
+                        const entryDate = entry.timestamp ? new Date(entry.timestamp) : null;
+                        const entryTimeText = entryDate && !isNaN(entryDate.getTime()) ? formatLocalDateTime(entryDate) : '未知時間';
+                        return (
+                          <div key={entry.id || entry.fileName} className="p-2 rounded-xl border border-violet-200 bg-white">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="font-bold text-[11px] truncate">{entry.fileName || entry.label || '備份紀錄'}</div>
+                                <div className="text-[10px] text-violet-700 mt-0.5">{entryTimeText}</div>
+                              </div>
+                              <button
+                                onClick={() => handleRestoreRecentAutoBackup(entry)}
+                                className="shrink-0 py-1.5 px-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg font-bold text-[10px] transition-colors"
+                              >
+                                還原
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
               </div>

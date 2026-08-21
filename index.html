@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
@@ -20,18 +20,14 @@
 <body class="bg-amber-50/50 text-slate-800 antialiased min-h-screen">
   <div id="root"></div>
 
-  <script src="./js/local-snapshot.js" defer></script>
-<script src="./js/app.bundle.js"></script>
+  <script src="./js/app.bundle.js"></script>
 
   <script>
-    // Register service worker to enable offline caching (works on localhost or HTTPS only)
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./service-worker.js', { scope: './' })
-        .then(reg => console.log('Service Worker registered:', reg.scope))
-        .catch(err => console.warn('Service Worker registration failed:', err));
-    }
+    // Disable automatic Service Worker registration to avoid conflicts with local Chrome
+    // extension workers and file:// debugging. The app remains usable without SW caching.
+    // If needed later, re-enable this only on localhost/HTTPS and after confirming no
+    // extension or other worker is intercepting the page.
   </script>
+
 </body>
 </html>
-
-
