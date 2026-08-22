@@ -1651,21 +1651,27 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "book",
     className: "w-4 h-4"
-  }), /*#__PURE__*/React.createElement("span", null, "筆記本")), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hidden md:inline"
+  }, "筆記本")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowBackupModal(true),
     className: "px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0",
     title: "開啟資料備份與還原"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "database",
     className: "w-4 h-4"
-  }), /*#__PURE__*/React.createElement("span", null, "備份/還原")), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hidden md:inline"
+  }, "備份/還原")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowDataMgmtModal(true),
     className: "px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0",
     title: "開啟資料管理"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-4 h-4"
-  }), /*#__PURE__*/React.createElement("span", null, "資料管理")), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hidden md:inline"
+  }, "資料管理")), /*#__PURE__*/React.createElement("button", {
     onClick: handleDownloadPDF,
     disabled: isExporting,
     className: "px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50 flex-shrink-0",
@@ -1673,7 +1679,9 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "download",
     className: "w-4 h-4"
-  }), /*#__PURE__*/React.createElement("span", null, isExporting ? '匯出中...' : 'PDF')), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "hidden md:inline"
+  }, isExporting ? '匯出中...' : 'PDF')), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowHelpModal(true),
     className: "p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0",
     title: "說明與特色"

@@ -1602,7 +1602,7 @@
                   title="開啟筆記本"
                 >
                   <Icon name="book" className="w-4 h-4" />
-                  <span>筆記本</span>
+                  <span className="hidden md:inline">筆記本</span>
                 </button>
                 <button
                   onClick={() => setShowBackupModal(true)}
@@ -1610,7 +1610,7 @@
                   title="開啟資料備份與還原"
                 >
                   <Icon name="database" className="w-4 h-4" />
-                  <span>備份/還原</span>
+                  <span className="hidden md:inline">備份/還原</span>
                 </button>
                 <button
                   onClick={() => setShowDataMgmtModal(true)}
@@ -1618,7 +1618,7 @@
                   title="開啟資料管理"
                 >
                   <Icon name="trash" className="w-4 h-4" />
-                  <span>資料管理</span>
+                  <span className="hidden md:inline">資料管理</span>
                 </button>
                 <button
                   onClick={handleDownloadPDF}
@@ -1627,7 +1627,7 @@
                   title="下載完整記錄 PDF"
                 >
                   <Icon name="download" className="w-4 h-4" />
-                  <span>{isExporting ? '匯出中...' : 'PDF'}</span>
+                  <span className="hidden md:inline">{isExporting ? '匯出中...' : 'PDF'}</span>
                 </button>
                 <button
                   onClick={() => setShowHelpModal(true)}
