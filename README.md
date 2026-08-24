@@ -30,7 +30,6 @@ PDF 匯出：可將紀錄一鍵匯出為 PDF，方便回診時提供給醫師參
 友善介面設計：支援深色/夜間模式，適合半夜起來餵奶時使用而不刺眼。
 
 🛠 系統架構與技術細節 (Tech Stack)
-(請依據您實際使用的技術自行調整以下項目)
 
 前端框架：HTML5 / CSS3 / JavaScript (或 React / Vue / Flutter / Tailwind CSS)
 
