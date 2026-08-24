@@ -34,7 +34,7 @@ PDF 匯出：可將紀錄一鍵匯出為 PDF，方便回診時提供給醫師參
 
 前端框架：HTML5 / CSS3 / JavaScript (或 React / Vue / Flutter / Tailwind CSS)
 
-資料儲存：Local Storage / IndexedDB (支援離線使用與本機資料備份)
+資料儲存：Local Storage / IndexedDB (支援本機資料備份)
 
 匯出功能：PDF 渲染模組
 
