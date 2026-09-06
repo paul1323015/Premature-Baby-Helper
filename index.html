@@ -15,6 +15,20 @@
     /* Custom scrollbar hiding utility */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .pdf-section {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .pdf-section h3 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+    #pdf-report-content table,
+    #pdf-report-content tr,
+    #pdf-report-content li {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
   </style>
 </head>
 <body class="bg-amber-50/50 text-slate-800 antialiased min-h-screen">

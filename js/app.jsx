@@ -857,6 +857,7 @@
       const [editFormData, setEditFormData] = React.useState({ ...babyInfo });
       const [pastedJson, setPastedJson] = React.useState('');
       const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
+      const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
       const APP_STORAGE_KEYS = [
         'sun_baby_profile_v5',
         'sun_baby_growth_history_v1',
@@ -864,7 +865,8 @@
         'sun_baby_doctor_notes_v1',
         'sun_baby_notes_v1',
         'sun_baby_emergency_snapshot_v1',
-        AUTO_BACKUP_STORAGE_KEY
+        AUTO_BACKUP_STORAGE_KEY,
+        ADVANCED_RESTORE_SETTING_KEY
       ];
 
       const readRecentAutoBackups = () => {
@@ -880,6 +882,10 @@
       };
 
       const [recentAutoBackups, setRecentAutoBackups] = React.useState(() => readRecentAutoBackups());
+      const [advancedRestoreEnabled, setAdvancedRestoreEnabled] = React.useState(() => {
+        const saved = localStorage.getItem(ADVANCED_RESTORE_SETTING_KEY);
+        return saved === null ? true : saved === 'true';
+      });
       const [showStorageRecoveryModal, setShowStorageRecoveryModal] = React.useState(false);
       const [storageRecoveryMeta, setStorageRecoveryMeta] = React.useState({
         title: '儲存空間不足',
@@ -915,6 +921,28 @@
 
         persistRecentAutoBackups([]);
         showToast('🗑️ 已清除所有自動備份紀錄');
+      };
+
+      const handleToggleAdvancedRestore = () => {
+        if (advancedRestoreEnabled) {
+          const confirmed = window.confirm(
+            '⚠️ 關閉進階還原後，將不再於還原前預先下載自動備份，並會刪除目前最近 3 筆進階還原紀錄。確定要關閉嗎？'
+          );
+          if (!confirmed) return;
+          setAdvancedRestoreEnabled(false);
+          localStorage.setItem(ADVANCED_RESTORE_SETTING_KEY, 'false');
+          persistRecentAutoBackups([]);
+          showToast('🔕 已關閉進階還原並清除備份紀錄');
+          return;
+        }
+
+        const confirmed = window.confirm(
+          '開啟進階還原後，還原前會先下載自動備份，並保留最近 3 筆備份紀錄。確定要開啟嗎？'
+        );
+        if (!confirmed) return;
+        setAdvancedRestoreEnabled(true);
+        localStorage.setItem(ADVANCED_RESTORE_SETTING_KEY, 'true');
+        showToast('🔔 已開啟進階還原');
       };
 
       const clearAppStorageData = () => {
@@ -1038,6 +1066,7 @@
       };
 
       const recordBackupHistoryEntry = (label, fileName, payload) => {
+        if (!advancedRestoreEnabled) return null;
         if (!payload || typeof payload !== 'object') return null;
 
         const entry = {
@@ -1131,7 +1160,9 @@
           ? formatLocalDateTime(backupTimestamp)
           : '未知時間';
 
-        const restoreMessage = `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n系統將先自動下載一份目前資料的備份檔案，避免還原後遺失現有紀錄。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？`;
+        const restoreMessage = advancedRestoreEnabled
+          ? `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n系統將先自動下載一份目前資料的備份檔案，避免還原後遺失現有紀錄。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？`
+          : `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n進階還原已關閉，不會預先下載目前資料的自動備份。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？`;
         const confirmed = window.confirm(restoreMessage);
         if (!confirmed) {
           setPastedJson('');
@@ -1147,7 +1178,9 @@
           return;
         }
 
-        autoBackupCurrentDataBeforeRestore();
+        if (advancedRestoreEnabled) {
+          autoBackupCurrentDataBeforeRestore();
+        }
 
         if (backupData.babyInfo) {
           const cleanedProfile = { ...backupData.babyInfo };
@@ -1408,13 +1441,43 @@
         showToast('🗑️ 已清除照護日誌');
       };
 
+      const handleClearBabyProfile = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將清除寶寶姓名、性別、出生資料與目前身高體重等基本資料，但不會刪除照護日誌、看診備忘或生長數據。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+        setBabyInfo({
+          name: '',
+          gender: 'boy',
+          gestationalWeeks: '',
+          birthWeight: '',
+          birthDate: '',
+          dueDate: '',
+          currentWeight: '',
+          currentHeight: '',
+          currentHead: '',
+          targetDailyMilk: '',
+        });
+        setShowEditProfileModal(false);
+        showToast('🧹 已清除寶寶基本資料');
+      };
+
       const handleClearDoctorNotes = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將清除所有看診備忘與筆記。確定要繼續嗎？'
+          '⚠️ 此操作將清除所有看診備忘，但不會刪除筆記。確定要繼續嗎？'
         );
         if (!confirmed) return;
         setDoctorNotes([]);
-        showToast('🗑️ 已清除看診備忘/筆記');
+        showToast('🗑️ 已清除看診備忘');
+      };
+
+      const handleClearNotes = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將清除所有筆記，但不會刪除看診備忘。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+        setNotes([]);
+        showToast('🗑️ 已清除筆記');
       };
 
       const handleClearGrowthData = () => {
@@ -1454,7 +1517,11 @@
             filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: {
+              mode: ['css', 'legacy'],
+              avoid: ['.pdf-section', 'table', 'tr', 'li']
+            }
           };
 
           if (window.html2pdf) {
@@ -1488,9 +1555,17 @@
         return latestEntry ? latestEntry.weight : '';
       }, [growthHistory]);
 
+      const getLocalDateInputValue = () => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      };
       const [newDoctorQuestion, setNewDoctorQuestion] = React.useState('');
+      const [editingDoctorNoteId, setEditingDoctorNoteId] = React.useState(null);
+      const [doctorNoteDate, setDoctorNoteDate] = React.useState(getLocalDateInputValue);
       const [showAddLogModal, setShowAddLogModal] = React.useState(false);
+      const [editingLogId, setEditingLogId] = React.useState(null);
       const [newLogType, setNewLogType] = React.useState('feeding');
+      const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
       const [newLogDetail, setNewLogDetail] = React.useState('');
       const [newLogAmount, setNewLogAmount] = React.useState('');
 
@@ -1510,33 +1585,99 @@
 
       const handleAddLog = (e) => {
         e.preventDefault();
-        const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        const detail = newLogDetail || (newLogType === 'feeding' ? '瓶餵母乳/配方奶' : '濕尿布');
+        const amount = newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null;
 
-        const newEntry = {
-          id: Date.now(),
-          type: newLogType,
-          time: timeStr,
-          detail: newLogDetail || (newLogType === 'feeding' ? '瓶餵母乳/配方奶' : '濕尿布'),
-          amount: newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null,
-        };
+        if (editingLogId !== null) {
+          setLogs(prevLogs => prevLogs.map(log => (
+            log.id === editingLogId
+              ? { ...log, date: newLogDate, type: newLogType, detail, amount }
+              : log
+          )));
+          showToast('💾 已儲存照護紀錄修改！');
+        } else {
+          const now = new Date();
+          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          setLogs(prevLogs => [{
+            id: Date.now(),
+            date: newLogDate,
+            type: newLogType,
+            time: timeStr,
+            detail,
+            amount,
+          }, ...prevLogs]);
+          showToast('🍼 已新增今日快照紀錄！');
+        }
 
-        setLogs([newEntry, ...logs]);
         setShowAddLogModal(false);
+        setEditingLogId(null);
         setNewLogDetail('');
         setNewLogAmount('');
-        showToast('🍼 已上記錄！');
+      };
+
+      const handleStartEditLog = (log) => {
+        setEditingLogId(log.id);
+        setNewLogDate(log.date || getLocalDateInputValue());
+        setNewLogType(log.type);
+        setNewLogDetail(log.detail || '');
+        setNewLogAmount(log.amount ? String(log.amount).replace(/ml$/i, '') : '');
+        setShowAddLogModal(true);
+      };
+
+      const handleCancelEditLog = () => {
+        setShowAddLogModal(false);
+        setEditingLogId(null);
+        setNewLogDate(getLocalDateInputValue());
+        setNewLogDetail('');
+        setNewLogAmount('');
+      };
+
+      const handleDeleteLog = (id) => {
+        if (!window.confirm('確定要刪除這筆照護紀錄嗎？')) return;
+        if (editingLogId === id) handleCancelEditLog();
+        setLogs(prevLogs => prevLogs.filter(log => log.id !== id));
+        showToast('🗑️ 已刪除照護紀錄');
       };
 
       const handleAddDoctorNote = (e) => {
         e.preventDefault();
         if (!newDoctorQuestion.trim()) return;
-        setDoctorNotes([
-          ...doctorNotes,
-          { id: Date.now(), question: newDoctorQuestion, answered: false, tag: '門診提問' }
-        ]);
+        if (editingDoctorNoteId !== null) {
+          setDoctorNotes(prevNotes => prevNotes.map(note => (
+            note.id === editingDoctorNoteId
+              ? { ...note, question: newDoctorQuestion.trim(), date: doctorNoteDate }
+              : note
+          )));
+          showToast('💾 已儲存看診備忘修改！');
+        } else {
+          setDoctorNotes(prevNotes => [
+            ...prevNotes,
+            { id: Date.now(), date: doctorNoteDate, question: newDoctorQuestion.trim(), answered: false, tag: '門診提問' }
+          ]);
+          showToast('🏥 已新增看診問題！');
+        }
         setNewDoctorQuestion('');
-        showToast('🏥 已新增看診問題！');
+        setEditingDoctorNoteId(null);
+        setDoctorNoteDate(getLocalDateInputValue());
+      };
+
+      const handleStartEditDoctorNote = (note) => {
+        setEditingDoctorNoteId(note.id);
+        setDoctorNoteDate(note.date || getLocalDateInputValue());
+        setNewDoctorQuestion(note.question || '');
+      };
+
+      const handleCancelEditDoctorNote = () => {
+        setEditingDoctorNoteId(null);
+        setDoctorNoteDate(getLocalDateInputValue());
+        setNewDoctorQuestion('');
+      };
+
+      const handleDeleteDoctorNote = (id) => {
+        if (!window.confirm('確定要刪除這筆看診備忘嗎？')) return;
+        if (editingDoctorNoteId === id) handleCancelEditDoctorNote();
+        setDoctorNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+        showToast('🗑️ 已刪除看診備忘');
       };
 
       const handleSendMessage = (e) => {
@@ -1824,7 +1965,14 @@
                 <div className="flex justify-between items-center mb-1">
                   <h3 className="font-bold text-sm">今日照護紀錄</h3>
                   <button
-                    onClick={() => setShowAddLogModal(true)}
+                    onClick={() => {
+                      setEditingLogId(null);
+                      setNewLogDate(getLocalDateInputValue());
+                      setNewLogType('feeding');
+                      setNewLogDetail('');
+                      setNewLogAmount('');
+                      setShowAddLogModal(true);
+                    }}
                     className="px-3 py-1 bg-amber-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-sm"
                   >
                     <Icon name="plus" className="w-3.5 h-3.5" />
@@ -1837,12 +1985,30 @@
                   </div>
                 ) : (
                   logs.map((log) => (
-                    <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center ${cardBg}`}>
+                    <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`}>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-amber-600">{log.time}</span>
+                        <span className="text-xs font-bold text-amber-600">{log.date || '未設定日期'} {log.time}</span>
                         <span className="text-xs font-medium">{log.detail}</span>
                       </div>
-                      {log.amount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{log.amount}</span>}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {log.amount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{log.amount}</span>}
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditLog(log)}
+                          className="text-amber-600 hover:text-amber-800 font-bold text-xs"
+                          title="編輯這筆照護紀錄"
+                        >
+                          編輯
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLog(log.id)}
+                          className="text-slate-400 hover:text-red-500 font-bold text-xs"
+                          title="刪除這筆照護紀錄"
+                        >
+                          刪除
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -1857,7 +2023,15 @@
                     <Icon name="stethoscope" className="text-amber-500" /> 看診備忘與門診提問
                   </h3>
                 </div>
-                <form onSubmit={handleAddDoctorNote} className="flex gap-2">
+                <form onSubmit={handleAddDoctorNote} className="space-y-2">
+                  <input
+                    type="date"
+                    required
+                    value={doctorNoteDate}
+                    onChange={(e) => setDoctorNoteDate(e.target.value)}
+                    className="p-2 border rounded-xl text-xs"
+                  />
+                  <div className="flex gap-2">
                   <input
                     type="text"
                     value={newDoctorQuestion}
@@ -1865,7 +2039,15 @@
                     placeholder="寫下想問新生兒加護病房或主治醫師的問題..."
                     className="flex-1 p-2.5 border rounded-xl text-xs"
                   />
-                  <button type="submit" className="px-4 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm">新增</button>
+                    <button type="submit" className="px-4 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm">
+                      {editingDoctorNoteId !== null ? '儲存修改' : '新增'}
+                    </button>
+                    {editingDoctorNoteId !== null && (
+                      <button type="button" onClick={handleCancelEditDoctorNote} className="px-4 py-2.5 border rounded-xl text-xs font-bold text-slate-600">
+                        取消
+                      </button>
+                    )}
+                  </div>
                 </form>
                 <div className="space-y-2">
                   {doctorNotes.length === 0 ? (
@@ -1874,16 +2056,37 @@
                     </div>
                   ) : (
                     doctorNotes.map((note) => (
-                      <div key={note.id} className="p-3 border rounded-xl text-xs space-y-1 bg-white">
+                      <div key={note.id} className={`p-3 border rounded-xl text-xs space-y-1 ${note.answered ? 'bg-green-50 border-green-200' : 'bg-white'}`}>
                         <div className="flex justify-between items-center">
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 rounded text-[10px] font-bold">{note.tag}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${note.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                            {note.answered ? '醫師解答' : '門診提問'}
+                          </span>
+                          <div className="flex items-center gap-2">
                           <button
+                            type="button"
+                            onClick={() => handleStartEditDoctorNote(note)}
+                            className="text-amber-600 hover:text-amber-800 font-bold"
+                          >
+                            編輯
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setDoctorNotes(doctorNotes.map(n => n.id === note.id ? { ...n, answered: !n.answered } : n))}
                             className={note.answered ? 'text-green-600 font-bold' : 'text-slate-400 hover:text-slate-600'}
                           >
                             {note.answered ? '✓ 醫師已解答' : '標記為已解答'}
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDoctorNote(note.id)}
+                            className="text-slate-400 hover:text-red-500 font-bold"
+                            title="刪除這筆看診備忘"
+                          >
+                            刪除
+                          </button>
+                          </div>
                         </div>
+                        <p className="text-[11px] text-slate-400">{note.date || '未設定日期'}</p>
                         <p className="font-medium text-slate-700">{note.question}</p>
                       </div>
                     ))
@@ -1930,7 +2133,7 @@
 
           {/* Printable PDF Report Element (Hidden on screen, target for html2pdf) */}
           <div id="pdf-report-content" className="hidden p-8 bg-white text-slate-800 space-y-6 font-sans">
-            <div className="border-b pb-4 flex justify-between items-center">
+            <div className="pdf-section border-b pb-4 flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-amber-700">巴掌小太陽·早產兒門診照護與生長報告</h1>
                 <p className="text-xs text-slate-500 mt-1">匯出時間：{formatLocalDateTime()}</p>
@@ -1941,7 +2144,7 @@
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200 sm:grid-cols-2">
+            <div className="pdf-section grid grid-cols-1 gap-3 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200 sm:grid-cols-2">
               <div><b>實際出生日：</b> {babyInfo.birthDate || '未填寫'}</div>
               <div><b>預產期：</b> {babyInfo.dueDate || '未填寫'}</div>
               <div><b>出生週數：</b> {babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
@@ -1950,7 +2153,7 @@
               <div className="sm:col-span-2"><b>當前體重/身長/頭圍：</b> {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / {babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'} / {babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}</div>
             </div>
 
-            <div className="space-y-2">
+            <div className="pdf-section space-y-2">
               <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📈 歷史測量紀錄表</h3>
               {growthHistory.length === 0 ? (
                 <p className="text-xs text-slate-400">尚無測量紀錄</p>
@@ -1978,7 +2181,7 @@
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="pdf-section space-y-2">
               <h3 className="font-bold text-sm text-slate-800 border-b pb-1">🏥 看診備忘與門診提問</h3>
               {doctorNotes.length === 0 ? (
                 <p className="text-xs text-slate-400">無門診提問紀錄</p>
@@ -1986,15 +2189,17 @@
                 <ul className="space-y-1.5 text-xs">
                   {doctorNotes.map(n => (
                     <li key={n.id} className="p-2 bg-slate-50 border rounded-lg flex justify-between items-center">
-                      <span>• {n.question}</span>
-                      <span className="font-bold text-[10px] px-2 py-0.5 rounded bg-slate-200 text-slate-700">{n.answered ? '✓ 醫師已解答' : '待詢問'}</span>
+                      <span>• {n.date || '未設定日期'}｜{n.question}</span>
+                      <span className={`font-bold text-[10px] px-2 py-0.5 rounded ${n.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                        {n.answered ? '醫師解答' : '門診提問'}
+                      </span>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className="pdf-section space-y-2">
               <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📝 筆記本重點摘要</h3>
               {notes.length === 0 ? (
                 <p className="text-xs text-slate-400">無筆記紀錄</p>
@@ -2010,7 +2215,7 @@
               )}
             </div>
 
-            <div className="text-center text-[10px] text-slate-400 pt-6 border-t">
+            <div className="pdf-section text-center text-[10px] text-slate-400 pt-6 border-t">
               本報告由「巴掌小太陽 · 早產兒照護小幫手」自動生成，僅供看診時輔助醫療團隊參考。
             </div>
           </div>
@@ -2149,8 +2354,8 @@
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
                 <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-amber-700">新增今日照護紀錄</h3>
-                  <button onClick={() => setShowAddLogModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <h3 className="font-bold text-sm text-amber-700">{editingLogId !== null ? '編輯照護紀錄' : '新增今日照護紀錄'}</h3>
+                  <button onClick={handleCancelEditLog} className="text-slate-400 hover:text-slate-600">
                     <Icon name="x" className="w-4 h-4" />
                   </button>
                 </div>
@@ -2170,6 +2375,17 @@
                     >
                       👶 尿布
                     </button>
+                  </div>
+
+                  <div>
+                    <label className="font-bold block mb-1">日期</label>
+                    <input
+                      type="date"
+                      required
+                      value={newLogDate}
+                      onChange={(e) => setNewLogDate(e.target.value)}
+                      className="w-full p-2 border rounded-xl"
+                    />
                   </div>
 
                   {newLogType === 'feeding' && (
@@ -2198,8 +2414,8 @@
                   </div>
 
                   <div className="flex gap-2 pt-2">
-                    <button type="button" onClick={() => setShowAddLogModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
-                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存紀錄</button>
+                    <button type="button" onClick={handleCancelEditLog} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
+                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">{editingLogId !== null ? '儲存修改' : '儲存紀錄'}</button>
                   </div>
                 </form>
               </div>
@@ -2481,16 +2697,35 @@
                 <div className="space-y-2 bg-violet-50 p-3 rounded-xl border border-violet-200 text-violet-900">
                   <div className="flex items-center justify-between gap-2">
                     <h4 className="font-bold text-xs">📦 進階還原（最近 3 筆備份紀錄）</h4>
-                    <button
-                      onClick={clearRecentAutoBackups}
-                      className="text-[10px] font-bold text-violet-700 hover:text-violet-900 underline-offset-2 hover:underline"
-                    >
-                      清除所有紀錄
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleToggleAdvancedRestore}
+                        className={`text-[10px] font-bold px-2 py-1 rounded-lg ${advancedRestoreEnabled ? 'bg-green-100 text-green-800' : 'bg-slate-200 text-slate-600'}`}
+                      >
+                        {advancedRestoreEnabled ? '已開啟' : '已關閉'}
+                      </button>
+                      {advancedRestoreEnabled && (
+                        <button
+                          type="button"
+                          onClick={clearRecentAutoBackups}
+                          className="text-[10px] font-bold text-violet-700 hover:text-violet-900 underline-offset-2 hover:underline"
+                        >
+                          清除所有紀錄
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  <p className="text-[10px] leading-relaxed">
+                    {advancedRestoreEnabled
+                      ? '開啟時，還原前會先下載目前資料並保留最近 3 筆備份。'
+                      : '已關閉，不會預先下載還原前備份，且不保留進階還原紀錄。'}
+                  </p>
                   {recentAutoBackups.length === 0 ? (
                     <div className="p-3 rounded-xl border border-dashed border-violet-300 bg-white text-[11px] text-violet-700 leading-relaxed">
-                      目前尚無備份紀錄。進行「匯出備份」或「還原前自動備份」後，這裡會自動顯示最近 3 筆可還原的紀錄。
+                      {advancedRestoreEnabled
+                        ? '目前尚無備份紀錄。進行「匯出備份」或「還原前自動備份」後，這裡會自動顯示最近 3 筆可還原的紀錄。'
+                        : '進階還原已關閉，目前不保留備份紀錄。'}
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -2546,6 +2781,13 @@
 
                   <div className="grid gap-2">
                     <button
+                      onClick={handleClearBabyProfile}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="trash" className="w-4 h-4" />
+                      清除寶寶基本資料
+                    </button>
+                    <button
                       onClick={handleClearLogs}
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
@@ -2557,7 +2799,14 @@
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
                       <Icon name="trash" className="w-4 h-4" />
-                      清除看診備忘/筆記
+                      清除看診備忘
+                    </button>
+                    <button
+                      onClick={handleClearNotes}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="trash" className="w-4 h-4" />
+                      清除筆記
                     </button>
                     <button
                       onClick={handleClearGrowthData}
