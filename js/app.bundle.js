@@ -451,7 +451,7 @@ const PretermGrowthChart = ({
   const minBabyMonth = babyMonths.length > 0 ? Math.min(...babyMonths) : 0;
   const maxBabyMonth = babyMonths.length > 0 ? Math.max(...babyMonths) : 12;
   const minX = Math.min(-2, Math.floor(minBabyMonth - 0.5));
-  const maxX = Math.max(12, Math.ceil(Math.min(24, maxBabyMonth + 1)));
+  const maxX = Math.max(36, Math.ceil(Math.min(36, maxBabyMonth + 1)));
   const xScale = month => padding.left + (month - minX) / (maxX - minX) * (width - padding.left - padding.right);
   const yScale = val => height - padding.bottom - (val - metricConfig.minY) / (metricConfig.maxY - metricConfig.minY) * (height - padding.top - padding.bottom);
 
@@ -492,6 +492,9 @@ const PretermGrowthChart = ({
   const step = maxX - minX > 16 ? 2 : 1;
   for (let m = minX; m <= maxX; m += step) {
     monthTicks.push(m);
+  }
+  if (monthTicks[monthTicks.length - 1] !== maxX) {
+    monthTicks.push(maxX);
   }
   const handleFormSubmit = e => {
     e.preventDefault();
