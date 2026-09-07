@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Offline-capable Premature Baby Helper",
   "scripts": {
+    "test": "jest",
     "generate-cache": "node generate-cache-list.js",
     "scan-external": "node scan-external-resources.js",
     "scan-external:download": "node scan-external-resources.js --download"
@@ -13,6 +14,7 @@
     "@babel/cli": "^8.0.4",
     "@babel/core": "^8.0.1",
     "@babel/preset-env": "^8.0.2",
-    "@babel/preset-react": "^8.0.1"
+    "@babel/preset-react": "^8.0.1",
+    "jest": "^30.0.0"
   }
 }

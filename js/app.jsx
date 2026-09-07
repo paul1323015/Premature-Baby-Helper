@@ -21,6 +21,7 @@
         download: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></g>,
         upload: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></g>,
         database: <g><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></g>,
+        hardDrive: <g><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 14h18M7 17h.01M11 17h.01" /></g>,
         copy: <g><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></g>,
         trash: <g><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></g>,
         alertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></g>,
@@ -327,7 +328,13 @@
       return ages.chronoMonths;
     };
 
-    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord }) => {
+    const formatBytes = (bytes) => {
+      if (bytes < 1024) return `${bytes} B`;
+      if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    };
+
+    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord, onToggleGrowthRecordPlot }) => {
       const [showRecordModal, setShowRecordModal] = React.useState(false);
       const [useChronoAxis, setUseChronoAxis] = React.useState(false);
       const [showPercentiles, setShowPercentiles] = React.useState(true);
@@ -337,7 +344,7 @@
       const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
 
       const metricConfig = {
-        weight: { label: '體重', unit: 'kg', minY: 0, maxY: 15, yTicks: [0, 2, 4, 6, 8, 10, 12, 14] },
+        weight: { label: '體重', unit: 'kg', minY: GrowthChartScale.METRIC_DOMAINS.weight.min, maxY: GrowthChartScale.METRIC_DOMAINS.weight.max, yTicks: [0, 2, 4, 6, 8, 10, 12, 14, 16] },
         height: { label: '身長', unit: 'cm', minY: 35, maxY: 95, yTicks: [35, 45, 55, 65, 75, 85, 95] },
         head: { label: '頭圍', unit: 'cm', minY: 25, maxY: 52, yTicks: [25, 30, 35, 40, 45, 50] },
       }[metric];
@@ -349,7 +356,7 @@
       const padding = { top: 25, right: 35, bottom: 55, left: 45 };
 
       const MS_PER_DAY = 1000 * 60 * 60 * 24;
-      const babyPoints = growthHistory.map(item => {
+      const babyPoints = growthHistory.filter(item => item.plotOnChart !== false).map(item => {
         // parse numeric value; if empty or invalid, skip plotting
         let val = parseFloat(item[metric]);
         if (isNaN(val)) return null;
@@ -406,7 +413,7 @@
       const maxX = Math.max(36, Math.ceil(Math.min(36, maxBabyMonth + 1)));
 
       const xScale = (month) => padding.left + ((month - minX) / (maxX - minX)) * (width - padding.left - padding.right);
-      const yScale = (val) => height - padding.bottom - ((val - metricConfig.minY) / (metricConfig.maxY - metricConfig.minY)) * (height - padding.top - padding.bottom);
+      const yScale = (val) => GrowthChartScale.mapValueToY(val, { min: metricConfig.minY, max: metricConfig.maxY }, height, padding);
 
       // Determine whether the 0-month baseline (出生 or 預產期) is within the plotted X range
       const zeroInRange = 0 >= minX && 0 <= maxX;
@@ -465,7 +472,8 @@
           date: cleanDate,
           weight: recWeight,
           height: recHeight,
-          head: recHead
+          head: recHead,
+          plotOnChart: window.confirm('是否要將這筆測量資料繪製在生長圖表上？')
         });
         setShowRecordModal(false);
       };
@@ -553,9 +561,6 @@
                     <text x={xPos} y={height - padding.bottom + 17} textAnchor="middle" className={`font-mono text-[9px] ${isZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`}>
                       {isZero ? '0個月' : `${mVal}個`}
                     </text>
-                    {isZero && !useChronoAxis && (
-                      <text x={xPos} y={height - padding.bottom + 28} textAnchor="middle" className="fill-amber-600 font-bold text-[8px]">(預產期)</text>
-                    )}
                   </g>
                 );
               })}
@@ -655,7 +660,7 @@
                         <div className="font-bold text-slate-800 flex items-center gap-2">
                           <span>{cleanDate}</span>
                           <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">
-                            {ages.correctedText} / {ages.chronoText}
+                            {ages.isSet ? `${ages.correctedText} / ${ages.chronoText}` : '尚未設定生日與預產期'}
                           </span>
                           {ages.inconsistent && (
                             <span className="ml-2 inline-flex items-center gap-1 text-red-600 font-bold text-[11px]">
@@ -670,6 +675,9 @@
                           {rec.head && <span>頭圍: <b className="text-slate-700">{rec.head} cm</b></span>}
                         </div>
                       </div>
+                      <button onClick={() => onToggleGrowthRecordPlot(rec.id)} className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${rec.plotOnChart === false ? 'bg-slate-200 text-slate-500' : 'bg-amber-100 text-amber-700'}`} title={rec.plotOnChart === false ? '繪製此測量點' : '隱藏此測量點'}>
+                        {rec.plotOnChart === false ? '繪製此點' : '隱藏此點'}
+                      </button>
                       <button onClick={() => onDeleteGrowthRecord(rec.id)} className="p-1 text-slate-400 hover:text-red-500 transition-colors" title="刪除紀錄">
                         <Icon name="trash" className="w-4 h-4" />
                       </button>
@@ -703,13 +711,7 @@
                     />
                     {babyInfo.dueDate && (
                       <div className="text-[11px] text-amber-600 mt-1 font-medium">
-                        對應矯正月齡：{
-                          getCorrectedAgeAtDate(recDate, babyInfo.birthDate, babyInfo.dueDate) > 24
-                            ? "已滿 2 歲"
-                            : getCorrectedAgeAtDate(recDate, babyInfo.birthDate, babyInfo.dueDate) < 0
-                            ? `預產期前`
-                            : `${getCorrectedAgeAtDate(recDate, babyInfo.birthDate, babyInfo.dueDate).toFixed(1)} 個月`
-                        }
+                        對應矯正月齡：{getAgesForDate(recDate, babyInfo.birthDate, babyInfo.dueDate).correctedText}
                       </div>
                     )}
                   </div>
@@ -745,6 +747,9 @@
       const [showHelpModal, setShowHelpModal] = React.useState(false);
       const [showBackupModal, setShowBackupModal] = React.useState(false);
       const [showDataMgmtModal, setShowDataMgmtModal] = React.useState(false);
+      const [showStorageManagerModal, setShowStorageManagerModal] = React.useState(false);
+      const [storageUsage, setStorageUsage] = React.useState({ bytes: 0, percent: 0 });
+      const storageWarningLevelRef = React.useRef(0);
       const [showNotesModal, setShowNotesModal] = React.useState(false);
       const [isExporting, setIsExporting] = React.useState(false);
 
@@ -849,12 +854,25 @@
       const [filterNoteCategory, setFilterNoteCategory] = React.useState('全部');
       const [editingNoteId, setEditingNoteId] = React.useState(null);
 
-      const [milestones, setMilestones] = React.useState([
+      const defaultMilestones = [
         { id: 1, text: '俯臥（趴著）時能短暫抬起頭部 45 度 (矯正 1-2 個月)', done: false },
         { id: 2, text: '眼神能跟隨視線移動或關注黑白卡 10 秒 (矯正 1-2 個月)', done: false },
         { id: 3, text: '聽到大人溫柔說話會停止哭泣或發出咕嚕聲 (矯正 2 個月)', done: false },
         { id: 4, text: '手掌能由緊握逐漸放鬆，雙手偶爾碰觸 (矯正 2-3 個月)', done: false },
-      ]);
+      ];
+      const [milestones, setMilestones] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_milestones_v1');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return parsed;
+          } catch (e) {}
+        }
+        return defaultMilestones;
+      });
+      const [showMilestoneModal, setShowMilestoneModal] = React.useState(false);
+      const [editingMilestoneId, setEditingMilestoneId] = React.useState(null);
+      const [milestoneText, setMilestoneText] = React.useState('');
 
       const [showEditProfileModal, setShowEditProfileModal] = React.useState(false);
       const [editFormData, setEditFormData] = React.useState({ ...babyInfo });
@@ -867,10 +885,55 @@
         'sun_baby_logs_v1',
         'sun_baby_doctor_notes_v1',
         'sun_baby_notes_v1',
+        'sun_baby_milestones_v1',
         'sun_baby_emergency_snapshot_v1',
         AUTO_BACKUP_STORAGE_KEY,
         ADVANCED_RESTORE_SETTING_KEY
       ];
+      const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
+      const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
+
+      const calculateStorageUsage = () => {
+        let bytes = 0;
+        for (let index = 0; index < localStorage.length; index += 1) {
+          const key = localStorage.key(index);
+          if (!key) continue;
+          const value = localStorage.getItem(key) || '';
+          bytes += new Blob([key, value]).size;
+        }
+        return { bytes, percent: Math.min(100, Math.round((bytes / STORAGE_LIMIT_BYTES) * 100)) };
+      };
+
+      const refreshStorageUsage = () => {
+        const usage = calculateStorageUsage();
+        setStorageUsage(usage);
+        return usage;
+      };
+
+      const cleanupStorageTemporaryData = () => {
+        const confirmed = window.confirm('將清除緊急暫存檔案，不會刪除正式資料或自動備份檔案。確定要繼續嗎？');
+        if (!confirmed) return;
+        localStorage.removeItem('sun_baby_emergency_snapshot_v1');
+        const usage = refreshStorageUsage();
+        showToast(`🧹 已清理暫存檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
+      };
+
+      const cleanupStorageAutoBackupData = () => {
+        const confirmed = window.confirm('將清除最近的自動備份檔案，之後將無法從最近備份紀錄還原。確定要繼續嗎？');
+        if (!confirmed) return;
+        localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY);
+        setRecentAutoBackups([]);
+        const usage = refreshStorageUsage();
+        showToast(`🗑️ 已清理自動備份檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
+      };
+
+      const ensureStorageCapacityForNewData = () => {
+        const usage = refreshStorageUsage();
+        if (usage.bytes < STORAGE_LIMIT_BYTES) return true;
+        setShowStorageManagerModal(true);
+        showToast('⚠️ 儲存空間已滿，新增資料已暫停');
+        return false;
+      };
 
       const readRecentAutoBackups = () => {
         try {
@@ -895,6 +958,15 @@
         message: '本地儲存空間不足，資料還原已暫停，請先清理或另行備份。',
         backupData: null
       });
+
+      React.useEffect(() => {
+        const usage = refreshStorageUsage();
+        const nextLevel = usage.bytes >= STORAGE_LIMIT_BYTES ? 2 : usage.bytes >= STORAGE_WARNING_BYTES ? 1 : 0;
+        if (nextLevel > storageWarningLevelRef.current && nextLevel > 0) {
+          setShowStorageManagerModal(true);
+        }
+        storageWarningLevelRef.current = nextLevel;
+      }, [babyInfo, growthHistory, logs, doctorNotes, notes, milestones, recentAutoBackups]);
 
       const persistRecentAutoBackups = (entries) => {
         const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
@@ -1018,6 +1090,10 @@
       React.useEffect(() => {
         safeSetStorageItem('sun_baby_notes_v1', JSON.stringify(notes));
       }, [notes]);
+
+      React.useEffect(() => {
+        safeSetStorageItem('sun_baby_milestones_v1', JSON.stringify(milestones));
+      }, [milestones]);
 
       React.useEffect(() => {
         let hasFixed = false;
@@ -1288,6 +1364,7 @@
           setNoteContent('');
           showToast('✏️ 已成功更新筆記！');
         } else {
+          if (!ensureStorageCapacityForNewData()) return;
           if (notes.length >= 1000) {
             showToast('⚠️ 筆記總數已達 1000 條上限，請先刪除舊筆記！');
             return;
@@ -1342,8 +1419,8 @@
         e.preventDefault();
         const cleanedForm = {
           ...editFormData,
-          birthDate: sanitizeDateStr(editFormData.birthDate),
-          dueDate: sanitizeDateStr(editFormData.dueDate)
+          birthDate: editFormData.birthDate ? sanitizeDateStr(editFormData.birthDate) : '',
+          dueDate: editFormData.dueDate ? sanitizeDateStr(editFormData.dueDate) : ''
         };
 
         // Update babyInfo immediately with the cleaned form
@@ -1386,6 +1463,7 @@
       };
 
       const handleAddGrowthRecord = (newRec) => {
+        if (!ensureStorageCapacityForNewData()) return;
         const cleanedRec = {
           ...newRec,
           date: sanitizeDateStr(newRec.date)
@@ -1403,6 +1481,56 @@
         showToast('🗑️ 已刪除測量點');
       };
 
+      const handleToggleGrowthRecordPlot = (id) => {
+        setGrowthHistory(growthHistory.map(item => item.id === id ? { ...item, plotOnChart: item.plotOnChart === false } : item));
+        showToast('📊 已更新圖表繪製設定');
+      };
+
+      const openMilestoneEditor = (milestone = null) => {
+        setEditingMilestoneId(milestone ? milestone.id : null);
+        setMilestoneText(milestone ? milestone.text : '');
+        setShowMilestoneModal(true);
+      };
+
+      const handleSaveMilestone = () => {
+        const text = milestoneText.trim();
+        if (!text) {
+          showToast('⚠️ 請先輸入里程碑內容');
+          return;
+        }
+        if (editingMilestoneId === null) {
+          if (!ensureStorageCapacityForNewData()) return;
+          setMilestones([...milestones, { id: Date.now(), text, done: false }]);
+          showToast('✅ 已新增發展里程碑');
+        } else {
+          setMilestones(milestones.map(item => item.id === editingMilestoneId ? { ...item, text } : item));
+          showToast('✅ 已更新發展里程碑');
+        }
+        setShowMilestoneModal(false);
+        setEditingMilestoneId(null);
+        setMilestoneText('');
+      };
+
+      const handleDeleteMilestone = (id) => {
+        if (!window.confirm('確定要刪除這項發展里程碑嗎？')) return;
+        setMilestones(milestones.filter(item => item.id !== id));
+        showToast('🗑️ 已刪除發展里程碑');
+      };
+
+      const handleRestoreDefaultMilestones = () => {
+        const missingDefaults = defaultMilestones.filter(
+          defaultItem => !milestones.some(item => item.id === defaultItem.id)
+        );
+        if (missingDefaults.length === 0) {
+          showToast('ℹ️ 預設發展里程碑都已存在');
+          return;
+        }
+        if (!window.confirm(`將載入 ${missingDefaults.length} 項預設發展里程碑，不會刪除現有自訂項目。確定要繼續嗎？`)) return;
+        if (!ensureStorageCapacityForNewData()) return;
+        setMilestones([...milestones, ...missingDefaults]);
+        showToast(`🌱 已載入 ${missingDefaults.length} 項預設發展里程碑`);
+      };
+
       const handleResetData = () => {
         const confirmed = window.confirm(
           "警告：此操作將清除所有寶寶照護與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？"
@@ -1414,6 +1542,7 @@
         localStorage.removeItem('sun_baby_logs_v1');
         localStorage.removeItem('sun_baby_doctor_notes_v1');
         localStorage.removeItem('sun_baby_notes_v1');
+        localStorage.removeItem('sun_baby_milestones_v1');
 
         setBabyInfo({
           name: '',
@@ -1431,6 +1560,7 @@
         setLogs([]);
         setDoctorNotes([]);
         setNotes([]);
+        setMilestones(defaultMilestones);
         setShowEditProfileModal(false);
         showToast('🧹 已重置清空所有本地資料');
       };
@@ -1531,7 +1661,7 @@
             window.html2pdf().set(opt).from(element).save().then(() => {
               element.style.display = 'none';
               setIsExporting(false);
-              showToast('✅ PDF 報告已順利匯出下載！');
+              showToast('PDF 報告已順利匯出！若未自動下載，請檢查瀏覽器是否阻擋了自動下載。');
             }).catch((err) => {
               console.error(err);
               element.style.display = 'none';
@@ -1562,9 +1692,19 @@
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       };
+      const getLocalTimeInputValue = () => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      };
+      const format24HourTime = (value) => {
+        const match = String(value || '').match(/^(\d{1,2}):(\d{2})/);
+        return match ? `${String(Number(match[1])).padStart(2, '0')}:${match[2]}` : '';
+      };
       const [newDoctorQuestion, setNewDoctorQuestion] = React.useState('');
       const [editingDoctorNoteId, setEditingDoctorNoteId] = React.useState(null);
       const [doctorNoteDate, setDoctorNoteDate] = React.useState(getLocalDateInputValue);
+      const [doctorNoteTime, setDoctorNoteTime] = React.useState(getLocalTimeInputValue);
+      const [doctorNoteCategory, setDoctorNoteCategory] = React.useState('門診提問');
       const [showAddLogModal, setShowAddLogModal] = React.useState(false);
       const [editingLogId, setEditingLogId] = React.useState(null);
       const [newLogType, setNewLogType] = React.useState('feeding');
@@ -1599,6 +1739,7 @@
           )));
           showToast('💾 已儲存照護紀錄修改！');
         } else {
+          if (!ensureStorageCapacityForNewData()) return;
           const now = new Date();
           const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
           setLogs(prevLogs => [{
@@ -1648,31 +1789,38 @@
         if (editingDoctorNoteId !== null) {
           setDoctorNotes(prevNotes => prevNotes.map(note => (
             note.id === editingDoctorNoteId
-              ? { ...note, question: newDoctorQuestion.trim(), date: doctorNoteDate }
+              ? { ...note, question: newDoctorQuestion.trim(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory }
               : note
           )));
           showToast('💾 已儲存看診備忘修改！');
         } else {
+          if (!ensureStorageCapacityForNewData()) return;
           setDoctorNotes(prevNotes => [
             ...prevNotes,
-            { id: Date.now(), date: doctorNoteDate, question: newDoctorQuestion.trim(), answered: false, tag: '門診提問' }
+            { id: Date.now(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory, question: newDoctorQuestion.trim(), answered: false, tag: doctorNoteCategory }
           ]);
           showToast('🏥 已新增看診問題！');
         }
         setNewDoctorQuestion('');
         setEditingDoctorNoteId(null);
         setDoctorNoteDate(getLocalDateInputValue());
+        setDoctorNoteTime(getLocalTimeInputValue());
+        setDoctorNoteCategory('門診提問');
       };
 
       const handleStartEditDoctorNote = (note) => {
         setEditingDoctorNoteId(note.id);
         setDoctorNoteDate(note.date || getLocalDateInputValue());
+        setDoctorNoteTime(note.time || '09:00');
+        setDoctorNoteCategory(note.category || note.tag || '門診提問');
         setNewDoctorQuestion(note.question || '');
       };
 
       const handleCancelEditDoctorNote = () => {
         setEditingDoctorNoteId(null);
         setDoctorNoteDate(getLocalDateInputValue());
+        setDoctorNoteTime(getLocalTimeInputValue());
+        setDoctorNoteCategory('門診提問');
         setNewDoctorQuestion('');
       };
 
@@ -1723,6 +1871,11 @@
         <div className={`min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`}>
           {toastMsg && (
             <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce">
+              {toastMsg.startsWith('PDF 報告已順利匯出') && (
+                <span className="inline-flex items-center justify-center rounded-full bg-green-500 text-white shrink-0">
+                  <Icon name="check" className="w-4 h-4" />
+                </span>
+              )}
               <span>{toastMsg}</span>
             </div>
           )}
@@ -1763,6 +1916,14 @@
                 >
                   <Icon name="trash" className="w-4 h-4" />
                   <span className="hidden md:inline">資料管理</span>
+                </button>
+                <button
+                  onClick={() => { refreshStorageUsage(); setShowStorageManagerModal(true); }}
+                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
+                  title="應用程式儲存空間管理"
+                >
+                  <Icon name="hardDrive" className="w-4 h-4" />
+                  <span className="hidden md:inline">儲存空間</span>
                 </button>
                 <button
                   onClick={handleDownloadPDF}
@@ -1944,18 +2105,50 @@
                   growthHistory={growthHistory}
                   onAddGrowthRecord={handleAddGrowthRecord}
                   onDeleteGrowthRecord={handleDeleteGrowthRecord}
+                  onToggleGrowthRecordPlot={handleToggleGrowthRecordPlot}
                 />
 
                 <div className="space-y-2 pt-2 border-t">
-                  <h4 className="font-bold text-xs text-slate-700">矯正月齡發展里程碑檢核</h4>
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-xs text-slate-700">矯正月齡發展里程碑檢核</h4>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={handleRestoreDefaultMilestones}
+                        className="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold"
+                      >
+                        載入預設
+                      </button>
+                      <button
+                        onClick={() => openMilestoneEditor()}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1"
+                      >
+                        <Icon name="plus" className="w-3 h-3" />
+                        新增
+                      </button>
+                    </div>
+                  </div>
                   {milestones.map((m) => (
                     <div
                       key={m.id}
                       onClick={() => setMilestones(milestones.map(item => item.id === m.id ? { ...item, done: !item.done } : item))}
-                      className="p-3 rounded-xl border flex items-center gap-3 cursor-pointer hover:bg-amber-50/50 transition-colors bg-white"
+                      className="p-3 rounded-xl border flex items-center gap-2 cursor-pointer hover:bg-amber-50/50 transition-colors bg-white"
                     >
                       <input type="checkbox" checked={m.done} readOnly className="w-4 h-4 accent-amber-500 rounded" />
-                      <span className={`text-xs font-medium ${m.done ? 'line-through text-slate-400' : 'text-slate-700'}`}>{m.text}</span>
+                      <span className={`text-xs font-medium flex-1 min-w-0 ${m.done ? 'line-through text-slate-400' : 'text-slate-700'}`}>{m.text}</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(event) => { event.stopPropagation(); openMilestoneEditor(m); }}
+                          className="px-2 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold"
+                        >
+                          編輯
+                        </button>
+                        <button
+                          onClick={(event) => { event.stopPropagation(); handleDeleteMilestone(m.id); }}
+                          className="px-2 py-1 rounded-md bg-red-50 hover:bg-red-100 text-red-700 text-[10px] font-bold"
+                        >
+                          刪除
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -2035,6 +2228,26 @@
                     className="p-2 border rounded-xl text-xs"
                   />
                   <div className="flex gap-2">
+                    <select
+                      value={doctorNoteCategory}
+                      onChange={(e) => setDoctorNoteCategory(e.target.value)}
+                      className="p-2 border rounded-xl text-xs"
+                    >
+                      <option value="門診提問">門診提問</option>
+                      <option value="看診備忘">看診備忘</option>
+                    </select>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="HH:mm"
+                      pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+                      required
+                      value={doctorNoteTime}
+                      onChange={(e) => setDoctorNoteTime(e.target.value)}
+                      className="p-2 border rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="flex gap-2">
                   <input
                     type="text"
                     value={newDoctorQuestion}
@@ -2062,7 +2275,7 @@
                       <div key={note.id} className={`p-3 border rounded-xl text-xs space-y-1 ${note.answered ? 'bg-green-50 border-green-200' : 'bg-white'}`}>
                         <div className="flex justify-between items-center">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${note.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                            {note.answered ? '醫師解答' : '門診提問'}
+                            {note.category || note.tag || '門診提問'}
                           </span>
                           <div className="flex items-center gap-2">
                           <button
@@ -2077,7 +2290,12 @@
                             onClick={() => setDoctorNotes(doctorNotes.map(n => n.id === note.id ? { ...n, answered: !n.answered } : n))}
                             className={note.answered ? 'text-green-600 font-bold' : 'text-slate-400 hover:text-slate-600'}
                           >
-                            {note.answered ? '✓ 醫師已解答' : '標記為已解答'}
+                            {note.answered ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Icon name="check" className="w-3.5 h-3.5" />
+                                醫師已解答
+                              </span>
+                            ) : '標記為已解答'}
                           </button>
                           <button
                             type="button"
@@ -2089,7 +2307,7 @@
                           </button>
                           </div>
                         </div>
-                        <p className="text-[11px] text-slate-400">{note.date || '未設定日期'}</p>
+                        <p className="text-[11px] text-slate-400">{note.date || '未設定日期'} {format24HourTime(note.time)}</p>
                         <p className="font-medium text-slate-700">{note.question}</p>
                       </div>
                     ))
@@ -2192,7 +2410,7 @@
                 <ul className="space-y-1.5 text-xs">
                   {doctorNotes.map(n => (
                     <li key={n.id} className="p-2 bg-slate-50 border rounded-lg flex justify-between items-center">
-                      <span>• {n.date || '未設定日期'}｜{n.question}</span>
+                      <span>• {n.date || '未設定日期'} {format24HourTime(n.time)}｜{n.category || n.tag || '門診提問'}｜{n.question}</span>
                       <span className={`font-bold text-[10px] px-2 py-0.5 rounded ${n.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                         {n.answered ? '醫師解答' : '門診提問'}
                       </span>
@@ -2601,6 +2819,60 @@
             </div>
           )}
 
+          {showStorageManagerModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+              <div className="w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4 text-xs">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="font-bold text-sm text-amber-700 flex items-center gap-1.5">
+                    <Icon name="hardDrive" className="w-4 h-4" />
+                    應用程式儲存空間管理
+                  </h3>
+                  <button onClick={() => setShowStorageManagerModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className={`rounded-xl border p-3 ${storageUsage.percent >= 100 ? 'bg-red-50 border-red-200 text-red-800' : storageUsage.percent >= 80 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
+                  <p className="font-bold">Local Storage 使用量</p>
+                  <p className="text-lg font-black mt-1">{formatBytes(storageUsage.bytes)} / 5 MB（約 {storageUsage.percent}%）</p>
+                  <p className="text-[10px] leading-relaxed mt-1">上限為常見估計值，實際限制可能依瀏覽器與瀏覽模式有所不同。</p>
+                </div>
+                {storageUsage.percent >= 80 && (
+                  <p className="text-[11px] leading-relaxed text-red-700">
+                    {storageUsage.percent >= 100
+                      ? '儲存量已達估計上限，請先下載完整備份，再清理暫存資料。'
+                      : '儲存量已達 80% 警戒值，建議先下載備份並清理暫存資料。'}
+                  </p>
+                )}
+                <div className="grid gap-2">
+                  <button
+                    onClick={refreshStorageUsage}
+                    className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold"
+                  >
+                    重新計算目前使用量
+                  </button>
+                  <button
+                    onClick={() => { setShowStorageManagerModal(false); setShowBackupModal(true); }}
+                    className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold"
+                  >
+                    先下載完整備份
+                  </button>
+                  <button
+                    onClick={cleanupStorageTemporaryData}
+                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
+                  >
+                    清理暫存檔案
+                  </button>
+                  <button
+                    onClick={cleanupStorageAutoBackupData}
+                    className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
+                  >
+                    清理自動備份檔案
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {showStorageRecoveryModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
               <div className="w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4">
@@ -2670,7 +2942,7 @@
                 <div className="space-y-2 bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-900">
                   <h4 className="font-bold text-xs">📥 還原資料</h4>
                   <p className="text-[11px] leading-relaxed">
-                    更換裝置或備份資料時使用，可以還原完整的紀錄檔。
+                    更換裝置或還原資料時使用，可以匯入完整的紀錄檔。
                   </p>
                   <div className="space-y-2 pt-1">
                     <label className="block w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-center cursor-pointer shadow-sm transition-colors">
@@ -2843,6 +3115,44 @@
                       清除所有本地資料 (重置)
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showMilestoneModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+              <div className={`w-full max-w-md p-5 rounded-2xl border shadow-xl ${cardBg}`}>
+                <div className="flex justify-between items-center pb-3 border-b mb-4">
+                  <h3 className="font-bold text-base text-emerald-800">
+                    {editingMilestoneId === null ? '新增發展里程碑' : '編輯發展里程碑'}
+                  </h3>
+                  <button onClick={() => setShowMilestoneModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
+                    <Icon name="x" className="w-5 h-5" />
+                  </button>
+                </div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">里程碑內容</label>
+                <textarea
+                  value={milestoneText}
+                  onChange={(event) => setMilestoneText(event.target.value)}
+                  rows="4"
+                  autoFocus
+                  placeholder="例如：能自行翻身（矯正 5-6 個月）"
+                  className="w-full rounded-xl border border-slate-200 p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                />
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    onClick={() => setShowMilestoneModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleSaveMilestone}
+                    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold"
+                  >
+                    儲存
+                  </button>
                 </div>
               </div>
             </div>
