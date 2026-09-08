@@ -16,6 +16,39 @@
     /* Custom scrollbar hiding utility */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .header-tools { -ms-overflow-style: none; scrollbar-width: none; max-width: 100%; }
+    .header-tools::-webkit-scrollbar { display: none; }
+    .toast-notification {
+      position: fixed;
+      top: var(--toast-top, 80px);
+      left: var(--toast-left, 50%);
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 85vw;
+      z-index: 99999;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.28);
+    }
+    @media (max-width: 767px) {
+      html, body { max-width: 100%; overflow-x: hidden; }
+      .header-tools {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+      .header-tools > button { flex: 0 0 auto; }
+      .toast-notification {
+        position: fixed !important;
+        top: var(--toast-top, 70px) !important;
+        right: auto !important;
+        bottom: auto !important;
+        left: var(--toast-left, 50%) !important;
+        transform: translateX(-50%) !important;
+        z-index: 99999 !important;
+        width: max-content !important;
+        max-width: 85vw !important;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.28);
+      }
+    }
     .pdf-section {
       break-inside: avoid;
       page-break-inside: avoid;
@@ -33,12 +66,31 @@
     }
     #pdf-report-content .pdf-item {
       display: block !important;
+      width: 100%;
+      break-inside: avoid-page !important;
+      page-break-inside: avoid !important;
+      -webkit-column-break-inside: avoid;
     }
     #pdf-report-content .pdf-footer {
       break-inside: avoid;
       page-break-inside: avoid;
       break-before: avoid;
       page-break-before: avoid;
+    }
+    @media (max-width: 640px) {
+      .fixed.inset-0 {
+        align-items: flex-start !important;
+        overflow-y: auto !important;
+        padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom)) !important;
+        box-sizing: border-box !important;
+      }
+      .fixed.inset-0 > div {
+        width: 100% !important;
+        max-height: calc(100dvh - 2rem) !important;
+        overflow-y: auto !important;
+        flex-shrink: 0;
+        box-sizing: border-box !important;
+      }
     }
   </style>
 </head>

@@ -826,7 +826,7 @@ const PretermGrowthChart = ({
       className: "w-4 h-4"
     })));
   }))), showRecordModal && /*#__PURE__*/React.createElement("div", {
-    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start sm:items-center justify-center overflow-y-auto p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
     className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3"
   }, /*#__PURE__*/React.createElement("div", {
@@ -910,6 +910,22 @@ function App() {
   const [isExporting, setIsExporting] = React.useState(false);
   const [toastMsg, setToastMsg] = React.useState('');
   const showToast = msg => {
+    try {
+      const headerEl = document.querySelector('header');
+      const topPx = headerEl ? Math.ceil(headerEl.getBoundingClientRect().bottom + 8) : 70;
+      document.documentElement.style.setProperty('--toast-top', topPx + 'px');
+      const container = document.querySelector('.max-w-4xl.mx-auto') || document.querySelector('.max-w-4xl');
+      if (container) {
+        const r = container.getBoundingClientRect();
+        const centerX = Math.round(r.left + r.width / 2);
+        document.documentElement.style.setProperty('--toast-left', centerX + 'px');
+      } else {
+        document.documentElement.style.removeProperty('--toast-left');
+      }
+    } catch (e) {
+      document.documentElement.style.setProperty('--toast-top', '70px');
+      document.documentElement.style.removeProperty('--toast-left');
+    }
     setToastMsg(msg);
     setTimeout(() => setToastMsg(''), 3000);
   };
@@ -1766,7 +1782,7 @@ function App() {
           orientation: 'portrait'
         },
         pagebreak: {
-          mode: ['css', 'legacy'],
+          mode: ['css'],
           avoid: ['.pdf-footer', '.pdf-item', 'table', 'tr', 'li']
         }
       };
@@ -1992,11 +2008,11 @@ function App() {
   return /*#__PURE__*/React.createElement("div", {
     className: `min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`
   }, toastMsg && /*#__PURE__*/React.createElement("div", {
-    className: "fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce"
+    className: "toast-notification fixed left-1/2 -translate-x-1/2 z-[99999] w-max max-w-[85vw] bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700"
   }, /*#__PURE__*/React.createElement("span", null, toastMsg)), /*#__PURE__*/React.createElement("header", {
-    className: `sticky top-0 z-30 border-b ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`
+    className: `sticky top-0 z-30 border-b overflow-hidden ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`
   }, /*#__PURE__*/React.createElement("div", {
-    className: "max-w-4xl mx-auto px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+    className: "max-w-4xl mx-auto min-w-0 px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center space-x-2 min-w-0"
   }, /*#__PURE__*/React.createElement("div", {
@@ -2011,7 +2027,7 @@ function App() {
   }, "巴掌小太陽"), /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] opacity-90"
   }, "早產兒照護小幫手"))), /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-wrap items-center justify-end gap-1.5 min-w-0 w-full sm:w-auto"
+    className: "header-tools flex flex-nowrap items-center justify-start gap-1 min-w-0 w-full max-w-full overflow-x-auto overflow-y-hidden whitespace-nowrap pb-0.5 sm:w-auto sm:justify-end sm:gap-1.5"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowNotesModal(true),
     className: "px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0",
@@ -2936,7 +2952,7 @@ function App() {
   }, "其他方案")))), showBackupModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[90vh] overflow-y-auto text-xs"
+    className: "w-full max-w-md my-2 sm:my-0 p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto text-xs box-border"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
@@ -3040,9 +3056,9 @@ function App() {
       className: "shrink-0 py-1.5 px-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg font-bold text-[10px] transition-colors"
     }, "還原")));
   }))))), showDataMgmtModal && /*#__PURE__*/React.createElement("div", {
-    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start sm:items-center justify-center overflow-y-auto p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[90vh] overflow-y-auto text-xs"
+    className: "w-full max-w-md my-2 sm:my-0 p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto text-xs box-border"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
