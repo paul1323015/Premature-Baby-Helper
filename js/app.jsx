@@ -226,6 +226,27 @@
       return getLocalDateString(dateObj);
     };
 
+    const getCalendarAgeParts = (startDate, endDate) => {
+      if (!startDate || !endDate || endDate < startDate) return { months: 0, days: 0 };
+      let months = (endDate.getFullYear() - startDate.getFullYear()) * 12
+        + endDate.getMonth() - startDate.getMonth();
+      const getAnchorDate = (monthCount) => {
+        const anchor = new Date(startDate.getFullYear(), startDate.getMonth() + monthCount, 1);
+        const lastDay = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+        anchor.setDate(Math.min(startDate.getDate(), lastDay));
+        return anchor;
+      };
+      let anchorDate = getAnchorDate(months);
+      if (endDate < anchorDate) {
+        months -= 1;
+        anchorDate = getAnchorDate(months);
+      }
+      return {
+        months: Math.max(0, months),
+        days: Math.max(0, Math.floor((endDate - anchorDate) / (1000 * 60 * 60 * 24)))
+      };
+    };
+
     // Helper: calculate ages for a given measurement date
     const getAgesForDate = (measurementDateStr, birthDateStr, dueDateStr) => {
       const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -253,9 +274,12 @@
 
       const chronoMonths = chronoDays / 30.4375;
       const correctedMonths = correctedDays / 30.4375;
-
-      const chronoMInt = Math.floor(chronoMonths);
-      const chronoDaysRemaining = Math.floor(chronoDays % 30.4375);
+      const chronoAgeParts = birthDate && measurementDate && chronoDays >= 0
+        ? getCalendarAgeParts(birthDate, measurementDate)
+        : { months: 0, days: 0 };
+      const correctedAgeParts = dueDate && measurementDate && correctedDays >= 0
+        ? getCalendarAgeParts(dueDate, measurementDate)
+        : { months: 0, days: 0 };
 
       let correctedText = '';
       if (dueDate && correctedDays < 0) {
@@ -264,9 +288,7 @@
       } else if (correctedMonths > 24) {
         correctedText = '已滿 2 歲（建議參考常規兒童生長曲線）';
       } else {
-        const correctedMInt = Math.floor(correctedDays / 30.4375);
-        const correctedDaysRemaining = Math.floor(correctedDays % 30.4375);
-        correctedText = `矯正 ${correctedMInt} 個月 ${correctedDaysRemaining} 天`;
+        correctedText = `矯正 ${correctedAgeParts.months} 個月 ${correctedAgeParts.days} 天`;
       }
 
       return {
@@ -276,7 +298,7 @@
         chronoMonths,
         correctedDays,
         correctedMonths,
-        chronoText: `實際 ${chronoMInt} 個月 ${chronoDaysRemaining} 天`,
+        chronoText: `實際 ${chronoAgeParts.months} 個月 ${chronoAgeParts.days} 天`,
         correctedText,
         isSet: !!birthDate && !!dueDate,
         inconsistent: typeof chronoDays === 'number' && typeof correctedDays === 'number' && chronoDays < correctedDays
@@ -879,6 +901,7 @@
       const [pastedJson, setPastedJson] = React.useState('');
       const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
       const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
+      const CHAT_HISTORY_STORAGE_KEY = 'sun_baby_chat_history_v1';
       const APP_STORAGE_KEYS = [
         'sun_baby_profile_v5',
         'sun_baby_growth_history_v1',
@@ -888,7 +911,8 @@
         'sun_baby_milestones_v1',
         'sun_baby_emergency_snapshot_v1',
         AUTO_BACKUP_STORAGE_KEY,
-        ADVANCED_RESTORE_SETTING_KEY
+        ADVANCED_RESTORE_SETTING_KEY,
+        CHAT_HISTORY_STORAGE_KEY
       ];
       const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
       const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
@@ -1126,7 +1150,8 @@
         notes,
         notebook: notes,
         notebookNotes: notes,
-        doctorQuestions: doctorNotes
+        doctorQuestions: doctorNotes,
+        chatMessages
       });
 
       const downloadBackupPayload = (label = '備份', customFileName = null) => {
@@ -1214,7 +1239,8 @@
           notes,
           notebook: notes,
           notebookNotes: notes,
-          doctorQuestions: doctorNotes
+          doctorQuestions: doctorNotes,
+          chatMessages
         };
         const jsonString = JSON.stringify(backupData, null, 2);
 
@@ -1285,6 +1311,7 @@
         }
 
         if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
+        if (Array.isArray(backupData.chatMessages)) setChatMessages(backupData.chatMessages);
 
         const importedNotebookNotes = Array.isArray(backupData.notes)
           ? backupData.notes
@@ -1304,6 +1331,7 @@
         if (backupData.growthHistory) restoredSections.push('歷史測量列表');
         if (backupData.logs) restoredSections.push('照護日誌');
         if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
+        if (backupData.chatMessages) restoredSections.push('AI 諮詢紀錄');
 
         setShowBackupModal(false);
         setPastedJson('');
@@ -1533,16 +1561,11 @@
 
       const handleResetData = () => {
         const confirmed = window.confirm(
-          "警告：此操作將清除所有寶寶照護與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？"
+          "警告：此操作將清除所有寶寶照護、發展里程碑、進階備份與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？"
         );
         if (!confirmed) return;
 
-        localStorage.removeItem('sun_baby_profile_v5');
-        localStorage.removeItem('sun_baby_growth_history_v1');
-        localStorage.removeItem('sun_baby_logs_v1');
-        localStorage.removeItem('sun_baby_doctor_notes_v1');
-        localStorage.removeItem('sun_baby_notes_v1');
-        localStorage.removeItem('sun_baby_milestones_v1');
+        clearAppStorageData();
 
         setBabyInfo({
           name: '',
@@ -1560,7 +1583,10 @@
         setLogs([]);
         setDoctorNotes([]);
         setNotes([]);
-        setMilestones(defaultMilestones);
+        setMilestones([]);
+        setRecentAutoBackups([]);
+        setAdvancedRestoreEnabled(true);
+        setChatMessages(defaultChatMessages);
         setShowEditProfileModal(false);
         showToast('🧹 已重置清空所有本地資料');
       };
@@ -1622,6 +1648,21 @@
         showToast('🗑️ 已清除生長數據');
       };
 
+      const handleClearMilestones = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將清除所有發展里程碑。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+        setMilestones([]);
+        showToast('🗑️ 已清除發展里程碑');
+      };
+
+      const handleClearChatHistory = () => {
+        if (!window.confirm('確定要清除所有 AI 諮詢紀錄嗎？清除後無法復原。')) return;
+        setChatMessages(defaultChatMessages);
+        showToast('🗑️ 已清除 AI 諮詢紀錄');
+      };
+
       const handleResetMilkSettings = () => {
         const confirmed = window.confirm(
           '⚠️ 此操作將重置每日奶量進度與目標。確定要繼續嗎？'
@@ -1643,13 +1684,30 @@
             return;
           }
 
-          element.style.display = 'block';
-
+          element.style.visibility = 'visible';
+          element.style.opacity = '1';
+          element.style.clipPath = 'inset(100%)';
           const opt = {
             margin: 10,
             filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
+            html2canvas: {
+              scale: 2,
+              useCORS: true,
+              logging: false,
+              onclone: (clonedDocument) => {
+                const clonedElement = clonedDocument.getElementById('pdf-report-content');
+                if (clonedElement) {
+                  clonedElement.style.position = 'static';
+                  clonedElement.style.left = 'auto';
+                  clonedElement.style.top = 'auto';
+                  clonedElement.style.zIndex = '0';
+                  clonedElement.style.opacity = '1';
+                  clonedElement.style.visibility = 'visible';
+                  clonedElement.style.clipPath = 'none';
+                }
+              }
+            },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: {
               mode: ['css', 'legacy'],
@@ -1659,18 +1717,21 @@
 
           if (window.html2pdf) {
             window.html2pdf().set(opt).from(element).save().then(() => {
-              element.style.display = 'none';
+              element.style.visibility = 'hidden';
+              element.style.clipPath = 'inset(100%)';
               setIsExporting(false);
-              showToast('PDF 報告已順利匯出！若未自動下載，請檢查瀏覽器是否阻擋了自動下載。');
+              showToast('✅ PDF 報告已順利匯出下載！');
             }).catch((err) => {
               console.error(err);
-              element.style.display = 'none';
+              element.style.visibility = 'hidden';
+              element.style.clipPath = 'inset(100%)';
               setIsExporting(false);
               showToast('❌ PDF 產生過程中發生錯誤。');
             });
           } else {
             window.print();
-            element.style.display = 'none';
+            element.style.visibility = 'hidden';
+            element.style.clipPath = 'inset(100%)';
             setIsExporting(false);
           }
         }, 150);
@@ -1712,10 +1773,24 @@
       const [newLogDetail, setNewLogDetail] = React.useState('');
       const [newLogAmount, setNewLogAmount] = React.useState('');
 
-      const [chatMessages, setChatMessages] = React.useState([
+      const defaultChatMessages = [
         { sender: 'bot', text: '你好！我是巴掌小太陽的 AI 照護助手 ☀️。您可以詢問關於【矯正月齡生長曲線】計算、每日奶量評估、資料同步備份與還原、筆記本使用等問題喔！' }
-      ]);
+      ];
+      const [chatMessages, setChatMessages] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+          const parsed = saved ? JSON.parse(saved) : null;
+          return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultChatMessages;
+        } catch (error) {
+          console.error('Failed to read AI chat history:', error);
+          return defaultChatMessages;
+        }
+      });
       const [inputMessage, setInputMessage] = React.useState('');
+
+      React.useEffect(() => {
+        safeSetStorageItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(chatMessages));
+      }, [chatMessages]);
 
       const todayTotalMilk = React.useMemo(() => {
         return logs
@@ -1836,7 +1911,7 @@
         if (!inputMessage.trim()) return;
 
         const userText = inputMessage;
-        setChatMessages(prev => [...prev, { sender: 'user', text: userText }]);
+        setChatMessages(prev => [...prev, { sender: 'user', text: userText, timestamp: new Date().toISOString() }]);
         setInputMessage('');
 
         setTimeout(() => {
@@ -1858,7 +1933,7 @@
               replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。您可以先點擊「自訂/修改」填入寶寶體重來計算喔！`;
             }
           }
-          setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
+          setChatMessages(prev => [...prev, { sender: 'bot', text: replyText, timestamp: new Date().toISOString() }]);
         }, 600);
       };
 
@@ -1871,11 +1946,6 @@
         <div className={`min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`}>
           {toastMsg && (
             <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce">
-              {toastMsg.startsWith('PDF 報告已順利匯出') && (
-                <span className="inline-flex items-center justify-center rounded-full bg-green-500 text-white shrink-0">
-                  <Icon name="check" className="w-4 h-4" />
-                </span>
-              )}
               <span>{toastMsg}</span>
             </div>
           )}
@@ -2318,7 +2388,7 @@
 
             {/* Tab 5: AI Consultation */}
             {activeTab === 'chat' && (
-              <div className={`p-4 rounded-2xl border flex flex-col h-[30rem] ${cardBg}`}>
+              <div style={{ minHeight: '30rem' }} className={`p-4 rounded-2xl border flex flex-col ${cardBg}`}>
                 <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm">
                   <Icon name="alertTriangle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
                   <div className="leading-snug">
@@ -2328,17 +2398,7 @@
                     </p>
                   </div>
                 </div>
-
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
-                  {chatMessages.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`}>
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <form onSubmit={handleSendMessage} className="mt-3 flex gap-2">
+                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem' }} className="mb-3">
                   <input
                     type="text"
                     value={inputMessage}
@@ -2348,12 +2408,36 @@
                   />
                   <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors">送出</button>
                 </form>
+
+                <div style={{ height: '20rem', overflowY: 'auto' }} className="space-y-2 pr-1 no-scrollbar">
+                  {chatMessages.map((msg, idx) => (
+                    <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`}>
+                        {msg.text}
+                        {msg.timestamp && (
+                          <div className={`mt-1 text-[10px] ${msg.sender === 'user' ? 'text-amber-100' : 'text-slate-400'}`}>
+                            {formatLocalDateTime(new Date(msg.timestamp))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }} className="mt-3">
+                  <button
+                    type="button"
+                    onClick={handleClearChatHistory}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] font-bold transition-colors"
+                  >
+                    清除諮詢紀錄
+                  </button>
+                </div>
               </div>
             )}
           </main>
 
           {/* Printable PDF Report Element (Hidden on screen, target for html2pdf) */}
-          <div id="pdf-report-content" className="hidden p-8 bg-white text-slate-800 space-y-6 font-sans">
+          <div id="pdf-report-content" style={{ visibility: 'visible', clipPath: 'inset(100%)' }} className="box-border w-[718px] p-8 bg-white text-slate-800 space-y-6 font-sans">
             <div className="pdf-section border-b pb-4 flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-amber-700">巴掌小太陽·早產兒門診照護與生長報告</h1>
@@ -2409,7 +2493,7 @@
               ) : (
                 <ul className="space-y-1.5 text-xs">
                   {doctorNotes.map(n => (
-                    <li key={n.id} className="p-2 bg-slate-50 border rounded-lg flex justify-between items-center">
+                    <li key={n.id} className="pdf-item p-2 bg-slate-50 border rounded-lg">
                       <span>• {n.date || '未設定日期'} {format24HourTime(n.time)}｜{n.category || n.tag || '門診提問'}｜{n.question}</span>
                       <span className={`font-bold text-[10px] px-2 py-0.5 rounded ${n.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                         {n.answered ? '醫師解答' : '門診提問'}
@@ -2427,7 +2511,7 @@
               ) : (
                 <div className="space-y-2 text-xs">
                   {notes.map(n => (
-                    <div key={n.id} className="p-2.5 bg-slate-50 border rounded-lg space-y-1">
+                    <div key={n.id} className="pdf-item p-2.5 bg-slate-50 border rounded-lg space-y-1">
                       <div className="font-bold text-amber-800">【{n.category}】{n.title} <span className="text-[10px] font-normal text-slate-400">({n.createdAt})</span></div>
                       {n.content && <p className="text-slate-600 whitespace-pre-wrap">{n.content}</p>}
                     </div>
@@ -3089,6 +3173,20 @@
                     >
                       <Icon name="trash" className="w-4 h-4" />
                       清除生長數據
+                    </button>
+                    <button
+                      onClick={handleClearMilestones}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="trash" className="w-4 h-4" />
+                      清除發展里程碑
+                    </button>
+                    <button
+                      onClick={handleClearChatHistory}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="trash" className="w-4 h-4" />
+                      清除 AI 諮詢紀錄
                     </button>
                     <button
                       onClick={handleResetMilkSettings}

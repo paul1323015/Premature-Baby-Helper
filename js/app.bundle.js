@@ -274,6 +274,28 @@ const sanitizeDateStr = str => {
   }
   return getLocalDateString(dateObj);
 };
+const getCalendarAgeParts = (startDate, endDate) => {
+  if (!startDate || !endDate || endDate < startDate) return {
+    months: 0,
+    days: 0
+  };
+  let months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + endDate.getMonth() - startDate.getMonth();
+  const getAnchorDate = monthCount => {
+    const anchor = new Date(startDate.getFullYear(), startDate.getMonth() + monthCount, 1);
+    const lastDay = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+    anchor.setDate(Math.min(startDate.getDate(), lastDay));
+    return anchor;
+  };
+  let anchorDate = getAnchorDate(months);
+  if (endDate < anchorDate) {
+    months -= 1;
+    anchorDate = getAnchorDate(months);
+  }
+  return {
+    months: Math.max(0, months),
+    days: Math.max(0, Math.floor((endDate - anchorDate) / (1000 * 60 * 60 * 24)))
+  };
+};
 
 // Helper: calculate ages for a given measurement date
 const getAgesForDate = (measurementDateStr, birthDateStr, dueDateStr) => {
@@ -301,8 +323,14 @@ const getAgesForDate = (measurementDateStr, birthDateStr, dueDateStr) => {
   }
   const chronoMonths = chronoDays / 30.4375;
   const correctedMonths = correctedDays / 30.4375;
-  const chronoMInt = Math.floor(chronoMonths);
-  const chronoDaysRemaining = Math.floor(chronoDays % 30.4375);
+  const chronoAgeParts = birthDate && measurementDate && chronoDays >= 0 ? getCalendarAgeParts(birthDate, measurementDate) : {
+    months: 0,
+    days: 0
+  };
+  const correctedAgeParts = dueDate && measurementDate && correctedDays >= 0 ? getCalendarAgeParts(dueDate, measurementDate) : {
+    months: 0,
+    days: 0
+  };
   let correctedText = '';
   if (dueDate && correctedDays < 0) {
     const remainingWeeks = Math.ceil(Math.abs(correctedDays) / 7);
@@ -310,9 +338,7 @@ const getAgesForDate = (measurementDateStr, birthDateStr, dueDateStr) => {
   } else if (correctedMonths > 24) {
     correctedText = '已滿 2 歲（建議參考常規兒童生長曲線）';
   } else {
-    const correctedMInt = Math.floor(correctedDays / 30.4375);
-    const correctedDaysRemaining = Math.floor(correctedDays % 30.4375);
-    correctedText = `矯正 ${correctedMInt} 個月 ${correctedDaysRemaining} 天`;
+    correctedText = `矯正 ${correctedAgeParts.months} 個月 ${correctedAgeParts.days} 天`;
   }
   return {
     measurementStr: measurementClean,
@@ -321,7 +347,7 @@ const getAgesForDate = (measurementDateStr, birthDateStr, dueDateStr) => {
     chronoMonths,
     correctedDays,
     correctedMonths,
-    chronoText: `實際 ${chronoMInt} 個月 ${chronoDaysRemaining} 天`,
+    chronoText: `實際 ${chronoAgeParts.months} 個月 ${chronoAgeParts.days} 天`,
     correctedText,
     isSet: !!birthDate && !!dueDate,
     inconsistent: typeof chronoDays === 'number' && typeof correctedDays === 'number' && chronoDays < correctedDays
@@ -1011,6 +1037,9 @@ function App() {
     }
     return defaultMilestones;
   });
+  const [showMilestoneModal, setShowMilestoneModal] = React.useState(false);
+  const [editingMilestoneId, setEditingMilestoneId] = React.useState(null);
+  const [milestoneText, setMilestoneText] = React.useState('');
   const [showEditProfileModal, setShowEditProfileModal] = React.useState(false);
   const [editFormData, setEditFormData] = React.useState({
     ...babyInfo
@@ -1018,7 +1047,50 @@ function App() {
   const [pastedJson, setPastedJson] = React.useState('');
   const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
   const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
-  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
+  const CHAT_HISTORY_STORAGE_KEY = 'sun_baby_chat_history_v1';
+  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY, CHAT_HISTORY_STORAGE_KEY];
+  const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
+  const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
+  const calculateStorageUsage = () => {
+    let bytes = 0;
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key) continue;
+      const value = localStorage.getItem(key) || '';
+      bytes += new Blob([key, value]).size;
+    }
+    return {
+      bytes,
+      percent: Math.min(100, Math.round(bytes / STORAGE_LIMIT_BYTES * 100))
+    };
+  };
+  const refreshStorageUsage = () => {
+    const usage = calculateStorageUsage();
+    setStorageUsage(usage);
+    return usage;
+  };
+  const cleanupStorageTemporaryData = () => {
+    const confirmed = window.confirm('將清除緊急暫存檔案，不會刪除正式資料或自動備份檔案。確定要繼續嗎？');
+    if (!confirmed) return;
+    localStorage.removeItem('sun_baby_emergency_snapshot_v1');
+    const usage = refreshStorageUsage();
+    showToast(`🧹 已清理暫存檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
+  };
+  const cleanupStorageAutoBackupData = () => {
+    const confirmed = window.confirm('將清除最近的自動備份檔案，之後將無法從最近備份紀錄還原。確定要繼續嗎？');
+    if (!confirmed) return;
+    localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY);
+    setRecentAutoBackups([]);
+    const usage = refreshStorageUsage();
+    showToast(`🗑️ 已清理自動備份檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
+  };
+  const ensureStorageCapacityForNewData = () => {
+    const usage = refreshStorageUsage();
+    if (usage.bytes < STORAGE_LIMIT_BYTES) return true;
+    setShowStorageManagerModal(true);
+    showToast('⚠️ 儲存空間已滿，新增資料已暫停');
+    return false;
+  };
   const readRecentAutoBackups = () => {
     try {
       const saved = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY);
@@ -1041,45 +1113,14 @@ function App() {
     message: '本地儲存空間不足，資料還原已暫停，請先清理或另行備份。',
     backupData: null
   });
-  const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
-  const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
-  const calculateStorageUsage = () => {
-    let bytes = 0;
-    for (let index = 0; index < localStorage.length; index += 1) {
-      const key = localStorage.key(index);
-      if (!key) continue;
-      bytes += new Blob([key, localStorage.getItem(key) || '']).size;
+  React.useEffect(() => {
+    const usage = refreshStorageUsage();
+    const nextLevel = usage.bytes >= STORAGE_LIMIT_BYTES ? 2 : usage.bytes >= STORAGE_WARNING_BYTES ? 1 : 0;
+    if (nextLevel > storageWarningLevelRef.current && nextLevel > 0) {
+      setShowStorageManagerModal(true);
     }
-    return {
-      bytes,
-      percent: Math.min(100, Math.round(bytes / STORAGE_LIMIT_BYTES * 100))
-    };
-  };
-  const refreshStorageUsage = () => {
-    const usage = calculateStorageUsage();
-    setStorageUsage(usage);
-    return usage;
-  };
-  const cleanupStorageTemporaryData = () => {
-    if (!window.confirm('將清除緊急暫存檔案，不會刪除正式資料或自動備份檔案。確定要繼續嗎？')) return;
-    localStorage.removeItem('sun_baby_emergency_snapshot_v1');
-    const usage = refreshStorageUsage();
-    showToast(`🧹 已清理暫存檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
-  };
-  const cleanupStorageAutoBackupData = () => {
-    if (!window.confirm('將清除最近的自動備份檔案，之後將無法從最近備份紀錄還原。確定要繼續嗎？')) return;
-    localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY);
-    setRecentAutoBackups([]);
-    const usage = refreshStorageUsage();
-    showToast(`🗑️ 已清理自動備份檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
-  };
-  const ensureStorageCapacityForNewData = () => {
-    const usage = refreshStorageUsage();
-    if (usage.bytes < STORAGE_LIMIT_BYTES) return true;
-    setShowStorageManagerModal(true);
-    showToast('⚠️ 儲存空間已滿，新增資料已暫停');
-    return false;
-  };
+    storageWarningLevelRef.current = nextLevel;
+  }, [babyInfo, growthHistory, logs, doctorNotes, notes, milestones, recentAutoBackups]);
   const persistRecentAutoBackups = entries => {
     const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
     setRecentAutoBackups(trimmed);
@@ -1193,12 +1234,6 @@ function App() {
     safeSetStorageItem('sun_baby_milestones_v1', JSON.stringify(milestones));
   }, [milestones]);
   React.useEffect(() => {
-    const usage = refreshStorageUsage();
-    const nextLevel = usage.bytes >= STORAGE_LIMIT_BYTES ? 2 : usage.bytes >= STORAGE_WARNING_BYTES ? 1 : 0;
-    if (nextLevel > storageWarningLevelRef.current && nextLevel > 0) setShowStorageManagerModal(true);
-    storageWarningLevelRef.current = nextLevel;
-  }, [babyInfo, growthHistory, logs, doctorNotes, notes, milestones, recentAutoBackups]);
-  React.useEffect(() => {
     let hasFixed = false;
     const cleaned = growthHistory.map(item => {
       const sanitized = sanitizeDateStr(item.date);
@@ -1230,7 +1265,8 @@ function App() {
     notes,
     notebook: notes,
     notebookNotes: notes,
-    doctorQuestions: doctorNotes
+    doctorQuestions: doctorNotes,
+    chatMessages
   });
   const downloadBackupPayload = (label = '備份', customFileName = null) => {
     const backupData = createBackupPayload();
@@ -1308,7 +1344,8 @@ function App() {
       notes,
       notebook: notes,
       notebookNotes: notes,
-      doctorQuestions: doctorNotes
+      doctorQuestions: doctorNotes,
+      chatMessages
     };
     const jsonString = JSON.stringify(backupData, null, 2);
     const textarea = document.createElement('textarea');
@@ -1366,6 +1403,7 @@ function App() {
       setDoctorNotes([]);
     }
     if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
+    if (Array.isArray(backupData.chatMessages)) setChatMessages(backupData.chatMessages);
     const importedNotebookNotes = Array.isArray(backupData.notes) ? backupData.notes : Array.isArray(backupData.notebook) ? backupData.notebook : Array.isArray(backupData.notebookNotes) ? backupData.notebookNotes : [];
     if (Array.isArray(backupData.notes) || Array.isArray(backupData.notebook) || Array.isArray(backupData.notebookNotes) || Object.prototype.hasOwnProperty.call(backupData, 'notes') || Object.prototype.hasOwnProperty.call(backupData, 'notebook') || Object.prototype.hasOwnProperty.call(backupData, 'notebookNotes')) {
       setNotes(importedNotebookNotes);
@@ -1376,6 +1414,7 @@ function App() {
     if (backupData.growthHistory) restoredSections.push('歷史測量列表');
     if (backupData.logs) restoredSections.push('照護日誌');
     if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
+    if (backupData.chatMessages) restoredSections.push('AI 諮詢紀錄');
     setShowBackupModal(false);
     setPastedJson('');
     showToast(`🎉 已還原：${restoredSections.join(' / ') || '資料'}`);
@@ -1547,25 +1586,35 @@ function App() {
     } : item));
     showToast('📊 已更新圖表繪製設定');
   };
-  const handleAddMilestone = () => {
-    const text = window.prompt('請輸入新的發展里程碑：');
-    if (!text || !text.trim()) return;
-    if (!ensureStorageCapacityForNewData()) return;
-    setMilestones([...milestones, {
-      id: Date.now(),
-      text: text.trim(),
-      done: false
-    }]);
-    showToast('✅ 已新增發展里程碑');
+  const openMilestoneEditor = (milestone = null) => {
+    setEditingMilestoneId(milestone ? milestone.id : null);
+    setMilestoneText(milestone ? milestone.text : '');
+    setShowMilestoneModal(true);
   };
-  const handleEditMilestone = milestone => {
-    const text = window.prompt('請修改發展里程碑：', milestone.text);
-    if (!text || !text.trim()) return;
-    setMilestones(milestones.map(item => item.id === milestone.id ? {
-      ...item,
-      text: text.trim()
-    } : item));
-    showToast('✅ 已更新發展里程碑');
+  const handleSaveMilestone = () => {
+    const text = milestoneText.trim();
+    if (!text) {
+      showToast('⚠️ 請先輸入里程碑內容');
+      return;
+    }
+    if (editingMilestoneId === null) {
+      if (!ensureStorageCapacityForNewData()) return;
+      setMilestones([...milestones, {
+        id: Date.now(),
+        text,
+        done: false
+      }]);
+      showToast('✅ 已新增發展里程碑');
+    } else {
+      setMilestones(milestones.map(item => item.id === editingMilestoneId ? {
+        ...item,
+        text
+      } : item));
+      showToast('✅ 已更新發展里程碑');
+    }
+    setShowMilestoneModal(false);
+    setEditingMilestoneId(null);
+    setMilestoneText('');
   };
   const handleDeleteMilestone = id => {
     if (!window.confirm('確定要刪除這項發展里程碑嗎？')) return;
@@ -1584,14 +1633,9 @@ function App() {
     showToast(`🌱 已載入 ${missingDefaults.length} 項預設發展里程碑`);
   };
   const handleResetData = () => {
-    const confirmed = window.confirm("警告：此操作將清除所有寶寶照護與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？");
+    const confirmed = window.confirm("警告：此操作將清除所有寶寶照護、發展里程碑、進階備份與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？");
     if (!confirmed) return;
-    localStorage.removeItem('sun_baby_profile_v5');
-    localStorage.removeItem('sun_baby_growth_history_v1');
-    localStorage.removeItem('sun_baby_logs_v1');
-    localStorage.removeItem('sun_baby_doctor_notes_v1');
-    localStorage.removeItem('sun_baby_notes_v1');
-    localStorage.removeItem('sun_baby_milestones_v1');
+    clearAppStorageData();
     setBabyInfo({
       name: '',
       gender: 'boy',
@@ -1608,6 +1652,10 @@ function App() {
     setLogs([]);
     setDoctorNotes([]);
     setNotes([]);
+    setMilestones([]);
+    setRecentAutoBackups([]);
+    setAdvancedRestoreEnabled(true);
+    setChatMessages(defaultChatMessages);
     setShowEditProfileModal(false);
     showToast('🧹 已重置清空所有本地資料');
   };
@@ -1653,6 +1701,17 @@ function App() {
     setGrowthHistory([]);
     showToast('🗑️ 已清除生長數據');
   };
+  const handleClearMilestones = () => {
+    const confirmed = window.confirm('⚠️ 此操作將清除所有發展里程碑。確定要繼續嗎？');
+    if (!confirmed) return;
+    setMilestones([]);
+    showToast('🗑️ 已清除發展里程碑');
+  };
+  const handleClearChatHistory = () => {
+    if (!window.confirm('確定要清除所有 AI 諮詢紀錄嗎？清除後無法復原。')) return;
+    setChatMessages(defaultChatMessages);
+    showToast('🗑️ 已清除 AI 諮詢紀錄');
+  };
   const handleResetMilkSettings = () => {
     const confirmed = window.confirm('⚠️ 此操作將重置每日奶量進度與目標。確定要繼續嗎？');
     if (!confirmed) return;
@@ -1673,7 +1732,9 @@ function App() {
         showToast('❌ 匯出失敗，無法找到 PDF 報告內容組件。');
         return;
       }
-      element.style.display = 'block';
+      element.style.visibility = 'visible';
+      element.style.opacity = '1';
+      element.style.clipPath = 'inset(100%)';
       const opt = {
         margin: 10,
         filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`,
@@ -1684,7 +1745,19 @@ function App() {
         html2canvas: {
           scale: 2,
           useCORS: true,
-          logging: false
+          logging: false,
+          onclone: clonedDocument => {
+            const clonedElement = clonedDocument.getElementById('pdf-report-content');
+            if (clonedElement) {
+              clonedElement.style.position = 'static';
+              clonedElement.style.left = 'auto';
+              clonedElement.style.top = 'auto';
+              clonedElement.style.zIndex = '0';
+              clonedElement.style.opacity = '1';
+              clonedElement.style.visibility = 'visible';
+              clonedElement.style.clipPath = 'none';
+            }
+          }
         },
         jsPDF: {
           unit: 'mm',
@@ -1698,18 +1771,21 @@ function App() {
       };
       if (window.html2pdf) {
         window.html2pdf().set(opt).from(element).save().then(() => {
-          element.style.display = 'none';
+          element.style.visibility = 'hidden';
+          element.style.clipPath = 'inset(100%)';
           setIsExporting(false);
-          showToast('PDF 報告已順利匯出！若未自動下載，請檢查瀏覽器是否阻擋了自動下載。');
+          showToast('✅ PDF 報告已順利匯出下載！');
         }).catch(err => {
           console.error(err);
-          element.style.display = 'none';
+          element.style.visibility = 'hidden';
+          element.style.clipPath = 'inset(100%)';
           setIsExporting(false);
           showToast('❌ PDF 產生過程中發生錯誤。');
         });
       } else {
         window.print();
-        element.style.display = 'none';
+        element.style.visibility = 'hidden';
+        element.style.clipPath = 'inset(100%)';
         setIsExporting(false);
       }
     }, 150);
@@ -1746,11 +1822,24 @@ function App() {
   const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
   const [newLogDetail, setNewLogDetail] = React.useState('');
   const [newLogAmount, setNewLogAmount] = React.useState('');
-  const [chatMessages, setChatMessages] = React.useState([{
+  const defaultChatMessages = [{
     sender: 'bot',
     text: '你好！我是巴掌小太陽的 AI 照護助手 ☀️。您可以詢問關於【矯正月齡生長曲線】計算、每日奶量評估、資料同步備份與還原、筆記本使用等問題喔！'
-  }]);
+  }];
+  const [chatMessages, setChatMessages] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultChatMessages;
+    } catch (error) {
+      console.error('Failed to read AI chat history:', error);
+      return defaultChatMessages;
+    }
+  });
   const [inputMessage, setInputMessage] = React.useState('');
+  React.useEffect(() => {
+    safeSetStorageItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(chatMessages));
+  }, [chatMessages]);
   const todayTotalMilk = React.useMemo(() => {
     return logs.filter(l => l.type === 'feeding' && l.amount).reduce((sum, l) => sum + parseInt(l.amount || '0', 10), 0);
   }, [logs]);
@@ -1866,7 +1955,8 @@ function App() {
     const userText = inputMessage;
     setChatMessages(prev => [...prev, {
       sender: 'user',
-      text: userText
+      text: userText,
+      timestamp: new Date().toISOString()
     }]);
     setInputMessage('');
     setTimeout(() => {
@@ -1890,7 +1980,8 @@ function App() {
       }
       setChatMessages(prev => [...prev, {
         sender: 'bot',
-        text: replyText
+        text: replyText,
+        timestamp: new Date().toISOString()
       }]);
     }, 600);
   };
@@ -1901,12 +1992,7 @@ function App() {
     className: `min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`
   }, toastMsg && /*#__PURE__*/React.createElement("div", {
     className: "fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700 animate-bounce"
-  }, toastMsg.startsWith('PDF 報告已順利匯出') && /*#__PURE__*/React.createElement("span", {
-    className: "inline-flex items-center justify-center rounded-full bg-green-500 text-white shrink-0"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "check",
-    className: "w-4 h-4"
-  })), /*#__PURE__*/React.createElement("span", null, toastMsg)), /*#__PURE__*/React.createElement("header", {
+  }, /*#__PURE__*/React.createElement("span", null, toastMsg)), /*#__PURE__*/React.createElement("header", {
     className: `sticky top-0 z-30 border-b ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-4xl mx-auto px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
@@ -2136,15 +2222,18 @@ function App() {
     onClick: handleRestoreDefaultMilestones,
     className: "px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold"
   }, "載入預設"), /*#__PURE__*/React.createElement("button", {
-    onClick: handleAddMilestone,
-    className: "px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold"
-  }, "新增"))), milestones.map(m => /*#__PURE__*/React.createElement("div", {
+    onClick: () => openMilestoneEditor(),
+    className: "px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "plus",
+    className: "w-3 h-3"
+  }), "新增"))), milestones.map(m => /*#__PURE__*/React.createElement("div", {
     key: m.id,
     onClick: () => setMilestones(milestones.map(item => item.id === m.id ? {
       ...item,
       done: !item.done
     } : item)),
-    className: "p-3 rounded-xl border flex items-center gap-3 cursor-pointer hover:bg-amber-50/50 transition-colors bg-white"
+    className: "p-3 rounded-xl border flex items-center gap-2 cursor-pointer hover:bg-amber-50/50 transition-colors bg-white"
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
     checked: m.done,
@@ -2152,10 +2241,12 @@ function App() {
     className: "w-4 h-4 accent-amber-500 rounded"
   }), /*#__PURE__*/React.createElement("span", {
     className: `text-xs font-medium flex-1 min-w-0 ${m.done ? 'line-through text-slate-400' : 'text-slate-700'}`
-  }, m.text), /*#__PURE__*/React.createElement("button", {
+  }, m.text), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-1 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: event => {
       event.stopPropagation();
-      handleEditMilestone(m);
+      openMilestoneEditor(m);
     },
     className: "px-2 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold"
   }, "編輯"), /*#__PURE__*/React.createElement("button", {
@@ -2164,7 +2255,7 @@ function App() {
       handleDeleteMilestone(m.id);
     },
     className: "px-2 py-1 rounded-md bg-red-50 hover:bg-red-100 text-red-700 text-[10px] font-bold"
-  }, "刪除"))))), activeTab === 'care' && /*#__PURE__*/React.createElement("div", {
+  }, "刪除")))))), activeTab === 'care' && /*#__PURE__*/React.createElement("div", {
     className: "space-y-3"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center mb-1"
@@ -2192,7 +2283,7 @@ function App() {
     className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-bold text-amber-600"
-  }, `${log.date || '未設定日期'} ${log.time}`), /*#__PURE__*/React.createElement("span", {
+  }, log.date || '未設定日期', " ", log.time), /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-medium"
   }, log.detail)), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 shrink-0"
@@ -2289,7 +2380,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "check",
     className: "w-3.5 h-3.5"
-  }), "\u91AB\u5E2B\u5DF2\u89E3\u7B54") : '標記為已解答'), /*#__PURE__*/React.createElement("button", {
+  }), "醫師已解答") : '標記為已解答'), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: () => handleDeleteDoctorNote(note.id),
     className: "text-slate-400 hover:text-red-500 font-bold",
@@ -2299,7 +2390,10 @@ function App() {
   }, note.date || '未設定日期', " ", format24HourTime(note.time)), /*#__PURE__*/React.createElement("p", {
     className: "font-medium text-slate-700"
   }, note.question))))), activeTab === 'chat' && /*#__PURE__*/React.createElement("div", {
-    className: `p-4 rounded-2xl border flex flex-col h-[30rem] ${cardBg}`
+    style: {
+      minHeight: '30rem'
+    },
+    className: `p-4 rounded-2xl border flex flex-col ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -2311,16 +2405,13 @@ function App() {
     className: "font-bold text-rose-800 block text-xs mb-0.5"
   }, "⚠️ 醫療諮詢重要聲明："), /*#__PURE__*/React.createElement("p", {
     className: "text-rose-700"
-  }, "本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。"))), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar"
-  }, chatMessages.map((msg, idx) => /*#__PURE__*/React.createElement("div", {
-    key: idx,
-    className: `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: `p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`
-  }, msg.text)))), /*#__PURE__*/React.createElement("form", {
+  }, "本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。"))), /*#__PURE__*/React.createElement("form", {
     onSubmit: handleSendMessage,
-    className: "mt-3 flex gap-2"
+    style: {
+      display: 'flex',
+      gap: '0.5rem'
+    },
+    className: "mb-3"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
     value: inputMessage,
@@ -2330,9 +2421,36 @@ function App() {
   }), /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: "px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors"
-  }, "送出")))), /*#__PURE__*/React.createElement("div", {
+  }, "送出")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '20rem',
+      overflowY: 'auto'
+    },
+    className: "space-y-2 pr-1 no-scrollbar"
+  }, chatMessages.map((msg, idx) => /*#__PURE__*/React.createElement("div", {
+    key: idx,
+    className: `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`
+  }, msg.text, msg.timestamp && /*#__PURE__*/React.createElement("div", {
+    className: `mt-1 text-[10px] ${msg.sender === 'user' ? 'text-amber-100' : 'text-slate-400'}`
+  }, formatLocalDateTime(new Date(msg.timestamp))))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'flex-end'
+    },
+    className: "mt-3"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleClearChatHistory,
+    className: "px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] font-bold transition-colors"
+  }, "清除諮詢紀錄")))), /*#__PURE__*/React.createElement("div", {
     id: "pdf-report-content",
-    className: "hidden p-8 bg-white text-slate-800 space-y-6 font-sans"
+    style: {
+      visibility: 'visible',
+      clipPath: 'inset(100%)'
+    },
+    className: "box-border w-[718px] p-8 bg-white text-slate-800 space-y-6 font-sans"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pdf-section border-b pb-4 flex justify-between items-center"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
@@ -2388,10 +2506,10 @@ function App() {
     className: "space-y-1.5 text-xs"
   }, doctorNotes.map(n => /*#__PURE__*/React.createElement("li", {
     key: n.id,
-    className: "p-2 bg-slate-50 border rounded-lg flex justify-between items-center"
+    className: "pdf-item p-2 bg-slate-50 border rounded-lg"
   }, /*#__PURE__*/React.createElement("span", null, "• ", n.date || '未設定日期', " ", format24HourTime(n.time), "｜", n.category || n.tag || '門診提問', "｜", n.question), /*#__PURE__*/React.createElement("span", {
     className: `font-bold text-[10px] px-2 py-0.5 rounded ${n.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`
-  }, n.answered ? '醫師解答' : '未解答'))))), /*#__PURE__*/React.createElement("div", {
+  }, n.answered ? '醫師解答' : '門診提問'))))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-slate-800 border-b pb-1"
@@ -2401,7 +2519,7 @@ function App() {
     className: "space-y-2 text-xs"
   }, notes.map(n => /*#__PURE__*/React.createElement("div", {
     key: n.id,
-    className: "p-2.5 bg-slate-50 border rounded-lg space-y-1"
+    className: "pdf-item p-2.5 bg-slate-50 border rounded-lg space-y-1"
   }, /*#__PURE__*/React.createElement("div", {
     className: "font-bold text-amber-800"
   }, "【", n.category, "】", n.title, " ", /*#__PURE__*/React.createElement("span", {
@@ -2755,8 +2873,11 @@ function App() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
-    className: "font-bold text-sm text-amber-700"
-  }, "應用程式儲存空間管理"), /*#__PURE__*/React.createElement("button", {
+    className: "font-bold text-sm text-amber-700 flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "hardDrive",
+    className: "w-4 h-4"
+  }), "應用程式儲存空間管理"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowStorageManagerModal(false),
     className: "text-slate-400 hover:text-slate-600"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -2975,6 +3096,18 @@ function App() {
     name: "trash",
     className: "w-4 h-4"
   }), "清除生長數據"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleClearMilestones,
+    className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "trash",
+    className: "w-4 h-4"
+  }), "清除發展里程碑"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleClearChatHistory,
+    className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "trash",
+    className: "w-4 h-4"
+  }), "清除 AI 諮詢紀錄"), /*#__PURE__*/React.createElement("button", {
     onClick: handleResetMilkSettings,
     className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -2994,7 +3127,38 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-3.5 h-3.5"
-  }), "清除所有本地資料 (重置)"))))), showHelpModal && /*#__PURE__*/React.createElement("div", {
+  }), "清除所有本地資料 (重置)"))))), showMilestoneModal && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `w-full max-w-md p-5 rounded-2xl border shadow-xl ${cardBg}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center pb-3 border-b mb-4"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold text-base text-emerald-800"
+  }, editingMilestoneId === null ? '新增發展里程碑' : '編輯發展里程碑'), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowMilestoneModal(false),
+    className: "text-slate-400 hover:text-slate-600 p-1"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "x",
+    className: "w-5 h-5"
+  }))), /*#__PURE__*/React.createElement("label", {
+    className: "block text-xs font-bold text-slate-600 mb-1"
+  }, "里程碑內容"), /*#__PURE__*/React.createElement("textarea", {
+    value: milestoneText,
+    onChange: event => setMilestoneText(event.target.value),
+    rows: "4",
+    autoFocus: true,
+    placeholder: "例如：能自行翻身（矯正 5-6 個月）",
+    className: "w-full rounded-xl border border-slate-200 p-3 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-emerald-300"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-end gap-2 mt-4"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowMilestoneModal(false),
+    className: "px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+  }, "取消"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleSaveMilestone,
+    className: "px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold"
+  }, "儲存")))), showHelpModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
     className: `w-full max-w-xl p-5 rounded-2xl border shadow-xl max-h-[90vh] flex flex-col ${cardBg}`

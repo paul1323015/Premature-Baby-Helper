@@ -26,9 +26,13 @@
     }
     #pdf-report-content table,
     #pdf-report-content tr,
-    #pdf-report-content li {
+    #pdf-report-content li,
+    #pdf-report-content .pdf-item {
       break-inside: avoid;
       page-break-inside: avoid;
+    }
+    #pdf-report-content .pdf-item {
+      display: block !important;
     }
   </style>
 </head>
