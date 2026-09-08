@@ -1749,9 +1749,10 @@ function App() {
           onclone: clonedDocument => {
             const clonedElement = clonedDocument.getElementById('pdf-report-content');
             if (clonedElement) {
-              clonedElement.style.position = 'static';
-              clonedElement.style.left = 'auto';
-              clonedElement.style.top = 'auto';
+              clonedDocument.body.style.margin = '0';
+              clonedElement.style.position = 'absolute';
+              clonedElement.style.left = '0';
+              clonedElement.style.top = '0';
               clonedElement.style.zIndex = '0';
               clonedElement.style.opacity = '1';
               clonedElement.style.visibility = 'visible';
@@ -1766,7 +1767,7 @@ function App() {
         },
         pagebreak: {
           mode: ['css', 'legacy'],
-          avoid: ['.pdf-section', 'table', 'tr', 'li']
+          avoid: ['.pdf-footer', '.pdf-item', 'table', 'tr', 'li']
         }
       };
       if (window.html2pdf) {
@@ -2527,7 +2528,7 @@ function App() {
   }, "(", n.createdAt, ")")), n.content && /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 whitespace-pre-wrap"
   }, n.content))))), /*#__PURE__*/React.createElement("div", {
-    className: "pdf-section text-center text-[10px] text-slate-400 pt-6 border-t"
+    className: "pdf-footer text-center text-[10px] text-slate-500 pt-6 pb-4 border-t"
   }, "本報告由「巴掌小太陽 · 早產兒照護小幫手」自動生成，僅供看診時輔助醫療團隊參考。")), showEditProfileModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
