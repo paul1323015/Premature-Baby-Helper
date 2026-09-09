@@ -909,27 +909,22 @@ function App() {
   const [showNotesModal, setShowNotesModal] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
   const [toastMsg, setToastMsg] = React.useState('');
+  const toastTimeoutRef = React.useRef(null);
   const showToast = msg => {
-    try {
-      const headerEl = document.querySelector('header');
-      const topPx = headerEl ? Math.ceil(headerEl.getBoundingClientRect().bottom + 8) : 70;
-      document.documentElement.style.setProperty('--toast-top', topPx + 'px');
-      // Center the toast relative to the centered content container when possible
-      const container = document.querySelector('.max-w-4xl.mx-auto') || document.querySelector('.max-w-4xl');
-      if (container) {
-        const r = container.getBoundingClientRect();
-        const centerX = Math.round(r.left + r.width / 2);
-        document.documentElement.style.setProperty('--toast-left', centerX + 'px');
-      } else {
-        document.documentElement.style.removeProperty('--toast-left');
-      }
-    } catch (e) {
-      document.documentElement.style.setProperty('--toast-top', '70px');
-      document.documentElement.style.removeProperty('--toast-left');
-    }
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 3000);
+    if (toastTimeoutRef.current !== null) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastMsg('');
+      toastTimeoutRef.current = null;
+    }, 3000);
   };
+  React.useEffect(() => () => {
+    if (toastTimeoutRef.current !== null) {
+      clearTimeout(toastTimeoutRef.current);
+    }
+  }, []);
   const [selectedMetric, setSelectedMetric] = React.useState('weight');
   const [selectedGender, setSelectedGender] = React.useState('boy');
   const [babyInfo, setBabyInfo] = React.useState(() => {
@@ -1761,6 +1756,11 @@ function App() {
           element.style.visibility = 'visible';
           element.style.opacity = '1';
           element.style.clipPath = 'inset(100%)';
+          const exportElement = element.cloneNode(true);
+          exportElement.style.visibility = 'visible';
+          exportElement.style.opacity = '1';
+          exportElement.style.clipPath = 'inset(100%)';
+          document.body.appendChild(exportElement);
           const opt = {
             margin: 7,
             filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`,
@@ -1797,13 +1797,15 @@ function App() {
             }
           };
           if (window.html2pdf) {
-            window.html2pdf().set(opt).from(element).save().then(() => {
+            window.html2pdf().set(opt).from(exportElement).save().then(() => {
+              exportElement.remove();
               element.style.visibility = 'hidden';
               element.style.clipPath = 'inset(100%)';
               setIsExporting(false);
               showToast('✅ PDF 報告已順利匯出下載！');
             }).catch(err => {
               console.error(err);
+              exportElement.remove();
               element.style.visibility = 'hidden';
               element.style.clipPath = 'inset(100%)';
               setIsExporting(false);
@@ -1811,6 +1813,7 @@ function App() {
             });
           } else {
             window.print();
+            exportElement.remove();
             element.style.visibility = 'hidden';
             element.style.clipPath = 'inset(100%)';
             setIsExporting(false);
@@ -2024,8 +2027,38 @@ function App() {
   return /*#__PURE__*/React.createElement("div", {
     className: `min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`
   }, toastMsg && /*#__PURE__*/React.createElement("div", {
-    className: "toast-notification fixed left-1/2 -translate-x-1/2 z-[99999] w-max max-w-[85vw] bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xl flex items-center gap-2 border border-slate-700"
-  }, /*#__PURE__*/React.createElement("span", null, toastMsg)), /*#__PURE__*/React.createElement("header", {
+    style: {
+      position: 'fixed',
+      top: 'max(20px, env(safe-area-inset-top))',
+      left: '0',
+      width: '100vw',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 2147483647,
+      pointerEvents: 'none'
+    },
+    role: "status",
+    "aria-live": "polite",
+    "aria-atomic": "true"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      pointerEvents: 'auto',
+      maxWidth: 'calc(100vw - 32px)',
+      backgroundColor: '#1e293b',
+      color: '#fff',
+      padding: '10px 16px',
+      borderRadius: '12px',
+      fontSize: '13px',
+      fontWeight: 'bold',
+      boxShadow: '0 10px 25px -5px rgba(0,0,0,.3)',
+      border: '1px solid #334155',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      textAlign: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("span", null, toastMsg))), /*#__PURE__*/React.createElement("header", {
     className: `sticky top-0 z-30 border-b overflow-hidden ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-4xl mx-auto min-w-0 px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
