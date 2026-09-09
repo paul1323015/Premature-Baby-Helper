@@ -1693,19 +1693,29 @@
       const handleDownloadPDF = () => {
         setIsExporting(true);
         showToast('📄 正在生成 PDF 報告，請稍候...');
-        setTimeout(() => {
-          const element = document.getElementById('pdf-report-content');
-          if (!element) {
-            setIsExporting(false);
-            showToast('❌ 匯出失敗，無法找到 PDF 報告內容組件。');
-            return;
-          }
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const container = document.getElementById('pdf-report-content');
+            if (container) {
+              void container.offsetHeight;
+            }
 
-          element.style.visibility = 'visible';
-          element.style.opacity = '1';
-          element.style.clipPath = 'inset(100%)';
-          const opt = {
-            margin: 10,
+            const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
+            fontsReady.then(() => new Promise((resolve) => {
+              setTimeout(resolve, 100);
+            })).then(() => {
+              const element = document.getElementById('pdf-report-content');
+              if (!element) {
+                setIsExporting(false);
+                showToast('❌ 匯出失敗，無法找到 PDF 報告內容組件。');
+                return;
+              }
+
+              element.style.visibility = 'visible';
+              element.style.opacity = '1';
+              element.style.clipPath = 'inset(100%)';
+              const opt = {
+            margin: 7,
             filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: {
@@ -1731,28 +1741,34 @@
               mode: ['css'],
               avoid: ['.pdf-footer', '.pdf-item', 'table', 'tr', 'li']
             }
-          };
+              };
 
-          if (window.html2pdf) {
-            window.html2pdf().set(opt).from(element).save().then(() => {
-              element.style.visibility = 'hidden';
-              element.style.clipPath = 'inset(100%)';
-              setIsExporting(false);
-              showToast('✅ PDF 報告已順利匯出下載！');
+              if (window.html2pdf) {
+                window.html2pdf().set(opt).from(element).save().then(() => {
+                  element.style.visibility = 'hidden';
+                  element.style.clipPath = 'inset(100%)';
+                  setIsExporting(false);
+                  showToast('✅ PDF 報告已順利匯出下載！');
+                }).catch((err) => {
+                  console.error(err);
+                  element.style.visibility = 'hidden';
+                  element.style.clipPath = 'inset(100%)';
+                  setIsExporting(false);
+                  showToast('❌ PDF 產生過程中發生錯誤。');
+                });
+              } else {
+                window.print();
+                element.style.visibility = 'hidden';
+                element.style.clipPath = 'inset(100%)';
+                setIsExporting(false);
+              }
             }).catch((err) => {
               console.error(err);
-              element.style.visibility = 'hidden';
-              element.style.clipPath = 'inset(100%)';
               setIsExporting(false);
               showToast('❌ PDF 產生過程中發生錯誤。');
             });
-          } else {
-            window.print();
-            element.style.visibility = 'hidden';
-            element.style.clipPath = 'inset(100%)';
-            setIsExporting(false);
-          }
-        }, 150);
+          });
+        });
       };
 
       const ageData = React.useMemo(() => {
