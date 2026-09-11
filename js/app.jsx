@@ -2460,7 +2460,7 @@
 
             {/* Tab 5: AI Consultation */}
             {activeTab === 'chat' && (
-              <div style={{ minHeight: '30rem' }} className={`p-4 rounded-2xl border flex flex-col ${cardBg}`}>
+              <div className={`ai-chat-panel p-4 rounded-2xl border flex flex-col ${cardBg}`}>
                 <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm">
                   <Icon name="alertTriangle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
                   <div className="leading-snug">
@@ -2470,18 +2470,8 @@
                     </p>
                   </div>
                 </div>
-                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem' }} className="mb-3">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="詢問矯正月齡計算、奶量、資料備份、筆記本..."
-                    className="flex-1 px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none"
-                  />
-                  <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors">送出</button>
-                </form>
 
-                <div style={{ height: '20rem', overflowY: 'auto' }} className="space-y-2 pr-1 no-scrollbar">
+                <div className="ai-chat-messages space-y-2 pr-1">
                   {chatMessages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`}>
@@ -2495,6 +2485,16 @@
                     </div>
                   ))}
                 </div>
+                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem' }} className="mt-3 flex-shrink-0">
+                  <input
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="詢問矯正月齡計算、奶量、資料備份、筆記本..."
+                    className="flex-1 px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  />
+                  <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors">送出</button>
+                </form>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }} className="mt-3">
                   <button
                     type="button"

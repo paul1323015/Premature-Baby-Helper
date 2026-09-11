@@ -2456,10 +2456,7 @@ function App() {
   }, note.date || '未設定日期', " ", format24HourTime(note.time)), /*#__PURE__*/React.createElement("p", {
     className: "font-medium text-slate-700"
   }, note.question))))), activeTab === 'chat' && /*#__PURE__*/React.createElement("div", {
-    style: {
-      minHeight: '30rem'
-    },
-    className: `p-4 rounded-2xl border flex flex-col ${cardBg}`
+    className: `ai-chat-panel p-4 rounded-2xl border flex flex-col ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -2471,13 +2468,22 @@ function App() {
     className: "font-bold text-rose-800 block text-xs mb-0.5"
   }, "⚠️ 醫療諮詢重要聲明："), /*#__PURE__*/React.createElement("p", {
     className: "text-rose-700"
-  }, "本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。"))), /*#__PURE__*/React.createElement("form", {
+  }, "本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。"))), /*#__PURE__*/React.createElement("div", {
+    className: "ai-chat-messages space-y-2 pr-1"
+  }, chatMessages.map((msg, idx) => /*#__PURE__*/React.createElement("div", {
+    key: idx,
+    className: `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`
+  }, msg.text, msg.timestamp && /*#__PURE__*/React.createElement("div", {
+    className: `mt-1 text-[10px] ${msg.sender === 'user' ? 'text-amber-100' : 'text-slate-400'}`
+  }, formatLocalDateTime(new Date(msg.timestamp))))))), /*#__PURE__*/React.createElement("form", {
     onSubmit: handleSendMessage,
     style: {
       display: 'flex',
       gap: '0.5rem'
     },
-    className: "mb-3"
+    className: "mt-3 flex-shrink-0"
   }, /*#__PURE__*/React.createElement("input", {
     type: "text",
     value: inputMessage,
@@ -2488,19 +2494,6 @@ function App() {
     type: "submit",
     className: "px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors"
   }, "送出")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: '20rem',
-      overflowY: 'auto'
-    },
-    className: "space-y-2 pr-1 no-scrollbar"
-  }, chatMessages.map((msg, idx) => /*#__PURE__*/React.createElement("div", {
-    key: idx,
-    className: `flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: `p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`
-  }, msg.text, msg.timestamp && /*#__PURE__*/React.createElement("div", {
-    className: `mt-1 text-[10px] ${msg.sender === 'user' ? 'text-amber-100' : 'text-slate-400'}`
-  }, formatLocalDateTime(new Date(msg.timestamp))))))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'flex-end'

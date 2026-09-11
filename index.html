@@ -18,6 +18,15 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .header-tools { -ms-overflow-style: none; scrollbar-width: none; max-width: 100%; }
     .header-tools::-webkit-scrollbar { display: none; }
+    .ai-chat-panel {
+      height: min(42rem, calc(100dvh - 11rem));
+      min-height: 30rem;
+    }
+    .ai-chat-messages {
+      min-height: 0;
+      flex: 1 1 auto;
+      overflow-y: auto;
+    }
     @media (max-width: 767px) {
       html, body { max-width: 100%; overflow-x: hidden; }
       .header-tools {
@@ -26,6 +35,12 @@
         white-space: nowrap;
       }
       .header-tools > button { flex: 0 0 auto; }
+    }
+    @media (max-width: 640px) {
+      .ai-chat-panel {
+        height: calc(100dvh - 8rem);
+        min-height: 24rem;
+      }
     }
     .pdf-section {
       break-inside: avoid;
