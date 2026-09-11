@@ -356,7 +356,7 @@
       return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
     };
 
-    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord, onToggleGrowthRecordPlot }) => {
+    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord, onToggleGrowthRecordPlot, showToast }) => {
       const [showRecordModal, setShowRecordModal] = React.useState(false);
       const [useChronoAxis, setUseChronoAxis] = React.useState(false);
       const [showPercentiles, setShowPercentiles] = React.useState(true);
@@ -511,7 +511,11 @@
               </div>
             </div>
             <button
-              onClick={() => setUseChronoAxis(!useChronoAxis)}
+              onClick={() => {
+                const nextUseChronoAxis = !useChronoAxis;
+                setUseChronoAxis(nextUseChronoAxis);
+                showToast(`✅ 已切換為${nextUseChronoAxis ? '實際月齡' : '矯正月齡'}`);
+              }}
               className="w-full px-2.5 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-[11px] sm:text-xs font-bold transition-colors border border-amber-300 shadow-sm sm:w-auto"
               title={useChronoAxis ? '目前顯示：實際月齡。點擊切換為 矯正月齡。' : '目前顯示：矯正月齡。點擊切換為 實際月齡。'}
             >
@@ -529,7 +533,11 @@
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
-                  onClick={() => setShowPercentiles(!showPercentiles)}
+                  onClick={() => {
+                    const nextShowPercentiles = !showPercentiles;
+                    setShowPercentiles(nextShowPercentiles);
+                    showToast(`✅ 百分位曲線已${nextShowPercentiles ? '顯示' : '隱藏'}`);
+                  }}
                   className={`px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${
                     showPercentiles
                       ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200'
@@ -936,14 +944,25 @@
           const key = localStorage.key(index);
           if (!key) continue;
           const value = localStorage.getItem(key) || '';
-          bytes += new Blob([key, value]).size;
+          bytes += key.length + value.length;
         }
         return { bytes, percent: Math.min(100, Math.round((bytes / STORAGE_LIMIT_BYTES) * 100)) };
       };
 
+      const formatStorageUsage = (bytes) => `${(bytes / 1024).toFixed(2)} KB`;
+
       const refreshStorageUsage = () => {
         const usage = calculateStorageUsage();
         setStorageUsage(usage);
+        return usage;
+      };
+
+      const handleRefreshStorageUsage = () => {
+        console.log("LocalStorage 重新計算中...");
+        const usage = refreshStorageUsage();
+        const size = Number((usage.bytes / 1024).toFixed(2));
+        console.log("計算完成，當前大小為：", size);
+        showToast(`✅ 計算完成，目前使用量為 ${formatStorageUsage(usage.bytes)}`);
         return usage;
       };
 
@@ -2084,7 +2103,11 @@
                   <Icon name="info" className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => setIsNightMode(!isNightMode)}
+                  onClick={() => {
+                    const nextIsNightMode = !isNightMode;
+                    setIsNightMode(nextIsNightMode);
+                    showToast(`✅ 已${nextIsNightMode ? '開啟' : '關閉'}夜間模式`);
+                  }}
                   className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
                   title="切換夜間模式"
                 >
@@ -2165,7 +2188,7 @@
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-sm flex items-center gap-1.5">
                       <Icon name="droplet" className="text-amber-500 w-4 h-4" />
-                      今日總奶量進度
+                      今日總奶量進度（目前設定的每日目標）
                     </span>
                     <span className="text-base font-bold text-amber-600">
                       {todayTotalMilk} / {babyInfo.targetDailyMilk || '0'} ml
@@ -2248,6 +2271,7 @@
                   onAddGrowthRecord={handleAddGrowthRecord}
                   onDeleteGrowthRecord={handleDeleteGrowthRecord}
                   onToggleGrowthRecordPlot={handleToggleGrowthRecordPlot}
+                  showToast={showToast}
                 />
 
                 <div className="space-y-2 pt-2 border-t">
@@ -2602,7 +2626,7 @@
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
                 <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-amber-700">修改寶寶基本資料</h3>
+                  <h3 className="font-bold text-sm text-amber-700">寶寶基本資料</h3>
                   <button onClick={() => setShowEditProfileModal(false)} className="text-slate-400 hover:text-slate-600">
                     <Icon name="x" className="w-4 h-4" />
                   </button>
@@ -2708,7 +2732,7 @@
                     </div>
                   </div>
                   <div>
-                    <label className="font-bold block mb-1">每日目標總奶量 (ml)</label>
+                    <label className="font-bold block mb-1">目前設定的每日目標總奶量 (ml)</label>
                     <input
                       type="number"
                       placeholder="例如：450"
@@ -2989,7 +3013,7 @@
                 </div>
                 <div className={`rounded-xl border p-3 ${storageUsage.percent >= 100 ? 'bg-red-50 border-red-200 text-red-800' : storageUsage.percent >= 80 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 text-slate-700'}`}>
                   <p className="font-bold">Local Storage 使用量</p>
-                  <p className="text-lg font-black mt-1">{formatBytes(storageUsage.bytes)} / 5 MB（約 {storageUsage.percent}%）</p>
+                  <p className="text-lg font-black mt-1">{formatStorageUsage(storageUsage.bytes)} / 5 MB（約 {storageUsage.percent}%）</p>
                   <p className="text-[10px] leading-relaxed mt-1">上限為常見估計值，實際限制可能依瀏覽器與瀏覽模式有所不同。</p>
                 </div>
                 {storageUsage.percent >= 80 && (
@@ -3001,7 +3025,7 @@
                 )}
                 <div className="grid gap-2">
                   <button
-                    onClick={refreshStorageUsage}
+                    onClick={handleRefreshStorageUsage}
                     className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold"
                   >
                     重新計算目前使用量
