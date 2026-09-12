@@ -1100,19 +1100,11 @@ function App() {
     return usage;
   };
   const cleanupStorageTemporaryData = () => {
-    const confirmed = window.confirm('將清除緊急暫存檔案，不會刪除正式資料或自動備份檔案。確定要繼續嗎？');
+    const confirmed = window.confirm('將清除暫存檔案，不會刪除正式資料。確定要繼續嗎？');
     if (!confirmed) return;
     localStorage.removeItem('sun_baby_emergency_snapshot_v1');
     const usage = refreshStorageUsage();
     showToast(`🧹 已清理暫存檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
-  };
-  const cleanupStorageAutoBackupData = () => {
-    const confirmed = window.confirm('將清除最近的自動備份檔案，之後將無法從最近備份紀錄還原。確定要繼續嗎？');
-    if (!confirmed) return;
-    localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY);
-    setRecentAutoBackups([]);
-    const usage = refreshStorageUsage();
-    showToast(`🗑️ 已清理自動備份檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
   };
   const ensureStorageCapacityForNewData = () => {
     const usage = refreshStorageUsage();
@@ -1394,7 +1386,7 @@ function App() {
     const backupTimestamp = backupData.exportTimestamp ? new Date(backupData.exportTimestamp) : null;
     const isValidDate = backupTimestamp && !isNaN(backupTimestamp.getTime());
     const backupTimeText = isValidDate ? formatLocalDateTime(backupTimestamp) : '未知時間';
-    const restoreMessage = advancedRestoreEnabled ? `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n系統將先自動下載一份目前資料的備份檔案，避免還原後遺失現有紀錄。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？` : `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n進階還原已關閉，不會預先下載目前資料的自動備份。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？`;
+    const restoreMessage = `即將載入還原檔案（建立時間：${backupTimeText}）。\n\n此動作會覆蓋目前所有資料，請確認是否繼續？`;
     const confirmed = window.confirm(restoreMessage);
     if (!confirmed) {
       setPastedJson('');
@@ -1407,9 +1399,6 @@ function App() {
       setPastedJson('');
       showToast('⚠️ 本機儲存空間不足，還原已暫停。');
       return;
-    }
-    if (advancedRestoreEnabled) {
-      autoBackupCurrentDataBeforeRestore();
     }
     if (backupData.babyInfo) {
       const cleanedProfile = {
@@ -1663,7 +1652,7 @@ function App() {
     showToast(`🌱 已載入 ${missingDefaults.length} 項預設發展里程碑`);
   };
   const handleResetData = () => {
-    const confirmed = window.confirm("警告：此操作將清除所有寶寶照護、發展里程碑、進階備份與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？");
+    const confirmed = window.confirm("警告：此操作將清除所有寶寶照護、發展里程碑與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？");
     if (!confirmed) return;
     clearAppStorageData();
     setBabyInfo({
@@ -2107,7 +2096,7 @@ function App() {
   }, "筆記本")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowBackupModal(true),
     className: "px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0",
-    title: "開啟資料備份與還原"
+    title: "開啟備份與還原"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "database",
     className: "w-4 h-4"
@@ -2989,10 +2978,7 @@ function App() {
   }, "先下載完整備份"), /*#__PURE__*/React.createElement("button", {
     onClick: cleanupStorageTemporaryData,
     className: "w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
-  }, "清理暫存檔案"), /*#__PURE__*/React.createElement("button", {
-    onClick: cleanupStorageAutoBackupData,
-    className: "w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
-  }, "清理自動備份檔案")))), showStorageRecoveryModal && /*#__PURE__*/React.createElement("div", {
+  }, "清理暫存檔案")))), showStorageRecoveryModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
   }, /*#__PURE__*/React.createElement("div", {
     className: "w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4"
@@ -3025,13 +3011,15 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "database",
     className: "w-4 h-4"
-  }), "資料備份與還原"), /*#__PURE__*/React.createElement("button", {
+  }), "備份與還原"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowBackupModal(false),
     className: "text-slate-400 hover:text-slate-600"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "x",
     className: "w-4 h-4"
   }))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-6"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900"
   }, /*#__PURE__*/React.createElement("h4", {
     className: "font-bold text-xs"
@@ -3045,13 +3033,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "download",
     className: "w-3.5 h-3.5"
-  }), "下載備份檔案"), /*#__PURE__*/React.createElement("button", {
-    onClick: handleCopyBackupToClipboard,
-    className: "py-2 px-3 border border-amber-300 bg-white hover:bg-amber-100 text-amber-900 rounded-xl font-bold flex items-center justify-center gap-1 transition-colors"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "copy",
-    className: "w-3.5 h-3.5"
-  }), "複製備份文字"))), /*#__PURE__*/React.createElement("div", {
+  }), "下載備份檔案"))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-900"
   }, /*#__PURE__*/React.createElement("h4", {
     className: "font-bold text-xs"
@@ -3069,58 +3051,7 @@ function App() {
     accept: ".json",
     onChange: handleFileUpload,
     className: "hidden"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "space-y-1"
-  }, /*#__PURE__*/React.createElement("textarea", {
-    rows: 2,
-    placeholder: "或貼上備份文字內容...",
-    value: pastedJson,
-    onChange: e => setPastedJson(e.target.value),
-    className: "w-full p-2 border rounded-xl text-[11px] font-mono bg-white"
-  }), /*#__PURE__*/React.createElement("button", {
-    onClick: handlePasteImport,
-    className: "w-full py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl font-bold text-xs transition-colors"
-  }, "貼上文字並還原")))), /*#__PURE__*/React.createElement("div", {
-    className: "space-y-2 bg-violet-50 p-3 rounded-xl border border-violet-200 text-violet-900"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center justify-between gap-2"
-  }, /*#__PURE__*/React.createElement("h4", {
-    className: "font-bold text-xs"
-  }, "📦 進階還原（最近 3 筆備份紀錄）"), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: handleToggleAdvancedRestore,
-    className: `text-[10px] font-bold px-2 py-1 rounded-lg ${advancedRestoreEnabled ? 'bg-green-100 text-green-800' : 'bg-slate-200 text-slate-600'}`
-  }, advancedRestoreEnabled ? '已開啟' : '已關閉'), advancedRestoreEnabled && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: clearRecentAutoBackups,
-    className: "text-[10px] font-bold text-violet-700 hover:text-violet-900 underline-offset-2 hover:underline"
-  }, "清除所有紀錄"))), /*#__PURE__*/React.createElement("p", {
-    className: "text-[10px] leading-relaxed"
-  }, advancedRestoreEnabled ? '開啟時，還原前會先下載目前資料並保留最近 3 筆備份。' : '已關閉，不會預先下載還原前備份，且不保留進階還原紀錄。'), recentAutoBackups.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "p-3 rounded-xl border border-dashed border-violet-300 bg-white text-[11px] text-violet-700 leading-relaxed"
-  }, advancedRestoreEnabled ? '目前尚無備份紀錄。進行「匯出備份」或「還原前自動備份」後，這裡會自動顯示最近 3 筆可還原的紀錄。' : '進階還原已關閉，目前不保留備份紀錄。') : /*#__PURE__*/React.createElement("div", {
-    className: "space-y-2"
-  }, recentAutoBackups.map(entry => {
-    const entryDate = entry.timestamp ? new Date(entry.timestamp) : null;
-    const entryTimeText = entryDate && !isNaN(entryDate.getTime()) ? formatLocalDateTime(entryDate) : '未知時間';
-    return /*#__PURE__*/React.createElement("div", {
-      key: entry.id || entry.fileName,
-      className: "p-2 rounded-xl border border-violet-200 bg-white"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "flex items-start justify-between gap-2"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "min-w-0"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "font-bold text-[11px] truncate"
-    }, entry.fileName || entry.label || '備份紀錄'), /*#__PURE__*/React.createElement("div", {
-      className: "text-[10px] text-violet-700 mt-0.5"
-    }, entryTimeText)), /*#__PURE__*/React.createElement("button", {
-      onClick: () => handleRestoreRecentAutoBackup(entry),
-      className: "shrink-0 py-1.5 px-2 bg-violet-500 hover:bg-violet-600 text-white rounded-lg font-bold text-[10px] transition-colors"
-    }, "還原")));
-  }))))), showDataMgmtModal && /*#__PURE__*/React.createElement("div", {
+  }))))))), showDataMgmtModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start sm:items-center justify-center overflow-y-auto p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
     className: "w-full max-w-md my-2 sm:my-0 p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto text-xs box-border"
