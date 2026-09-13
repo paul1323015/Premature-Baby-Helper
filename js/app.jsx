@@ -1719,6 +1719,20 @@
               exportElement.style.visibility = 'visible';
               exportElement.style.opacity = '1';
               exportElement.style.clipPath = 'inset(100%)';
+              const cacheBuster = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+              const exportMarker = `pdf-export-${cacheBuster}`;
+              exportElement.setAttribute('data-pdf-export-id', exportMarker);
+              const divElements = [exportElement, ...exportElement.querySelectorAll('div')];
+              divElements
+                .sort(() => Math.random() - 0.5)
+                .slice(0, Math.min(4, divElements.length))
+                .forEach((divElement, index) => {
+                  divElement.setAttribute('data-pdf-cache-buster', `${cacheBuster}-${index}`);
+                });
+              const cacheBusterElement = document.createElement('div');
+              cacheBusterElement.style.display = 'none';
+              cacheBusterElement.textContent = cacheBuster;
+              exportElement.appendChild(cacheBusterElement);
               document.body.appendChild(exportElement);
               const opt = {
             margin: 7,
@@ -1729,7 +1743,7 @@
               useCORS: true,
               logging: false,
               onclone: (clonedDocument) => {
-                const clonedElement = clonedDocument.getElementById('pdf-report-content');
+                const clonedElement = clonedDocument.querySelector(`[data-pdf-export-id="${exportMarker}"]`);
                 if (clonedElement) {
                   clonedDocument.body.style.margin = '0';
                   clonedElement.style.position = 'absolute';
@@ -1909,14 +1923,14 @@
             note.id === editingDoctorNoteId
               ? { ...note, question: newDoctorQuestion.trim(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory }
               : note
-          )));
+          )).sort((a, b) => `${b.date || ''} ${b.time || ''}`.localeCompare(`${a.date || ''} ${a.time || ''}`)));
           showToast('💾 已儲存看診備忘修改！');
         } else {
           if (!ensureStorageCapacityForNewData()) return;
           setDoctorNotes(prevNotes => [
             ...prevNotes,
             { id: Date.now(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory, question: newDoctorQuestion.trim(), answered: false, tag: doctorNoteCategory }
-          ]);
+          ].sort((a, b) => `${b.date || ''} ${b.time || ''}`.localeCompare(`${a.date || ''} ${a.time || ''}`)));
           showToast('🏥 已新增看診問題！');
         }
         setNewDoctorQuestion('');
