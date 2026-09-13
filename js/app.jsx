@@ -946,7 +946,8 @@
           const value = localStorage.getItem(key) || '';
           bytes += key.length + value.length;
         }
-        return { bytes, percent: Math.min(100, Math.round((bytes / STORAGE_LIMIT_BYTES) * 100)) };
+        const percent = Math.min(100, (bytes / STORAGE_LIMIT_BYTES) * 100);
+        return { bytes, percent: percent > 0 && percent < 0.01 ? '< 0.01' : percent.toFixed(2) };
       };
 
       const formatStorageUsage = (bytes) => `${(bytes / 1024).toFixed(2)} KB`;
@@ -1352,7 +1353,7 @@
 
         setShowBackupModal(false);
         setPastedJson('');
-        showToast(`🎉 已還原：${restoredSections.join(' / ') || '資料'}`);
+        showToast('✅ 備份檔案已還原成功！');
       };
 
       const handleFileUpload = (e) => {
@@ -1578,7 +1579,7 @@
 
       const handleResetData = () => {
         const confirmed = window.confirm(
-          "警告：此操作將清除所有寶寶照護、發展里程碑與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？"
+          "警告：此操作將清除所有資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？"
         );
         if (!confirmed) return;
 
@@ -2618,7 +2619,7 @@
                 </div>
                 <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
                   <div>
-                    <label className="font-bold block mb-1">寶寶暱稱</label>
+                    <label className="font-bold block mb-1">寶寶姓名</label>
                     <input
                       type="text"
                       placeholder="例如：小太陽"
@@ -3205,7 +3206,7 @@
                       className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-1 transition-colors"
                     >
                       <Icon name="trash" className="w-3.5 h-3.5" />
-                      清除所有本地資料 (重置)
+                      清除所有本地資料(重設應用程式預設值)
                     </button>
                   </div>
                 </div>
@@ -3257,7 +3258,7 @@
               <div className={`w-full max-w-xl p-5 rounded-2xl border shadow-xl max-h-[90vh] flex flex-col ${cardBg}`}>
                 <div className="flex justify-between items-center pb-3 border-b mb-3">
                   <h3 className="font-bold text-base text-amber-800 flex items-center gap-2">
-                    📖 「巴掌小太陽」關於與特色說明
+                    📖 「巴掌小太陽」說明與特色
                   </h3>
                   <button onClick={() => setShowHelpModal(false)} className="text-slate-400 hover:text-slate-600 p-1">
                     <Icon name="x" className="w-5 h-5" />

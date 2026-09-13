@@ -1080,9 +1080,10 @@ function App() {
       const value = localStorage.getItem(key) || '';
       bytes += key.length + value.length;
     }
+    const percent = Math.min(100, bytes / STORAGE_LIMIT_BYTES * 100);
     return {
       bytes,
-      percent: Math.min(100, Math.round(bytes / STORAGE_LIMIT_BYTES * 100))
+      percent: percent > 0 && percent < 0.01 ? '< 0.01' : percent.toFixed(2)
     };
   };
   const formatStorageUsage = bytes => `${(bytes / 1024).toFixed(2)} KB`;
@@ -1436,7 +1437,7 @@ function App() {
     if (backupData.chatMessages) restoredSections.push('AI 諮詢紀錄');
     setShowBackupModal(false);
     setPastedJson('');
-    showToast(`🎉 已還原：${restoredSections.join(' / ') || '資料'}`);
+    showToast('✅ 備份檔案已還原成功！');
   };
   const handleFileUpload = e => {
     const file = e.target.files[0];
@@ -1652,7 +1653,7 @@ function App() {
     showToast(`🌱 已載入 ${missingDefaults.length} 項預設發展里程碑`);
   };
   const handleResetData = () => {
-    const confirmed = window.confirm("警告：此操作將清除所有寶寶照護、發展里程碑與筆記本資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？");
+    const confirmed = window.confirm("警告：此操作將清除所有資料！資料刪除後無法復原。建議先使用畫面上方的『備份/還原』功能匯出備份檔案。確定要繼續清空所有資料嗎？");
     if (!confirmed) return;
     clearAppStorageData();
     setBabyInfo({
@@ -2618,7 +2619,7 @@ function App() {
     className: "space-y-3 text-xs"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "寶寶暱稱"), /*#__PURE__*/React.createElement("input", {
+  }, "寶寶姓名"), /*#__PURE__*/React.createElement("input", {
     type: "text",
     placeholder: "例如：小太陽",
     value: editFormData.name,
@@ -3140,7 +3141,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-3.5 h-3.5"
-  }), "清除所有本地資料 (重置)"))))), showMilestoneModal && /*#__PURE__*/React.createElement("div", {
+  }), "清除所有本地資料(重設應用程式預設值)"))))), showMilestoneModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
     className: `w-full max-w-md p-5 rounded-2xl border shadow-xl ${cardBg}`
@@ -3179,7 +3180,7 @@ function App() {
     className: "flex justify-between items-center pb-3 border-b mb-3"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-base text-amber-800 flex items-center gap-2"
-  }, "📖 「巴掌小太陽」關於與特色說明"), /*#__PURE__*/React.createElement("button", {
+  }, "📖 「巴掌小太陽」說明與特色"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowHelpModal(false),
     className: "text-slate-400 hover:text-slate-600 p-1"
   }, /*#__PURE__*/React.createElement(Icon, {
