@@ -1735,7 +1735,9 @@ function App() {
   const handleResetMilkSettings = () => {
     const confirmed = window.confirm('⚠️ 此操作將重置每日奶量進度與目標。確定要繼續嗎？');
     if (!confirmed) return;
-    setLogs(prevLogs => prevLogs.filter(item => item.type !== 'feeding'));
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    setLogs(prevLogs => prevLogs.filter(item => item.type !== 'feeding' || item.date !== today));
     setBabyInfo(prev => ({
       ...prev,
       targetDailyMilk: ''
@@ -1896,7 +1898,9 @@ function App() {
     safeSetStorageItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(chatMessages));
   }, [chatMessages]);
   const todayTotalMilk = React.useMemo(() => {
-    return logs.filter(l => l.type === 'feeding' && l.amount).reduce((sum, l) => sum + parseInt(l.amount || '0', 10), 0);
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return logs.filter(l => l.type === 'feeding' && l.amount && String(l.date || '').slice(0, 10) === today).reduce((sum, l) => sum + (parseInt(String(l.amount).replace(/[^\d.-]/g, ''), 10) || 0), 0);
   }, [logs]);
   const targetMilkNum = parseInt(babyInfo.targetDailyMilk || '0', 10);
   const milkPercent = targetMilkNum > 0 ? Math.min(100, Math.round(todayTotalMilk / targetMilkNum * 100)) : 0;

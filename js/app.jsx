@@ -1686,7 +1686,11 @@
           '⚠️ 此操作將重置每日奶量進度與目標。確定要繼續嗎？'
         );
         if (!confirmed) return;
-        setLogs((prevLogs) => prevLogs.filter((item) => item.type !== 'feeding'));
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        setLogs((prevLogs) => prevLogs.filter(
+          (item) => item.type !== 'feeding' || item.date !== today
+        ));
         setBabyInfo((prev) => ({ ...prev, targetDailyMilk: '' }));
         showToast('🧴 已重置奶量設定/目標');
       };
@@ -1850,9 +1854,11 @@
       }, [chatMessages]);
 
       const todayTotalMilk = React.useMemo(() => {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         return logs
-          .filter(l => l.type === 'feeding' && l.amount)
-          .reduce((sum, l) => sum + parseInt(l.amount || '0', 10), 0);
+          .filter(l => l.type === 'feeding' && l.amount && String(l.date || '').slice(0, 10) === today)
+          .reduce((sum, l) => sum + (parseInt(String(l.amount).replace(/[^\d.-]/g, ''), 10) || 0), 0);
       }, [logs]);
 
       const targetMilkNum = parseInt(babyInfo.targetDailyMilk || '0', 10);
