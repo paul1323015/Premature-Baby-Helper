@@ -508,6 +508,12 @@
               <div className="flex-1 min-w-0">
                 <span className="font-bold block text-amber-800">⚡️ 生長曲線軸線設定：</span>
                 <span className="block">預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。</span>
+                {useChronoAxis && (
+                  <span className="block text-amber-700 font-bold">⚠️ 實際月齡模式僅供月齡趨勢查看，不作 WHO 百分位判讀。</span>
+                )}
+                {!useChronoAxis && (
+                  <span className="block text-amber-700 font-bold">⚠️ 矯正月齡模式較適合早產兒生長趨勢參考；百分位結果僅供參考，實際判讀請諮詢兒科或新生兒科醫師。</span>
+                )}
               </div>
             </div>
             <button
@@ -608,6 +614,12 @@
               )}
 
               <line x1={padding.left} y1={height - padding.bottom} x2={width - padding.right} y2={height - padding.bottom} stroke="#94a3b8" strokeWidth="1.5" />
+              <text x={width - padding.right} y={padding.top - 8} textAnchor="end" className="fill-slate-600 font-bold text-[10px]">
+                X 軸：{useChronoAxis ? '實際月齡' : '矯正月齡'}（月）
+              </text>
+              <text x={12} y={height / 2} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`} className="fill-slate-600 font-bold text-[10px]">
+                Y 軸：{metricConfig.label}（{metricConfig.unit}）
+              </text>
 
               {showPercentiles && percentileIndices.map((pIndex, i) => {
                 const pathD = refData.map((d, idx) => `${idx === 0 ? 'M' : 'L'} ${xScale(d[0])} ${yScale(d[pIndex])}`).join(' ');
@@ -922,7 +934,6 @@
       const [pastedJson, setPastedJson] = React.useState('');
       const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
       const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
-      const CHAT_HISTORY_STORAGE_KEY = 'sun_baby_chat_history_v1';
       const APP_STORAGE_KEYS = [
         'sun_baby_profile_v5',
         'sun_baby_growth_history_v1',
@@ -932,8 +943,7 @@
         'sun_baby_milestones_v1',
         'sun_baby_emergency_snapshot_v1',
         AUTO_BACKUP_STORAGE_KEY,
-        ADVANCED_RESTORE_SETTING_KEY,
-        CHAT_HISTORY_STORAGE_KEY
+        ADVANCED_RESTORE_SETTING_KEY
       ];
       const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
       const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
@@ -1174,8 +1184,7 @@
         notes,
         notebook: notes,
         notebookNotes: notes,
-        doctorQuestions: doctorNotes,
-        chatMessages
+        doctorQuestions: doctorNotes
       });
 
       const downloadBackupPayload = (label = '備份', customFileName = null) => {
@@ -1263,8 +1272,7 @@
           notes,
           notebook: notes,
           notebookNotes: notes,
-          doctorQuestions: doctorNotes,
-          chatMessages
+          doctorQuestions: doctorNotes
         };
         const jsonString = JSON.stringify(backupData, null, 2);
 
@@ -1329,7 +1337,6 @@
         }
 
         if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
-        if (Array.isArray(backupData.chatMessages)) setChatMessages(backupData.chatMessages);
 
         const importedNotebookNotes = Array.isArray(backupData.notes)
           ? backupData.notes
@@ -1349,7 +1356,6 @@
         if (backupData.growthHistory) restoredSections.push('歷史測量列表');
         if (backupData.logs) restoredSections.push('照護日誌');
         if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
-        if (backupData.chatMessages) restoredSections.push('AI 諮詢紀錄');
 
         setShowBackupModal(false);
         setPastedJson('');
@@ -1604,7 +1610,6 @@
         setMilestones([]);
         setRecentAutoBackups([]);
         setAdvancedRestoreEnabled(true);
-        setChatMessages(defaultChatMessages);
         setShowEditProfileModal(false);
         showToast('🧹 已重置清空所有本地資料');
       };
@@ -1673,12 +1678,6 @@
         if (!confirmed) return;
         setMilestones([]);
         showToast('🗑️ 已清除發展里程碑');
-      };
-
-      const handleClearChatHistory = () => {
-        if (!window.confirm('確定要清除所有 AI 諮詢紀錄嗎？清除後無法復原。')) return;
-        setChatMessages(defaultChatMessages);
-        showToast('🗑️ 已清除 AI 諮詢紀錄');
       };
 
       const handleResetMilkSettings = () => {
@@ -1834,25 +1833,6 @@
       const [newLogDetail, setNewLogDetail] = React.useState('');
       const [newLogAmount, setNewLogAmount] = React.useState('');
 
-      const defaultChatMessages = [
-        { sender: 'bot', text: '你好！我是巴掌小太陽的 AI 照護助手 ☀️。您可以詢問關於【矯正月齡生長曲線】計算、每日奶量評估、資料同步備份與還原、筆記本使用等問題喔！' }
-      ];
-      const [chatMessages, setChatMessages] = React.useState(() => {
-        try {
-          const saved = localStorage.getItem(CHAT_HISTORY_STORAGE_KEY);
-          const parsed = saved ? JSON.parse(saved) : null;
-          return Array.isArray(parsed) && parsed.length > 0 ? parsed : defaultChatMessages;
-        } catch (error) {
-          console.error('Failed to read AI chat history:', error);
-          return defaultChatMessages;
-        }
-      });
-      const [inputMessage, setInputMessage] = React.useState('');
-
-      React.useEffect(() => {
-        safeSetStorageItem(CHAT_HISTORY_STORAGE_KEY, JSON.stringify(chatMessages));
-      }, [chatMessages]);
-
       const todayTotalMilk = React.useMemo(() => {
         const now = new Date();
         const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -1967,37 +1947,6 @@
         if (editingDoctorNoteId === id) handleCancelEditDoctorNote();
         setDoctorNotes(prevNotes => prevNotes.filter(note => note.id !== id));
         showToast('🗑️ 已刪除看診備忘');
-      };
-
-      const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (!inputMessage.trim()) return;
-
-        const userText = inputMessage;
-        setChatMessages(prev => [...prev, { sender: 'user', text: userText, timestamp: new Date().toISOString() }]);
-        setInputMessage('');
-
-        setTimeout(() => {
-          let replyText = "早產兒請務必根據【矯正月齡】來對照生長與發展指標！若要跨裝置或備份資料，可隨時點擊右上角「備份/還原」匯出備份檔案。";
-          const babyName = babyInfo.name || '寶寶';
-          if (userText.includes('備份') || userText.includes('還原') || userText.includes('匯入') || userText.includes('匯出')) {
-            replyText = `點擊上方選單列的【備份/還原】按鈕，即可將 ${babyName} 的「基本設定檔」、「歷史測量列表」以及「筆記本」完整下載成備份檔案。更換手機或瀏覽器時貼上即可秒速還原！`;
-          } else if (userText.includes('筆記') || userText.includes('記')) {
-            replyText = `點擊頁面頂部的【筆記本】按鈕即可快速紀錄【回診提問】、【成長大事記】與【其他備忘】。單篇上限 1000 字，最多可儲存 1000 條筆記，並隨時支援編輯與覆蓋更新喔！`;
-          } else if (userText.includes('矯正') || userText.includes('算') || userText.includes('曲線')) {
-            replyText = `評估 ${babyName} 的身高、體重與頭圍時，請統一查看【生長與發展】分頁的生長曲線圖，其 X 軸已鎖定預產期算的【矯正月齡】（目前為 ${ageData.correctedText}）。`;
-          } else if (userText.includes('奶量') || userText.includes('喝')) {
-            const weight = parseFloat(babyInfo.currentWeight || '0');
-            if (weight > 0) {
-              const minMilk = Math.round(weight * 150);
-              const maxMilk = Math.round(weight * 180);
-              replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。以 ${babyName} 目前體重 ${weight}kg 計算，一天建議總奶量約為 ${minMilk}ml ~ ${maxMilk}ml。`;
-            } else {
-              replyText = `早產兒每日建議總奶量公式為：體重(kg) × 150ml ~ 180ml。您可以先點擊「自訂/修改」填入寶寶體重來計算喔！`;
-            }
-          }
-          setChatMessages(prev => [...prev, { sender: 'bot', text: replyText, timestamp: new Date().toISOString() }]);
-        }, 600);
       };
 
       const filteredNotes = notes.filter(n => filterNoteCategory === '全部' || n.category === filterNoteCategory);
@@ -2171,7 +2120,6 @@
                 { id: 'growth', label: '📈 矯正月齡生長曲線' },
                 { id: 'care', label: '🍼 照護日誌' },
                 { id: 'doctor', label: '🏥 看診備忘' },
-                { id: 'chat', label: '🤖 AI 諮詢' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -2488,54 +2436,6 @@
               </div>
             )}
 
-            {/* Tab 5: AI Consultation */}
-            {activeTab === 'chat' && (
-              <div className={`ai-chat-panel p-4 rounded-2xl border flex flex-col ${cardBg}`}>
-                <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5 shadow-sm">
-                  <Icon name="alertTriangle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-                  <div className="leading-snug">
-                    <span className="font-bold text-rose-800 block text-xs mb-0.5">⚠️ 醫療諮詢重要聲明：</span>
-                    <p className="text-rose-700">
-                      本 AI 諮詢功能結果僅供參考，不可作為醫療診斷或處方依據。寶寶身體狀況隨時變化，仍須以專業醫師評估結果為準。
-                    </p>
-                  </div>
-                </div>
-
-                <div className="ai-chat-messages space-y-2 pr-1">
-                  {chatMessages.map((msg, idx) => (
-                    <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`p-3 rounded-xl text-xs max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-amber-500 text-white' : 'bg-amber-50 text-slate-800 border border-amber-200'}`}>
-                        {msg.text}
-                        {msg.timestamp && (
-                          <div className={`mt-1 text-[10px] ${msg.sender === 'user' ? 'text-amber-100' : 'text-slate-400'}`}>
-                            {formatLocalDateTime(new Date(msg.timestamp))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem' }} className="mt-3 flex-shrink-0">
-                  <input
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    placeholder="詢問矯正月齡計算、奶量、資料備份、筆記本..."
-                    className="flex-1 px-3 py-2 border rounded-xl text-xs focus:ring-2 focus:ring-amber-400 focus:outline-none"
-                  />
-                  <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition-colors">送出</button>
-                </form>
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }} className="mt-3">
-                  <button
-                    type="button"
-                    onClick={handleClearChatHistory}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-[11px] font-bold transition-colors"
-                  >
-                    清除諮詢紀錄
-                  </button>
-                </div>
-              </div>
-            )}
           </main>
 
           {/* Printable PDF Report Element (Hidden on screen, target for html2pdf) */}
@@ -3198,13 +3098,6 @@
                       清除發展里程碑
                     </button>
                     <button
-                      onClick={handleClearChatHistory}
-                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <Icon name="trash" className="w-4 h-4" />
-                      清除 AI 諮詢紀錄
-                    </button>
-                    <button
                       onClick={handleResetMilkSettings}
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
@@ -3338,15 +3231,6 @@
                       </p>
                     </div>
 
-                    {/* Card 6 */}
-                    <div className="p-3 bg-rose-50/70 border border-rose-200 rounded-xl space-y-1">
-                      <div className="font-bold text-rose-900 text-sm flex items-center gap-1.5">
-                        🤖 暖心照護叮嚀與 AI 諮詢
-                      </div>
-                      <p className="text-slate-600 leading-relaxed">
-                        內建實用的照護小叮嚀與 AI 諮詢助手，隨時陪伴爸媽走過每個焦慮時刻。
-                      </p>
-                    </div>
                   </div>
 
                   {/* 🌸 溫馨陪伴理念卡片 */}

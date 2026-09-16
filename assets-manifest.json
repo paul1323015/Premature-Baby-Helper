@@ -43,7 +43,6 @@
     "./js/html2pdf.bundle.min.js",
     "./js/react-dom.production.min.js",
     "./js/react.production.min.js",
-    "./js/tailwind.min.js",
-    "./service-worker.js"
+    "./js/tailwind.min.js"
   ]
 }

@@ -3,7 +3,6 @@ const path = require('path');
 
 // Configuration
 const ROOT = path.resolve(__dirname); // project root
-const SW_PATH = path.join(ROOT, 'service-worker.js');
 const MANIFEST_PATH = path.join(ROOT, 'assets-manifest.json');
 const IGNORE_DIRS = new Set(['node_modules', '.git', '.vs', 'dist']);
 const IGNORE_FILES = new Set(['.DS_Store']);
@@ -47,11 +46,10 @@ function generateAssetsList() {
     .filter(f => !f.endsWith('.bak'))
     .filter(f => !['external-resources.json','assets-manifest.json','replacement-report.json','scan-external-resources.js','replace-external-with-local.js'].includes(f));
 
-  // Always ensure index.html and service-worker.js are present
+  // Always ensure index.html is present
   const assets = new Set();
   assets.add('/');
   assets.add('/index.html');
-  assets.add('/service-worker.js');
 
   for (const f of filtered) {
     // skip hidden files
@@ -68,31 +66,9 @@ function writeManifest(assets) {
   console.log(`Wrote assets manifest to ${MANIFEST_PATH} (${assets.length} assets)`);
 }
 
-function updateServiceWorker(assets) {
-  let sw = fs.readFileSync(SW_PATH, 'utf8');
-
-  // New cache name with timestamp to force clients to update
-  const newCacheName = `pbh-cache-v${Date.now()}`;
-  sw = sw.replace(/const\s+CACHE_NAME\s*=\s*['"][^'"]+['"];?/, `const CACHE_NAME = '${newCacheName}';`);
-
-  const assetsStr = assets.map(a => `  '${a.replace(/'/g, "\\'")}'`).join(',\n');
-  const newAssetsBlock = `const ASSETS_TO_CACHE = [\n${assetsStr}\n];`;
-
-  sw = sw.replace(/const\s+ASSETS_TO_CACHE\s*=\s*\[[\s\S]*?\];/, newAssetsBlock);
-
-  fs.writeFileSync(SW_PATH, sw, 'utf8');
-  console.log(`Updated ${SW_PATH} with ${assets.length} assets and cache name ${newCacheName}`);
-}
-
 function main() {
-  if (!fs.existsSync(SW_PATH)) {
-    console.error('service-worker.js not found at', SW_PATH);
-    process.exit(1);
-  }
-
   const assets = generateAssetsList();
   writeManifest(assets);
-  updateServiceWorker(assets);
 }
 
 main();
