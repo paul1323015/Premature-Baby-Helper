@@ -588,9 +588,7 @@ const PretermGrowthChart = ({
     className: "flex flex-col gap-2 mb-2 px-1 sm:flex-row sm:items-center sm:justify-between"
   }, /*#__PURE__*/React.createElement("div", {
     className: "text-xs font-bold text-slate-700 flex items-center gap-1.5 flex-wrap"
-  }, /*#__PURE__*/React.createElement("span", null, gender === 'boy' ? '👦 男寶' : '👧 女寶', " WHO ", metricConfig.label, "生長曲線圖"), /*#__PURE__*/React.createElement("span", {
-    className: "text-[10px] text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full font-bold"
-  }, "X軸 = ", useChronoAxis ? '實際月齡' : '矯正月齡')), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, gender === 'boy' ? '👦 男寶' : '👧 女寶', " WHO ", metricConfig.label, "生長曲線圖")), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {

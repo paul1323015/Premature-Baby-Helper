@@ -533,9 +533,6 @@
             <div className="flex flex-col gap-2 mb-2 px-1 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-xs font-bold text-slate-700 flex items-center gap-1.5 flex-wrap">
                 <span>{gender === 'boy' ? '👦 男寶' : '👧 女寶'} WHO {metricConfig.label}生長曲線圖</span>
-                <span className="text-[10px] text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full font-bold">
-                  X軸 = {useChronoAxis ? '實際月齡' : '矯正月齡'}
-                </span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button
