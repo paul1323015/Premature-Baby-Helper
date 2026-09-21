@@ -1878,6 +1878,41 @@
         e.preventDefault();
         if (newLogType === 'vaccination') {
           if (!vaccinationForm.vaccineName.trim() || !vaccinationForm.date) return;
+          if (editingLogId !== null) {
+            const editingLog = logs.find(log => log.id === editingLogId);
+            const existingRecord = vaccinationLogs.find(record => (
+              record.id === editingLog?.sourceId
+              || (record.date === editingLog?.date && editingLog.detail?.includes(record.vaccineName))
+            ));
+            const updatedRecord = existingRecord ? {
+              ...existingRecord,
+              vaccineName: vaccinationForm.vaccineName.trim(),
+              doseNumber: Number(vaccinationForm.doseNumber) || 1,
+              date: vaccinationForm.date,
+              location: vaccinationForm.location.trim(),
+              sideEffects: vaccinationForm.sideEffects.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
+              notes: vaccinationForm.notes.trim()
+            } : null;
+            const updatedVaccinationLogs = updatedRecord
+              ? vaccinationLogs.map(record => record.id === updatedRecord.id ? updatedRecord : record)
+              : vaccinationLogs;
+            setVaccinationLogs(updatedVaccinationLogs);
+            safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify(updatedVaccinationLogs));
+            setLogs(prevLogs => prevLogs.map(log => (
+              log.id === editingLogId
+                ? {
+                    ...log,
+                    date: vaccinationForm.date,
+                    detail: `💉 ${vaccinationForm.vaccineName.trim()}（第 ${Number(vaccinationForm.doseNumber) || 1} 劑）`,
+                    amount: null
+                  }
+                : log
+            )));
+            showToast('💾 已儲存疫苗接種紀錄修改！');
+            setShowAddLogModal(false);
+            setEditingLogId(null);
+            return;
+          }
           if (!ensureStorageCapacityForNewData()) return;
           const vaccinationRecord = {
             id: String(Date.now()),
@@ -1896,6 +1931,7 @@
             id: `${Date.now()}-vaccination`,
             date: vaccinationForm.date,
             type: 'vaccination',
+            sourceId: vaccinationRecord.id,
             time: timeStr,
             detail: `💉 ${vaccinationRecord.vaccineName}（第 ${vaccinationRecord.doseNumber} 劑）`,
             amount: null,
@@ -1906,6 +1942,40 @@
         }
         if (newLogType === 'solidFood') {
           if (!solidFoodForm.foodName.trim() || !solidFoodForm.date) return;
+          if (editingLogId !== null) {
+            const editingLog = logs.find(log => log.id === editingLogId);
+            const existingRecord = solidFoodLogs.find(record => (
+              record.id === editingLog?.sourceId
+              || (record.date === editingLog?.date && editingLog.detail?.includes(record.foodName))
+            ));
+            const updatedRecord = existingRecord ? {
+              ...existingRecord,
+              foodName: solidFoodForm.foodName.trim(),
+              date: solidFoodForm.date,
+              amount: Number(solidFoodForm.amount) || 0,
+              allergySeverity: solidFoodForm.allergySeverity,
+              reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean)
+            } : null;
+            const updatedSolidFoodLogs = updatedRecord
+              ? solidFoodLogs.map(record => record.id === updatedRecord.id ? updatedRecord : record)
+              : solidFoodLogs;
+            setSolidFoodLogs(updatedSolidFoodLogs);
+            safeSetStorageItem('sun_baby_solid_food_logs_v1', JSON.stringify(updatedSolidFoodLogs));
+            setLogs(prevLogs => prevLogs.map(log => (
+              log.id === editingLogId
+                ? {
+                    ...log,
+                    date: solidFoodForm.date,
+                    detail: `🥣 ${solidFoodForm.foodName.trim()}`,
+                    amount: solidFoodForm.amount ? `${Number(solidFoodForm.amount) || 0}ml/湯匙` : null
+                  }
+                : log
+            )));
+            showToast('💾 已儲存副食品試吃紀錄修改！');
+            setShowAddLogModal(false);
+            setEditingLogId(null);
+            return;
+          }
           if (!ensureStorageCapacityForNewData()) return;
           const solidFoodRecord = {
             id: String(Date.now()),
@@ -1922,6 +1992,7 @@
           setLogs(prevLogs => [{
             id: `${Date.now()}-solid-food`,
             type: 'solidFood',
+            sourceId: solidFoodRecord.id,
             time: timeStr,
             date: solidFoodForm.date,
             detail: `🥣 ${solidFoodRecord.foodName}`,
@@ -1969,6 +2040,37 @@
         setNewLogType(log.type);
         setNewLogDetail(log.detail || '');
         setNewLogAmount(log.amount ? String(log.amount).replace(/ml$/i, '') : '');
+        if (log.type === 'vaccination') {
+          const record = vaccinationLogs.find(item => (
+            item.id === log.sourceId
+            || (item.date === log.date && log.detail?.includes(item.vaccineName))
+          ));
+          if (record) {
+            setVaccinationForm({
+              vaccineName: record.vaccineName,
+              doseNumber: record.doseNumber || 1,
+              date: record.date || getLocalDateInputValue(),
+              location: record.location || '',
+              sideEffects: Array.isArray(record.sideEffects) ? record.sideEffects.join('、') : (record.sideEffects || ''),
+              notes: record.notes || ''
+            });
+          }
+        }
+        if (log.type === 'solidFood') {
+          const record = solidFoodLogs.find(item => (
+            item.id === log.sourceId
+            || (item.date === log.date && log.detail?.includes(item.foodName))
+          ));
+          if (record) {
+            setSolidFoodForm({
+              foodName: record.foodName,
+              date: record.date || getLocalDateInputValue(),
+              amount: record.amount ?? '',
+              allergySeverity: record.allergySeverity || 'none',
+              reactions: Array.isArray(record.reactions) ? record.reactions.join('、') : (record.reactions || '')
+            });
+          }
+        }
         setShowAddLogModal(true);
       };
 
@@ -2283,25 +2385,25 @@
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                   <button
-                    onClick={() => { setNewLogType('feeding'); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('feeding'); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm md:p-5"
                   >
                     🍼 記餵奶
                   </button>
                   <button
-                    onClick={() => { setNewLogType('diaper'); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('diaper'); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm md:p-5"
                   >
                     👶 記尿布
                   </button>
                   <button
-                    onClick={() => { setNewLogType('solidFood'); setSolidFoodForm({ ...solidFoodForm, date: getLocalDateInputValue() }); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('solidFood'); setSolidFoodForm({ ...solidFoodForm, date: getLocalDateInputValue() }); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors shadow-sm md:p-5"
                   >
                     🥣 記副食品
                   </button>
                   <button
-                    onClick={() => { setNewLogType('vaccination'); setVaccinationForm({ ...vaccinationForm, date: getLocalDateInputValue() }); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('vaccination'); setVaccinationForm({ ...vaccinationForm, date: getLocalDateInputValue() }); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-purple-50 border-purple-200 text-purple-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition-colors shadow-sm md:p-5"
                   >
                     💉 記疫苗
