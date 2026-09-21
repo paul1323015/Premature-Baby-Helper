@@ -1019,6 +1019,26 @@ function App() {
     }
     return [];
   });
+  const [vaccinationLogs, setVaccinationLogs] = React.useState(() => {
+    const saved = localStorage.getItem('sun_baby_vaccination_logs_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return [];
+  });
+  const [solidFoodLogs, setSolidFoodLogs] = React.useState(() => {
+    const saved = localStorage.getItem('sun_baby_solid_food_logs_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {}
+    }
+    return [];
+  });
   const [doctorNotes, setDoctorNotes] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_doctor_notes_v1');
     if (saved) {
@@ -1081,7 +1101,7 @@ function App() {
   const [pastedJson, setPastedJson] = React.useState('');
   const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
   const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
-  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
+  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
   const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
   const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
   const calculateStorageUsage = () => {
@@ -1295,6 +1315,8 @@ function App() {
     babyInfo,
     growthHistory,
     logs,
+    vaccinationLogs,
+    solidFoodLogs,
     doctorNotes,
     milestones,
     notes,
@@ -1367,19 +1389,7 @@ function App() {
     handleImportBackupObj(entry.payload);
   };
   const handleCopyBackupToClipboard = () => {
-    const backupData = {
-      version: '1.3',
-      exportTimestamp: new Date().toISOString(),
-      babyInfo,
-      growthHistory,
-      logs,
-      doctorNotes,
-      milestones,
-      notes,
-      notebook: notes,
-      notebookNotes: notes,
-      doctorQuestions: doctorNotes
-    };
+    const backupData = createBackupPayload();
     const jsonString = JSON.stringify(backupData, null, 2);
     const textarea = document.createElement('textarea');
     textarea.value = jsonString;
@@ -1427,6 +1437,14 @@ function App() {
       setGrowthHistory(cleanedHistory);
     }
     if (Array.isArray(backupData.logs)) setLogs(backupData.logs);
+    if (Array.isArray(backupData.vaccinationLogs)) {
+      setVaccinationLogs(backupData.vaccinationLogs);
+      safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify(backupData.vaccinationLogs));
+    }
+    if (Array.isArray(backupData.solidFoodLogs)) {
+      setSolidFoodLogs(backupData.solidFoodLogs);
+      safeSetStorageItem('sun_baby_solid_food_logs_v1', JSON.stringify(backupData.solidFoodLogs));
+    }
     if (Array.isArray(backupData.doctorNotes) || Array.isArray(backupData.doctorQuestions)) {
       setDoctorNotes(Array.isArray(backupData.doctorNotes) ? backupData.doctorNotes : backupData.doctorQuestions);
     } else if (Object.prototype.hasOwnProperty.call(backupData, 'doctorNotes') || Object.prototype.hasOwnProperty.call(backupData, 'doctorQuestions')) {
@@ -1442,6 +1460,8 @@ function App() {
     if (backupData.babyInfo) restoredSections.push('今日快照');
     if (backupData.growthHistory) restoredSections.push('歷史測量列表');
     if (backupData.logs) restoredSections.push('照護日誌');
+    if (backupData.vaccinationLogs) restoredSections.push('疫苗接種紀錄');
+    if (backupData.solidFoodLogs) restoredSections.push('副食品試吃紀錄');
     if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
     setShowBackupModal(false);
     setPastedJson('');
@@ -1881,6 +1901,25 @@ function App() {
   const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
   const [newLogDetail, setNewLogDetail] = React.useState('');
   const [newLogAmount, setNewLogAmount] = React.useState('');
+  const [showVaccinationModal, setShowVaccinationModal] = React.useState(false);
+  const [showSolidFoodModal, setShowSolidFoodModal] = React.useState(false);
+  const [vaccinationForm, setVaccinationForm] = React.useState({
+    vaccineName: '',
+    doseNumber: 1,
+    date: getLocalDateInputValue(),
+    location: '',
+    sideEffects: '',
+    notes: ''
+  });
+  const [solidFoodForm, setSolidFoodForm] = React.useState({
+    foodName: '',
+    date: getLocalDateInputValue(),
+    amount: '',
+    allergySeverity: 'none',
+    reactions: ''
+  });
+  const safeFoods = ['十倍粥', '南瓜泥', '地瓜泥', '胡蘿蔔泥', '蘋果泥'];
+  const allergyWarningFoods = ['花生', '堅果', '蛋', '牛奶', '小麥', '魚類', '蝦蟹'];
   const todayTotalMilk = React.useMemo(() => {
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -1890,6 +1929,61 @@ function App() {
   const milkPercent = targetMilkNum > 0 ? Math.min(100, Math.round(todayTotalMilk / targetMilkNum * 100)) : 0;
   const handleAddLog = e => {
     e.preventDefault();
+    if (newLogType === 'vaccination') {
+      if (!vaccinationForm.vaccineName.trim() || !vaccinationForm.date) return;
+      if (!ensureStorageCapacityForNewData()) return;
+      const vaccinationRecord = {
+        id: String(Date.now()),
+        vaccineName: vaccinationForm.vaccineName.trim(),
+        doseNumber: Number(vaccinationForm.doseNumber) || 1,
+        date: vaccinationForm.date,
+        location: vaccinationForm.location.trim(),
+        sideEffects: vaccinationForm.sideEffects.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
+        notes: vaccinationForm.notes.trim()
+      };
+      setVaccinationLogs(prevLogs => [vaccinationRecord, ...prevLogs]);
+      safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify([vaccinationRecord, ...vaccinationLogs]));
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setLogs(prevLogs => [{
+        id: `${Date.now()}-vaccination`,
+        date: vaccinationForm.date,
+        type: 'vaccination',
+        time: timeStr,
+        detail: `💉 ${vaccinationRecord.vaccineName}（第 ${vaccinationRecord.doseNumber} 劑）`,
+        amount: null
+      }, ...prevLogs]);
+      showToast('💉 已新增疫苗接種紀錄！');
+      setShowAddLogModal(false);
+      return;
+    }
+    if (newLogType === 'solidFood') {
+      if (!solidFoodForm.foodName.trim() || !solidFoodForm.date) return;
+      if (!ensureStorageCapacityForNewData()) return;
+      const solidFoodRecord = {
+        id: String(Date.now()),
+        foodName: solidFoodForm.foodName.trim(),
+        date: solidFoodForm.date,
+        amount: Number(solidFoodForm.amount) || 0,
+        allergySeverity: solidFoodForm.allergySeverity,
+        reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean)
+      };
+      setSolidFoodLogs(prevLogs => [solidFoodRecord, ...prevLogs]);
+      safeSetStorageItem('sun_baby_solid_food_logs_v1', JSON.stringify([solidFoodRecord, ...solidFoodLogs]));
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      setLogs(prevLogs => [{
+        id: `${Date.now()}-solid-food`,
+        type: 'solidFood',
+        time: timeStr,
+        date: solidFoodForm.date,
+        detail: `🥣 ${solidFoodRecord.foodName}`,
+        amount: solidFoodRecord.amount ? `${solidFoodRecord.amount}ml/湯匙` : null
+      }, ...prevLogs]);
+      showToast('🥣 已新增副食品試吃紀錄！');
+      setShowAddLogModal(false);
+      return;
+    }
     const detail = newLogDetail || (newLogType === 'feeding' ? '瓶餵母乳/配方奶' : '濕尿布');
     const amount = newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null;
     if (editingLogId !== null) {
@@ -1934,6 +2028,56 @@ function App() {
     setNewLogDate(getLocalDateInputValue());
     setNewLogDetail('');
     setNewLogAmount('');
+  };
+  const handleSaveVaccinationLog = e => {
+    e.preventDefault();
+    if (!vaccinationForm.vaccineName.trim() || !vaccinationForm.date) return;
+    if (!ensureStorageCapacityForNewData()) return;
+    const record = {
+      id: String(Date.now()),
+      vaccineName: vaccinationForm.vaccineName.trim(),
+      doseNumber: Number(vaccinationForm.doseNumber) || 1,
+      date: vaccinationForm.date,
+      location: vaccinationForm.location.trim(),
+      sideEffects: vaccinationForm.sideEffects.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
+      notes: vaccinationForm.notes.trim()
+    };
+    setVaccinationLogs(prevLogs => [record, ...prevLogs]);
+    localStorage.setItem('sun_baby_vaccination_logs_v1', JSON.stringify([record, ...vaccinationLogs]));
+    setShowVaccinationModal(false);
+    setVaccinationForm({
+      vaccineName: '',
+      doseNumber: 1,
+      date: getLocalDateInputValue(),
+      location: '',
+      sideEffects: '',
+      notes: ''
+    });
+    showToast('💉 已新增疫苗接種紀錄！');
+  };
+  const handleSaveSolidFoodLog = e => {
+    e.preventDefault();
+    if (!solidFoodForm.foodName.trim() || !solidFoodForm.date) return;
+    if (!ensureStorageCapacityForNewData()) return;
+    const record = {
+      id: String(Date.now()),
+      foodName: solidFoodForm.foodName.trim(),
+      date: solidFoodForm.date,
+      amount: Number(solidFoodForm.amount) || 0,
+      allergySeverity: solidFoodForm.allergySeverity,
+      reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean)
+    };
+    setSolidFoodLogs(prevLogs => [record, ...prevLogs]);
+    localStorage.setItem('sun_baby_solid_food_logs_v1', JSON.stringify([record, ...solidFoodLogs]));
+    setShowSolidFoodModal(false);
+    setSolidFoodForm({
+      foodName: '',
+      date: getLocalDateInputValue(),
+      amount: '',
+      allergySeverity: 'none',
+      reactions: ''
+    });
+    showToast('🥣 已新增副食品試吃紀錄！');
   };
   const handleDeleteLog = id => {
     if (!window.confirm('確定要刪除這筆照護紀錄嗎？')) return;
@@ -2206,7 +2350,27 @@ function App() {
       setShowAddLogModal(true);
     },
     className: "p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm md:p-5"
-  }, "👶 記尿布"))), activeTab === 'growth' && /*#__PURE__*/React.createElement("div", {
+  }, "👶 記尿布"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setNewLogType('solidFood');
+      setSolidFoodForm({
+        ...solidFoodForm,
+        date: getLocalDateInputValue()
+      });
+      setShowAddLogModal(true);
+    },
+    className: "p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors shadow-sm md:p-5"
+  }, "🥣 記副食品"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setNewLogType('vaccination');
+      setVaccinationForm({
+        ...vaccinationForm,
+        date: getLocalDateInputValue()
+      });
+      setShowAddLogModal(true);
+    },
+    className: "p-4 rounded-2xl border bg-purple-50 border-purple-200 text-purple-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition-colors shadow-sm md:p-5"
+  }, "💉 記疫苗"))), activeTab === 'growth' && /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-2xl border space-y-4 md:p-5 ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 md:gap-3"
@@ -2685,13 +2849,44 @@ function App() {
     type: "button",
     onClick: () => setNewLogType('diaper'),
     className: `flex-1 py-2 rounded-xl font-bold border transition-colors ${newLogType === 'diaper' ? 'bg-blue-500 text-white border-blue-500' : 'bg-slate-50 text-slate-600'}`
-  }, "👶 尿布")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }, "👶 尿布"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setNewLogType('solidFood');
+      setSolidFoodForm(prev => ({
+        ...prev,
+        date: newLogDate
+      }));
+    },
+    className: `flex-1 py-2 rounded-xl font-bold border transition-colors ${newLogType === 'solidFood' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-slate-50 text-slate-600'}`
+  }, "🥣 副食品"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setNewLogType('vaccination');
+      setVaccinationForm(prev => ({
+        ...prev,
+        date: newLogDate
+      }));
+    },
+    className: `flex-1 py-2 rounded-xl font-bold border transition-colors ${newLogType === 'vaccination' ? 'bg-purple-500 text-white border-purple-500' : 'bg-slate-50 text-slate-600'}`
+  }, "💉 疫苗")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "日期"), /*#__PURE__*/React.createElement("input", {
     type: "date",
     required: true,
     value: newLogDate,
-    onChange: e => setNewLogDate(e.target.value),
+    onChange: e => {
+      const date = e.target.value;
+      setNewLogDate(date);
+      if (newLogType === 'solidFood') setSolidFoodForm(prev => ({
+        ...prev,
+        date
+      }));
+      if (newLogType === 'vaccination') setVaccinationForm(prev => ({
+        ...prev,
+        date
+      }));
+    },
     className: "w-full p-2 border rounded-xl"
   })), newLogType === 'feeding' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
@@ -2702,7 +2897,110 @@ function App() {
     value: newLogAmount,
     onChange: e => setNewLogAmount(e.target.value),
     className: "w-full p-2 border rounded-xl"
+  })), newLogType === 'solidFood' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "食材名稱"), /*#__PURE__*/React.createElement("input", {
+    required: true,
+    value: solidFoodForm.foodName,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      foodName: e.target.value
+    }),
+    placeholder: "例如：南瓜泥",
+    className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "份量 (ml/湯匙)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    min: "0",
+    required: true,
+    value: solidFoodForm.amount,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      amount: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "過敏等級"), /*#__PURE__*/React.createElement("select", {
+    value: solidFoodForm.allergySeverity,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      allergySeverity: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "none"
+  }, "無"), /*#__PURE__*/React.createElement("option", {
+    value: "mild"
+  }, "輕微"), /*#__PURE__*/React.createElement("option", {
+    value: "severe"
+  }, "嚴重"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "反應（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+    value: solidFoodForm.reactions,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      reactions: e.target.value
+    }),
+    placeholder: "例如：紅疹、拉肚子",
+    className: "w-full p-2 border rounded-xl"
+  }))), newLogType === 'vaccination' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "疫苗名稱"), /*#__PURE__*/React.createElement("input", {
+    required: true,
+    value: vaccinationForm.vaccineName,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      vaccineName: e.target.value
+    }),
+    placeholder: "例如：五合一、水痘",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "第幾劑"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    min: "1",
+    required: true,
+    value: vaccinationForm.doseNumber,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      doseNumber: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "接種地點"), /*#__PURE__*/React.createElement("input", {
+    value: vaccinationForm.location,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      location: e.target.value
+    }),
+    placeholder: "例如：兒科診所",
+    className: "w-full p-2 border rounded-xl"
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+    value: vaccinationForm.sideEffects,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      sideEffects: e.target.value
+    }),
+    placeholder: "例如：發燒、腫脹",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+    value: vaccinationForm.notes,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      notes: e.target.value
+    }),
+    rows: "2",
+    className: "w-full p-2 border rounded-xl resize-y"
+  }))), ['feeding', 'diaper'].includes(newLogType) && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註/細節"), /*#__PURE__*/React.createElement("input", {
     type: "text",
@@ -2719,7 +3017,193 @@ function App() {
   }, "取消"), /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: "flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
-  }, editingLogId !== null ? '儲存修改' : '儲存紀錄'))))), showNotesModal && /*#__PURE__*/React.createElement("div", {
+  }, editingLogId !== null ? '儲存修改' : '儲存紀錄'))))), showSolidFoodModal && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center border-b pb-2"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold text-sm text-emerald-700"
+  }, "🥣 新增副食品試吃紀錄"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowSolidFoodModal(false),
+    className: "text-slate-400 hover:text-slate-600"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "x",
+    className: "w-4 h-4"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-bold mb-1"
+  }, "安全食材清單"), /*#__PURE__*/React.createElement("div", null, safeFoods.join('、')), /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-rose-700 mt-2"
+  }, "過敏食物警示"), /*#__PURE__*/React.createElement("div", {
+    className: "text-rose-700"
+  }, allergyWarningFoods.join('、'))), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSaveSolidFoodLog,
+    className: "space-y-3 text-xs"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "食材名稱"), /*#__PURE__*/React.createElement("input", {
+    required: true,
+    value: solidFoodForm.foodName,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      foodName: e.target.value
+    }),
+    placeholder: "例如：南瓜泥",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "日期"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    required: true,
+    value: solidFoodForm.date,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      date: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "份量 (ml/湯匙)"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    min: "0",
+    value: solidFoodForm.amount,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      amount: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "過敏等級"), /*#__PURE__*/React.createElement("select", {
+    value: solidFoodForm.allergySeverity,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      allergySeverity: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "none"
+  }, "無"), /*#__PURE__*/React.createElement("option", {
+    value: "mild"
+  }, "輕微"), /*#__PURE__*/React.createElement("option", {
+    value: "severe"
+  }, "嚴重"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "反應（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+    value: solidFoodForm.reactions,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      reactions: e.target.value
+    }),
+    placeholder: "例如：紅疹、拉肚子",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowSolidFoodModal(false),
+    className: "flex-1 py-2 border rounded-xl text-slate-500 font-bold"
+  }, "取消"), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl"
+  }, "儲存紀錄"))))), showVaccinationModal && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-between items-center border-b pb-2"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold text-sm text-purple-700"
+  }, "💉 新增疫苗接種紀錄"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setShowVaccinationModal(false),
+    className: "text-slate-400 hover:text-slate-600"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "x",
+    className: "w-4 h-4"
+  }))), /*#__PURE__*/React.createElement("form", {
+    onSubmit: handleSaveVaccinationLog,
+    className: "space-y-3 text-xs"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "疫苗名稱"), /*#__PURE__*/React.createElement("input", {
+    required: true,
+    value: vaccinationForm.vaccineName,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      vaccineName: e.target.value
+    }),
+    placeholder: "例如：五合一、水痘",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "第幾劑"), /*#__PURE__*/React.createElement("input", {
+    type: "number",
+    min: "1",
+    required: true,
+    value: vaccinationForm.doseNumber,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      doseNumber: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "接種日期"), /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    required: true,
+    value: vaccinationForm.date,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      date: e.target.value
+    }),
+    className: "w-full p-2 border rounded-xl"
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "接種地點"), /*#__PURE__*/React.createElement("input", {
+    value: vaccinationForm.location,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      location: e.target.value
+    }),
+    placeholder: "例如：兒科診所",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+    value: vaccinationForm.sideEffects,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      sideEffects: e.target.value
+    }),
+    placeholder: "例如：發燒、腫脹",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+    value: vaccinationForm.notes,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      notes: e.target.value
+    }),
+    rows: "2",
+    className: "w-full p-2 border rounded-xl resize-y"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowVaccinationModal(false),
+    className: "flex-1 py-2 border rounded-xl text-slate-500 font-bold"
+  }, "取消"), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "flex-1 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-xl"
+  }, "儲存紀錄"))))), showNotesModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
     className: `w-full max-w-lg p-5 rounded-2xl border shadow-xl max-h-[90vh] flex flex-col ${cardBg}`
@@ -3126,7 +3610,19 @@ function App() {
     className: "font-bold text-indigo-900 text-sm flex items-center gap-1.5"
   }, "📄 一鍵匯出 PDF 報表"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "看診或回診時，能直接將記錄匯出成整潔清晰的 PDF，方便與醫療團隊溝通。"))), /*#__PURE__*/React.createElement("div", {
+  }, "看診或回診時，能直接將記錄匯出成整潔清晰的 PDF，方便與醫療團隊溝通。")), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-purple-900 text-sm flex items-center gap-1.5"
+  }, "💉 疫苗接種紀錄"), /*#__PURE__*/React.createElement("p", {
+    className: "text-slate-600 leading-relaxed"
+  }, "記下疫苗名稱、劑次、接種地點與副作用，回診時能快速提供完整資訊。")), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-emerald-900 text-sm flex items-center gap-1.5"
+  }, "🥣 副食品試吃紀錄"), /*#__PURE__*/React.createElement("p", {
+    className: "text-slate-600 leading-relaxed"
+  }, "參考安全食材清單並記錄份量、過敏等級與反應，安心追蹤每次嘗試。"))), /*#__PURE__*/React.createElement("div", {
     className: "p-3.5 bg-pink-50/80 border border-pink-200 rounded-xl space-y-1.5"
   }, /*#__PURE__*/React.createElement("div", {
     className: "font-bold text-pink-900 text-sm flex items-center gap-1.5"
