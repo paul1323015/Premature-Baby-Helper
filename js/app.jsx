@@ -632,8 +632,10 @@
               })}
 
               {babyPoints.map((p, i) => {
-                const chartAgeDays = useChronoAxis ? p.chronoDays : p.correctedDays;
-                const labelText = formatAgeText(chartAgeDays, useChronoAxis ? '實際' : '矯正', true);
+                const ages = getAgesForDate(p.date, babyInfo.birthDate, babyInfo.dueDate);
+                const correctedAgeCalculatedLabel = ages.correctedText;
+                const actualAgeCalculatedLabel = ages.chronoText;
+                const labelText = useChronoAxis ? actualAgeCalculatedLabel : correctedAgeCalculatedLabel;
                 const compactLabel = labelText
                   .replace(/^矯正\s*/, '')
                   .replace(/^實際\s*/, '')
