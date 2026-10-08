@@ -378,15 +378,16 @@
       const padding = { top: 25, right: 35, bottom: 55, left: 45 };
 
       const MS_PER_DAY = 1000 * 60 * 60 * 24;
+      const normalizeMetricValue = (value, metricName = metric) => {
+        const parsedValue = parseFloat(value);
+        if (isNaN(parsedValue)) return null;
+        // some weight entries were stored in grams; convert large numbers to kg
+        return metricName === 'weight' && parsedValue > 30 ? parsedValue / 1000 : parsedValue;
+      };
       const babyPoints = growthHistory.filter(item => item.plotOnChart !== false).map(item => {
         // parse numeric value; if empty or invalid, skip plotting
-        let val = parseFloat(item[metric]);
-        if (isNaN(val)) return null;
-
-        if (metric === 'weight' && val > 30) {
-          // some weight entries were stored in grams; convert large numbers to kg
-          val = val / 1000;
-        }
+        const val = normalizeMetricValue(item[metric]);
+        if (val === null) return null;
 
         // Parse dates explicitly to avoid sanitize fallback to "today"
         const measurementStr = sanitizeDateStr(item.date);
@@ -711,7 +712,7 @@
                           )}
                         </div>
                         <div className="text-[11px] text-slate-500 mt-0.5 space-x-2">
-                          {rec.weight && <span>體重: <b className="text-slate-700">{rec.weight} kg</b></span>}
+                          {rec.weight && <span>體重: <b className="text-slate-700">{normalizeMetricValue(rec.weight, 'weight') ?? rec.weight} kg</b></span>}
                           {rec.height && <span>身長: <b className="text-slate-700">{rec.height} cm</b></span>}
                           {rec.head && <span>頭圍: <b className="text-slate-700">{rec.head} cm</b></span>}
                         </div>

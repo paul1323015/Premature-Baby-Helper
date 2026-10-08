@@ -447,14 +447,16 @@ const PretermGrowthChart = ({
     left: 45
   };
   const MS_PER_DAY = 1000 * 60 * 60 * 24;
+  const normalizeMetricValue = (value, metricName = metric) => {
+    const parsedValue = parseFloat(value);
+    if (isNaN(parsedValue)) return null;
+    // some weight entries were stored in grams; convert large numbers to kg
+    return metricName === 'weight' && parsedValue > 30 ? parsedValue / 1000 : parsedValue;
+  };
   const babyPoints = growthHistory.filter(item => item.plotOnChart !== false).map(item => {
     // parse numeric value; if empty or invalid, skip plotting
-    let val = parseFloat(item[metric]);
-    if (isNaN(val)) return null;
-    if (metric === 'weight' && val > 30) {
-      // some weight entries were stored in grams; convert large numbers to kg
-      val = val / 1000;
-    }
+    const val = normalizeMetricValue(item[metric]);
+    if (val === null) return null;
 
     // Parse dates explicitly to avoid sanitize fallback to "today"
     const measurementStr = sanitizeDateStr(item.date);
@@ -724,8 +726,10 @@ const PretermGrowthChart = ({
       className: "fill-slate-400 text-[8px] font-bold"
     }, percentileLabels[i]));
   }), babyPoints.map((p, i) => {
-    const chartAgeDays = useChronoAxis ? p.chronoDays : p.correctedDays;
-    const labelText = formatAgeText(chartAgeDays, useChronoAxis ? '實際' : '矯正', true);
+    const ages = getAgesForDate(p.date, babyInfo.birthDate, babyInfo.dueDate);
+    const correctedAgeCalculatedLabel = ages.correctedText;
+    const actualAgeCalculatedLabel = ages.chronoText;
+    const labelText = useChronoAxis ? actualAgeCalculatedLabel : correctedAgeCalculatedLabel;
     const compactLabel = labelText.replace(/^矯正\s*/, '').replace(/^實際\s*/, '').replace(/個月/g, '月').replace(/天/g, '天');
     // Move the small orange date label above the bottom axis to avoid overlapping ticks
     const labelY = height - padding.bottom - 10;
@@ -831,7 +835,7 @@ const PretermGrowthChart = ({
       className: "text-[11px] text-slate-500 mt-0.5 space-x-2"
     }, rec.weight && /*#__PURE__*/React.createElement("span", null, "體重: ", /*#__PURE__*/React.createElement("b", {
       className: "text-slate-700"
-    }, rec.weight, " kg")), rec.height && /*#__PURE__*/React.createElement("span", null, "身長: ", /*#__PURE__*/React.createElement("b", {
+    }, normalizeMetricValue(rec.weight, 'weight') ?? rec.weight, " kg")), rec.height && /*#__PURE__*/React.createElement("span", null, "身長: ", /*#__PURE__*/React.createElement("b", {
       className: "text-slate-700"
     }, rec.height, " cm")), rec.head && /*#__PURE__*/React.createElement("span", null, "頭圍: ", /*#__PURE__*/React.createElement("b", {
       className: "text-slate-700"
