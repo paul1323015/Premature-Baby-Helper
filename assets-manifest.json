@@ -35,6 +35,7 @@
     "./external/github.com/to-regex-range",
     "./external/tailwindcss.com/upgrade-guide",
     "./external/www.chartjs.org/index",
+    "./css/tailwind.css",
     "./index.html",
     "./js/app.bundle.js",
     "./js/app.jsx",
@@ -42,7 +43,6 @@
     "./js/chart.min.js",
     "./js/html2pdf.bundle.min.js",
     "./js/react-dom.production.min.js",
-    "./js/react.production.min.js",
-    "./js/tailwind.min.js"
+    "./js/react.production.min.js"
   ]
 }
