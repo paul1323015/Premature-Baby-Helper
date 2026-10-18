@@ -1854,6 +1854,8 @@
       const [newLogType, setNewLogType] = React.useState('feeding');
       const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
       const [newLogDetail, setNewLogDetail] = React.useState('');
+      const [newLogMilkType, setNewLogMilkType] = React.useState('');
+      const [newLogFeedingMethod, setNewLogFeedingMethod] = React.useState('');
       const [newLogAmount, setNewLogAmount] = React.useState('');
       const [showVaccinationModal, setShowVaccinationModal] = React.useState(false);
       const [showSolidFoodModal, setShowSolidFoodModal] = React.useState(false);
@@ -2006,7 +2008,11 @@
           return;
         }
 
-        const detail = newLogDetail || (newLogType === 'feeding' ? '瓶餵母乳/配方奶' : '濕尿布');
+        const customDetail = newLogDetail.trim();
+        const feedingTags = [newLogFeedingMethod, newLogMilkType].filter(Boolean).join('');
+        const detail = newLogType === 'feeding'
+          ? [feedingTags, customDetail].filter(Boolean).join(' ')
+          : customDetail;
         const amount = newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null;
 
         if (editingLogId !== null) {
@@ -2034,6 +2040,8 @@
         setShowAddLogModal(false);
         setEditingLogId(null);
         setNewLogDetail('');
+        setNewLogMilkType('');
+        setNewLogFeedingMethod('');
         setNewLogAmount('');
       };
 
@@ -2041,7 +2049,38 @@
         setEditingLogId(log.id);
         setNewLogDate(log.date || getLocalDateInputValue());
         setNewLogType(log.type);
-        setNewLogDetail(log.detail || '');
+        const logDetail = log.detail || '';
+        if (log.type === 'feeding') {
+          const bracketMatch = logDetail.match(/^\[([^\]]+)\](?:\s*(.*))?$/);
+          const tagOptions = [
+            { text: '瓶餵母乳', milkType: '母乳', feedingMethod: '瓶餵' },
+            { text: '瓶餵配方奶', milkType: '配方奶', feedingMethod: '瓶餵' },
+            { text: '瓶餵混合', milkType: '混合', feedingMethod: '瓶餵' },
+            { text: '親餵母乳', milkType: '母乳', feedingMethod: '親餵' },
+            { text: '親餵配方奶', milkType: '配方奶', feedingMethod: '親餵' },
+            { text: '親餵混合', milkType: '混合', feedingMethod: '親餵' },
+            { text: '母乳', milkType: '母乳', feedingMethod: '' },
+            { text: '配方奶', milkType: '配方奶', feedingMethod: '' },
+            { text: '混合', milkType: '混合', feedingMethod: '' },
+            { text: '瓶餵', milkType: '', feedingMethod: '瓶餵' },
+            { text: '親餵', milkType: '', feedingMethod: '親餵' },
+          ];
+          const tagSource = bracketMatch?.[1] || logDetail;
+          const legacyDefault = logDetail === '瓶餵母乳/配方奶';
+          const matchedTag = tagOptions.find(option => tagSource.startsWith(option.text));
+          setNewLogMilkType(matchedTag?.milkType || '');
+          setNewLogFeedingMethod(matchedTag?.feedingMethod || '');
+          const customDetail = bracketMatch
+            ? (bracketMatch[2] || '')
+            : matchedTag
+              ? logDetail.slice(matchedTag.text.length).trim()
+              : logDetail;
+          setNewLogDetail(legacyDefault ? '' : customDetail);
+        } else {
+          setNewLogDetail(logDetail);
+          setNewLogMilkType('');
+          setNewLogFeedingMethod('');
+        }
         setNewLogAmount(log.amount ? String(log.amount).replace(/ml$/i, '') : '');
         if (log.type === 'vaccination') {
           const record = vaccinationLogs.find(item => (
@@ -2082,6 +2121,8 @@
         setEditingLogId(null);
         setNewLogDate(getLocalDateInputValue());
         setNewLogDetail('');
+        setNewLogMilkType('');
+        setNewLogFeedingMethod('');
         setNewLogAmount('');
       };
 
@@ -2388,13 +2429,13 @@
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                   <button
-                    onClick={() => { setEditingLogId(null); setNewLogType('feeding'); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('feeding'); setNewLogDetail(''); setNewLogMilkType(''); setNewLogFeedingMethod(''); setNewLogAmount(''); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm md:p-5"
                   >
                     🍼 記餵奶
                   </button>
                   <button
-                    onClick={() => { setEditingLogId(null); setNewLogType('diaper'); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('diaper'); setNewLogDetail(''); setNewLogMilkType(''); setNewLogFeedingMethod(''); setNewLogAmount(''); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm md:p-5"
                   >
                     👶 記尿布
@@ -2528,6 +2569,8 @@
                       setNewLogDate(getLocalDateInputValue());
                       setNewLogType('feeding');
                       setNewLogDetail('');
+                      setNewLogMilkType('');
+                      setNewLogFeedingMethod('');
                       setNewLogAmount('');
                       setShowAddLogModal(true);
                     }}
@@ -2546,7 +2589,7 @@
                     <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`}>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-amber-600">{log.date || '未設定日期'} {log.time}</span>
-                        <span className="text-xs font-medium">{log.detail}</span>
+                        <span className="text-xs font-medium">{log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {log.amount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{log.amount}</span>}
@@ -3028,11 +3071,58 @@
                     </>
                   )}
 
-                  {['feeding', 'diaper'].includes(newLogType) && <div>
+                  {newLogType === 'feeding' && (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="font-bold block mb-1">奶水種類</label>
+                        <div className="flex flex-wrap gap-2" role="group" aria-label="奶水種類">
+                          {['母乳', '配方奶', '混合'].map(tag => (
+                            <button
+                              key={tag}
+                              type="button"
+                              aria-pressed={newLogMilkType === tag}
+                              onClick={() => setNewLogMilkType(current => current === tag ? '' : tag)}
+                              className={`px-3 py-1.5 rounded-full border font-medium transition-colors ${newLogMilkType === tag ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-600 border-slate-300'}`}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="font-bold block mb-1">餵養方式</label>
+                        <div className="flex flex-wrap gap-2" role="group" aria-label="餵養方式">
+                          {['瓶餵', '親餵'].map(tag => (
+                            <button
+                              key={tag}
+                              type="button"
+                              aria-pressed={newLogFeedingMethod === tag}
+                              onClick={() => setNewLogFeedingMethod(current => current === tag ? '' : tag)}
+                              className={`px-3 py-1.5 rounded-full border font-medium transition-colors ${newLogFeedingMethod === tag ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-600 border-slate-300'}`}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="font-bold block mb-1">備註/細節（選填）</label>
+                        <input
+                          type="text"
+                          placeholder="輸入額外細節"
+                          value={newLogDetail}
+                          onChange={(e) => setNewLogDetail(e.target.value)}
+                          className="w-full p-2 border rounded-xl"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {newLogType === 'diaper' && <div>
                     <label className="font-bold block mb-1">備註/細節</label>
                     <input
                       type="text"
-                      placeholder={newLogType === 'feeding' ? '母乳 / 配方奶 / 瓶餵' : '濕尿布 / 便便 / 量多'}
+                      placeholder="濕尿布 / 便便 / 量多"
                       value={newLogDetail}
                       onChange={(e) => setNewLogDetail(e.target.value)}
                       className="w-full p-2 border rounded-xl"
