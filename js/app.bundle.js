@@ -1067,6 +1067,7 @@ function App() {
   const [noteTitle, setNoteTitle] = React.useState('');
   const [noteContent, setNoteContent] = React.useState('');
   const [filterNoteCategory, setFilterNoteCategory] = React.useState('全部');
+  const [noteSearchQuery, setNoteSearchQuery] = React.useState('');
   const [editingNoteId, setEditingNoteId] = React.useState(null);
   const defaultMilestones = [{
     id: 1,
@@ -1522,7 +1523,7 @@ function App() {
     } else {
       if (!ensureStorageCapacityForNewData()) return;
       if (notes.length >= 1000) {
-        showToast('⚠️ 筆記總數已達 1000 條上限，請先刪除舊筆記！');
+        showToast('⚠️ 筆記總數已達 1000 則上限，請先刪除舊筆記！');
         return;
       }
       const now = new Date();
@@ -1546,15 +1547,27 @@ function App() {
     setNoteTitle(note.title || '');
     setNoteContent(note.content || '');
   };
-  const handleCancelEditNote = () => {
+  const handleCancelEditNote = (confirmDiscard = true) => {
+    const originalNote = notes.find(note => note.id === editingNoteId);
+    const hasUnsavedChanges = originalNote && (noteCategory !== originalNote.category || noteTitle !== (originalNote.title || '') || noteContent !== (originalNote.content || ''));
+    if (confirmDiscard && hasUnsavedChanges && !window.confirm('有尚未儲存的修改，確定要放棄嗎？')) return false;
     setEditingNoteId(null);
     setNoteCategory('回診提問');
     setNoteTitle('');
     setNoteContent('');
+    return true;
+  };
+  const handleCloseNotesModal = () => {
+    if (editingNoteId !== null && !handleCancelEditNote()) return;
+    setShowNotesModal(false);
   };
   const handleDeleteNote = id => {
+    const note = notes.find(n => n.id === id);
+    if (!note) return;
+    const noteTitle = note.title?.trim() || '這則筆記';
+    if (!window.confirm(`刪除這則筆記？\n確定要刪除「${noteTitle}」嗎？刪除後將無法復原。`)) return;
     if (editingNoteId === id) {
-      handleCancelEditNote();
+      handleCancelEditNote(false);
     }
     setNotes(notes.filter(n => n.id !== id));
     showToast('🗑️ 已刪除筆記');
@@ -1903,6 +1916,7 @@ function App() {
   const [editingLogId, setEditingLogId] = React.useState(null);
   const [newLogType, setNewLogType] = React.useState('feeding');
   const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
+  const [newLogTime, setNewLogTime] = React.useState(getLocalTimeInputValue);
   const [newLogDetail, setNewLogDetail] = React.useState('');
   const [newLogMilkType, setNewLogMilkType] = React.useState('');
   const [newLogFeedingMethod, setNewLogFeedingMethod] = React.useState('');
@@ -1955,6 +1969,7 @@ function App() {
         setLogs(prevLogs => prevLogs.map(log => log.id === editingLogId ? {
           ...log,
           date: vaccinationForm.date,
+          time: newLogTime,
           detail: `💉 ${vaccinationForm.vaccineName.trim()}（第 ${Number(vaccinationForm.doseNumber) || 1} 劑）`,
           amount: null
         } : log));
@@ -1975,14 +1990,12 @@ function App() {
       };
       setVaccinationLogs(prevLogs => [vaccinationRecord, ...prevLogs]);
       safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify([vaccinationRecord, ...vaccinationLogs]));
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       setLogs(prevLogs => [{
         id: `${Date.now()}-vaccination`,
         date: vaccinationForm.date,
         type: 'vaccination',
         sourceId: vaccinationRecord.id,
-        time: timeStr,
+        time: newLogTime,
         detail: `💉 ${vaccinationRecord.vaccineName}（第 ${vaccinationRecord.doseNumber} 劑）`,
         amount: null
       }, ...prevLogs]);
@@ -2009,6 +2022,7 @@ function App() {
         setLogs(prevLogs => prevLogs.map(log => log.id === editingLogId ? {
           ...log,
           date: solidFoodForm.date,
+          time: newLogTime,
           detail: `🥣 ${solidFoodForm.foodName.trim()}`,
           amount: solidFoodForm.amount ? `${Number(solidFoodForm.amount) || 0}ml/湯匙` : null
         } : log));
@@ -2028,13 +2042,11 @@ function App() {
       };
       setSolidFoodLogs(prevLogs => [solidFoodRecord, ...prevLogs]);
       safeSetStorageItem('sun_baby_solid_food_logs_v1', JSON.stringify([solidFoodRecord, ...solidFoodLogs]));
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       setLogs(prevLogs => [{
         id: `${Date.now()}-solid-food`,
         type: 'solidFood',
         sourceId: solidFoodRecord.id,
-        time: timeStr,
+        time: newLogTime,
         date: solidFoodForm.date,
         detail: `🥣 ${solidFoodRecord.foodName}`,
         amount: solidFoodRecord.amount ? `${solidFoodRecord.amount}ml/湯匙` : null
@@ -2051,6 +2063,7 @@ function App() {
       setLogs(prevLogs => prevLogs.map(log => log.id === editingLogId ? {
         ...log,
         date: newLogDate,
+        time: newLogTime,
         type: newLogType,
         detail,
         amount
@@ -2058,13 +2071,11 @@ function App() {
       showToast('💾 已儲存照護紀錄修改！');
     } else {
       if (!ensureStorageCapacityForNewData()) return;
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       setLogs(prevLogs => [{
         id: Date.now(),
         date: newLogDate,
         type: newLogType,
-        time: timeStr,
+        time: newLogTime,
         detail,
         amount
       }, ...prevLogs]);
@@ -2080,6 +2091,7 @@ function App() {
   const handleStartEditLog = log => {
     setEditingLogId(log.id);
     setNewLogDate(log.date || getLocalDateInputValue());
+    setNewLogTime(format24HourTime(log.time) || getLocalTimeInputValue());
     setNewLogType(log.type);
     const logDetail = log.detail || '';
     if (log.type === 'feeding') {
@@ -2173,6 +2185,7 @@ function App() {
     setShowAddLogModal(false);
     setEditingLogId(null);
     setNewLogDate(getLocalDateInputValue());
+    setNewLogTime(getLocalTimeInputValue());
     setNewLogDetail('');
     setNewLogMilkType('');
     setNewLogFeedingMethod('');
@@ -2285,7 +2298,7 @@ function App() {
     setDoctorNotes(prevNotes => prevNotes.filter(note => note.id !== id));
     showToast('🗑️ 已刪除看診備忘');
   };
-  const filteredNotes = notes.filter(n => filterNoteCategory === '全部' || n.category === filterNoteCategory);
+  const filteredNotes = notes.filter(n => (filterNoteCategory === '全部' || n.category === filterNoteCategory) && (!noteSearchQuery.trim() || `${n.title || ''} ${n.content || ''}`.toLowerCase().includes(noteSearchQuery.trim().toLowerCase())));
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
   const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
   return /*#__PURE__*/React.createElement("div", {
@@ -2629,6 +2642,7 @@ function App() {
     onClick: () => {
       setEditingLogId(null);
       setNewLogDate(getLocalDateInputValue());
+      setNewLogTime(getLocalTimeInputValue());
       setNewLogType('feeding');
       setNewLogDetail('');
       setNewLogMilkType('');
@@ -3051,6 +3065,18 @@ function App() {
       }));
     },
     className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "時間"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    inputMode: "numeric",
+    required: true,
+    pattern: "([01][0-9]|2[0-3]):[0-5][0-9]",
+    placeholder: "例如：09:14",
+    title: "請輸入 24 小時制時間，例如 09:14",
+    value: newLogTime,
+    onChange: e => setNewLogTime(e.target.value),
+    className: "w-full p-2 border rounded-xl"
   })), newLogType === 'feeding' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "餵奶量 (ml)"), /*#__PURE__*/React.createElement("input", {
@@ -3417,10 +3443,10 @@ function App() {
     className: "font-bold text-base text-amber-800 flex items-center gap-2"
   }, "筆記本", /*#__PURE__*/React.createElement("span", {
     className: "text-[11px] font-normal px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full"
-  }, "已存 ", notes.length, " / 1000 條")), /*#__PURE__*/React.createElement("p", {
+  }, "已存 ", notes.length, " / 1000 則")), /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-400"
   }, "家長快速紀錄門診問題、大事記與備忘"))), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setShowNotesModal(false),
+    onClick: handleCloseNotesModal,
     className: "text-slate-400 hover:text-slate-600 p-1"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "x",
@@ -3491,8 +3517,15 @@ function App() {
     onClick: handleCancelEditNote,
     className: "px-4 py-2 border border-slate-300 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors"
   }, "取消"))), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center justify-between gap-2 pt-1"
-  }, /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2 pt-1"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "search",
+    value: noteSearchQuery,
+    onChange: e => setNoteSearchQuery(e.target.value),
+    placeholder: "搜尋筆記標題或內容...",
+    "aria-label": "搜尋筆記標題或內容",
+    className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-amber-400"
+  }), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-1 overflow-x-auto no-scrollbar"
   }, ['全部', '回診提問', '成長大事記', '其他備忘'].map(cat => /*#__PURE__*/React.createElement("button", {
     key: cat,
@@ -3502,7 +3535,7 @@ function App() {
     className: "space-y-2 max-h-60 overflow-y-auto pr-1"
   }, filteredNotes.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50"
-  }, "目前沒有", filterNoteCategory === '全部' ? '' : `【${filterNoteCategory}】`, "相關筆記") : filteredNotes.map(note => /*#__PURE__*/React.createElement("div", {
+  }, noteSearchQuery.trim() ? '找不到符合搜尋條件的筆記' : `目前沒有${filterNoteCategory === '全部' ? '' : `【${filterNoteCategory}】`}相關筆記`) : filteredNotes.map(note => /*#__PURE__*/React.createElement("div", {
     key: note.id,
     className: "p-3 border rounded-xl bg-white shadow-sm space-y-1.5 hover:border-amber-300 transition-colors"
   }, /*#__PURE__*/React.createElement("div", {
