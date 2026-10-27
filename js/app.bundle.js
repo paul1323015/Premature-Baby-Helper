@@ -1758,6 +1758,7 @@ function App() {
     });
     setGrowthHistory([]);
     setLogs([]);
+    setCareReminders([]);
     setDoctorNotes([]);
     setNotes([]);
     setMilestones([]);
@@ -1771,6 +1772,12 @@ function App() {
     if (!confirmed) return;
     setLogs([]);
     showToast('🗑️ 已清除照護日誌');
+  };
+  const handleClearCareReminders = () => {
+    const confirmed = window.confirm('⚠️ 此操作將清除所有照護提醒。確定要繼續嗎？');
+    if (!confirmed) return;
+    setCareReminders([]);
+    showToast('🗑️ 已清除照護提醒');
   };
   const handleClearBabyProfile = () => {
     const confirmed = window.confirm('⚠️ 此操作將清除寶寶姓名、性別、出生資料與目前身高體重等基本資料，但不會刪除照護日誌、看診備忘或生長數據。確定要繼續嗎？');
@@ -1815,7 +1822,7 @@ function App() {
     showToast('🗑️ 已清除發展里程碑');
   };
   const handleResetMilkSettings = () => {
-    const confirmed = window.confirm('⚠️ 此操作將重置每日奶量進度與目標。確定要繼續嗎？');
+    const confirmed = window.confirm('⚠️ 此操作將重設每日奶量進度與目標。確定要繼續嗎？');
     if (!confirmed) return;
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -1824,7 +1831,7 @@ function App() {
       ...prev,
       targetDailyMilk: ''
     }));
-    showToast('🧴 已重置奶量設定/目標');
+    showToast('🧴 已重設奶量設定/目標');
   };
   const handleDownloadPDF = () => {
     setIsExporting(true);
@@ -3846,7 +3853,7 @@ function App() {
     className: "font-bold text-xs"
   }, "📤 匯出備份"), /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] leading-relaxed"
-  }, "更換裝置或備份資料時使用，可以匯出完整的紀錄檔。"), /*#__PURE__*/React.createElement("div", {
+  }, "更換裝置或備份資料時使用，可以匯出完整的紀錄檔案。"), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 pt-1"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: handleExportBackupJSON,
@@ -3860,7 +3867,7 @@ function App() {
     className: "font-bold text-xs"
   }, "📥 還原資料"), /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] leading-relaxed"
-  }, "更換裝置或還原資料時使用，可以匯入完整的紀錄檔。"), /*#__PURE__*/React.createElement("div", {
+  }, "更換裝置或還原資料時使用，可以匯入完整的紀錄檔案。"), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 pt-1"
   }, /*#__PURE__*/React.createElement("label", {
     className: "block w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-center cursor-pointer shadow-sm transition-colors"
@@ -3912,6 +3919,12 @@ function App() {
     name: "trash",
     className: "w-4 h-4"
   }), "清除照護日誌"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleClearCareReminders,
+    className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "trash",
+    className: "w-4 h-4"
+  }), "清除照護提醒"), /*#__PURE__*/React.createElement("button", {
     onClick: handleClearDoctorNotes,
     className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -3941,7 +3954,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-4 h-4"
-  }), "重置奶量設定/目標")), /*#__PURE__*/React.createElement("div", {
+  }), "重設奶量設定/目標")), /*#__PURE__*/React.createElement("div", {
     className: "rounded-xl border border-amber-200 bg-amber-50/80 p-2.5 text-amber-900"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-[11px] mb-1"
@@ -3955,7 +3968,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-3.5 h-3.5"
-  }), "清除所有本地資料(重設應用程式預設值)"))))), showMilestoneModal && /*#__PURE__*/React.createElement("div", {
+  }), "清除應用程式所有資料"))))), showMilestoneModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
     className: `w-full max-w-md p-5 rounded-2xl border shadow-xl ${cardBg}`
