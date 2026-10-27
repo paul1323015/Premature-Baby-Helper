@@ -1397,10 +1397,15 @@
         }
 
         if (Array.isArray(backupData.logs)) setLogs(backupData.logs);
-        notifiedReminderIdsRef.current.clear();
-        setCareReminders(Array.isArray(backupData.careReminders)
+        const restoredCareReminders = Array.isArray(backupData.careReminders)
           ? backupData.careReminders.filter(isValidCareReminder)
-          : []);
+          : [];
+        notifiedReminderIdsRef.current.clear();
+        const dueReminderIds = restoredCareReminders
+          .filter(reminder => new Date(reminder.dueAt).getTime() <= Date.now())
+          .map(reminder => reminder.id);
+        dueReminderIds.forEach(id => notifiedReminderIdsRef.current.add(id));
+        setCareReminders(restoredCareReminders);
         if (Array.isArray(backupData.vaccinationLogs)) {
           setVaccinationLogs(backupData.vaccinationLogs);
           safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify(backupData.vaccinationLogs));
@@ -1443,6 +1448,12 @@
         setShowBackupModal(false);
         setPastedJson('');
         showToast('✅ 備份檔案已還原成功！');
+        if (dueReminderIds.length > 0) {
+          setTimeout(() => {
+            dueReminderIds.forEach(id => notifiedReminderIdsRef.current.delete(id));
+            setReminderNow(Date.now());
+          }, 3000);
+        }
       };
 
       const handleFileUpload = (e) => {
@@ -1705,13 +1716,14 @@
         });
         setGrowthHistory([]);
         setLogs([]);
+        setCareReminders([]);
         setDoctorNotes([]);
         setNotes([]);
         setMilestones([]);
         setRecentAutoBackups([]);
         setAdvancedRestoreEnabled(true);
         setShowEditProfileModal(false);
-        showToast('🧹 已重置清空所有本地資料');
+        showToast('🧹 已清除應用程式所有資料');
       };
 
       const handleClearLogs = () => {
@@ -1721,6 +1733,15 @@
         if (!confirmed) return;
         setLogs([]);
         showToast('🗑️ 已清除照護日誌');
+      };
+
+      const handleClearCareReminders = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將清除所有照護提醒。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+        setCareReminders([]);
+        showToast('🗑️ 已清除照護提醒');
       };
 
       const handleClearBabyProfile = () => {
@@ -1782,7 +1803,7 @@
 
       const handleResetMilkSettings = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將重置每日奶量進度與目標。確定要繼續嗎？'
+          '⚠️ 此操作將重設每日奶量進度與目標。確定要繼續嗎？'
         );
         if (!confirmed) return;
         const now = new Date();
@@ -1791,7 +1812,7 @@
           (item) => item.type !== 'feeding' || item.date !== today
         ));
         setBabyInfo((prev) => ({ ...prev, targetDailyMilk: '' }));
-        showToast('🧴 已重置奶量設定/目標');
+        showToast('🧴 已重設奶量設定/目標');
       };
 
       const handleDownloadPDF = () => {
@@ -3794,7 +3815,7 @@
                   <div className="space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900">
                     <h4 className="font-bold text-xs">📤 匯出備份</h4>
                     <p className="text-[11px] leading-relaxed">
-                      更換裝置或備份資料時使用，可以匯出完整的紀錄檔。
+                      更換裝置或備份資料時使用，可以匯出完整的紀錄檔案。
                     </p>
                     <div className="flex gap-2 pt-1">
                       <button
@@ -3810,7 +3831,7 @@
                   <div className="space-y-2 bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-900">
                     <h4 className="font-bold text-xs">📥 還原資料</h4>
                     <p className="text-[11px] leading-relaxed">
-                      更換裝置或還原資料時使用，可以匯入完整的紀錄檔。
+                      更換裝置或還原資料時使用，可以匯入完整的紀錄檔案。
                     </p>
                     <div className="space-y-2 pt-1">
                       <label className="block w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-center cursor-pointer shadow-sm transition-colors">
@@ -3864,6 +3885,13 @@
                       清除照護日誌
                     </button>
                     <button
+                      onClick={handleClearCareReminders}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="trash" className="w-4 h-4" />
+                      清除照護提醒
+                    </button>
+                    <button
                       onClick={handleClearDoctorNotes}
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
@@ -3896,7 +3924,7 @@
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
                       <Icon name="trash" className="w-4 h-4" />
-                      重置奶量設定/目標
+                      重設奶量設定/目標
                     </button>
                   </div>
 
@@ -3913,7 +3941,7 @@
                       className="w-full py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-xl font-bold flex items-center justify-center gap-1 transition-colors"
                     >
                       <Icon name="trash" className="w-3.5 h-3.5" />
-                      清除所有本地資料(重設應用程式預設值)
+                      清除應用程式所有資料
                     </button>
                   </div>
                 </div>
