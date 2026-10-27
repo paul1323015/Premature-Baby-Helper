@@ -886,6 +886,38 @@
         return [];
       });
 
+      const isValidCareReminder = reminder => (
+        reminder
+        && typeof reminder.id === 'string'
+        && typeof reminder.title === 'string'
+        && typeof reminder.dueAt === 'string'
+        && Number.isFinite(new Date(reminder.dueAt).getTime())
+      );
+      const [careReminders, setCareReminders] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_care_reminders_v1');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) return parsed.filter(isValidCareReminder);
+          } catch (e) {}
+        }
+        return [];
+      });
+      const [showReminderForm, setShowReminderForm] = React.useState(false);
+      const [reminderTitle, setReminderTitle] = React.useState('');
+      const [editingReminderId, setEditingReminderId] = React.useState(null);
+      const formatReminderDateTimeInput = date => {
+        const pad = value => String(value).padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+      };
+      const getReminderDefaultDateTime = () => {
+        const date = new Date(Date.now() + 60 * 60 * 1000);
+        return formatReminderDateTimeInput(date);
+      };
+      const [reminderDateTime, setReminderDateTime] = React.useState(getReminderDefaultDateTime);
+      const [reminderNow, setReminderNow] = React.useState(Date.now());
+      const notifiedReminderIdsRef = React.useRef(new Set());
+
       const [vaccinationLogs, setVaccinationLogs] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_vaccination_logs_v1');
         if (saved) {
@@ -960,6 +992,7 @@
         'sun_baby_profile_v5',
         'sun_baby_growth_history_v1',
         'sun_baby_logs_v1',
+        'sun_baby_care_reminders_v1',
         'sun_baby_vaccination_logs_v1',
         'sun_baby_solid_food_logs_v1',
         'sun_baby_doctor_notes_v1',
@@ -1166,6 +1199,26 @@
       }, [logs]);
 
       React.useEffect(() => {
+        safeSetStorageItem('sun_baby_care_reminders_v1', JSON.stringify(careReminders));
+      }, [careReminders]);
+
+      React.useEffect(() => {
+        const timer = setInterval(() => setReminderNow(Date.now()), 30000);
+        return () => clearInterval(timer);
+      }, []);
+
+      React.useEffect(() => {
+        const dueReminders = careReminders.filter(reminder => (
+          new Date(reminder.dueAt).getTime() <= reminderNow
+          && !notifiedReminderIdsRef.current.has(reminder.id)
+        ));
+        dueReminders.forEach(reminder => {
+          notifiedReminderIdsRef.current.add(reminder.id);
+          showToast(`☀️ 照護提醒：${reminder.title}`);
+        });
+      }, [careReminders, reminderNow]);
+
+      React.useEffect(() => {
         safeSetStorageItem('sun_baby_doctor_notes_v1', JSON.stringify(doctorNotes));
       }, [doctorNotes]);
 
@@ -1203,6 +1256,7 @@
         babyInfo,
         growthHistory,
         logs,
+        careReminders,
         vaccinationLogs,
         solidFoodLogs,
         doctorNotes,
@@ -1343,6 +1397,10 @@
         }
 
         if (Array.isArray(backupData.logs)) setLogs(backupData.logs);
+        notifiedReminderIdsRef.current.clear();
+        setCareReminders(Array.isArray(backupData.careReminders)
+          ? backupData.careReminders.filter(isValidCareReminder)
+          : []);
         if (Array.isArray(backupData.vaccinationLogs)) {
           setVaccinationLogs(backupData.vaccinationLogs);
           safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify(backupData.vaccinationLogs));
@@ -1377,6 +1435,7 @@
         if (backupData.babyInfo) restoredSections.push('今日快照');
         if (backupData.growthHistory) restoredSections.push('歷史測量列表');
         if (backupData.logs) restoredSections.push('照護日誌');
+        if (backupData.careReminders) restoredSections.push('照護提醒');
         if (backupData.vaccinationLogs) restoredSections.push('疫苗接種紀錄');
         if (backupData.solidFoodLogs) restoredSections.push('副食品試吃紀錄');
         if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
@@ -2060,6 +2119,59 @@
         setNewLogAmount('');
       };
 
+      const handleAddCareReminder = (e) => {
+        e.preventDefault();
+        const title = reminderTitle.trim();
+        const dueAt = new Date(reminderDateTime);
+        if (!title || !reminderDateTime || Number.isNaN(dueAt.getTime())) {
+          showToast('⚠️ 請填寫提醒事項與有效時間。');
+          return;
+        }
+        if (editingReminderId !== null) {
+          setCareReminders(prevReminders => prevReminders.map(reminder => (
+            reminder.id === editingReminderId
+              ? { ...reminder, title, dueAt: dueAt.toISOString() }
+              : reminder
+          )));
+          notifiedReminderIdsRef.current.delete(editingReminderId);
+          setEditingReminderId(null);
+          setReminderTitle('');
+          setReminderDateTime(getReminderDefaultDateTime());
+          setShowReminderForm(false);
+          showToast('✅ 已更新照護提醒！');
+          return;
+        }
+        if (!ensureStorageCapacityForNewData()) return;
+        setCareReminders(prevReminders => [{
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          title,
+          dueAt: dueAt.toISOString()
+        }, ...prevReminders]);
+        setReminderTitle('');
+        setReminderDateTime(getReminderDefaultDateTime());
+        setShowReminderForm(false);
+        showToast('✅ 已新增照護提醒！');
+      };
+
+      const handleEditCareReminder = reminder => {
+        const dueAt = new Date(reminder.dueAt);
+        if (Number.isNaN(dueAt.getTime())) {
+          showToast('⚠️ 提醒時間格式不正確，無法編輯。');
+          return;
+        }
+        setEditingReminderId(reminder.id);
+        setReminderTitle(reminder.title);
+        setReminderDateTime(formatReminderDateTimeInput(dueAt));
+        setShowReminderForm(true);
+      };
+
+      const handleDeleteCareReminder = reminder => {
+        if (!window.confirm(`確定要刪除「${reminder.title}」提醒嗎？`)) return;
+        setCareReminders(prevReminders => prevReminders.filter(item => item.id !== reminder.id));
+        notifiedReminderIdsRef.current.delete(reminder.id);
+        showToast('🗑️ 已刪除照護提醒。');
+      };
+
       const handleStartEditLog = (log) => {
         setEditingLogId(log.id);
         setNewLogDate(log.date || getLocalDateInputValue());
@@ -2475,6 +2587,135 @@
                   >
                     💉 記疫苗
                   </button>
+                </div>
+
+                <div className={`p-4 rounded-2xl border ${cardBg}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-bold text-sm">☀️ 照護提醒</h3>
+                      <p className="text-xs text-slate-500 mt-1">
+                        僅在網頁開啟時提示；重新開啟後仍會顯示尚未完成的到期提醒。
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        提醒會納入「備份與還原」；更換裝置時，請先備份再匯入。
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!showReminderForm) {
+                          setEditingReminderId(null);
+                          setReminderTitle('');
+                        } else {
+                          setEditingReminderId(null);
+                        }
+                        setReminderDateTime(getReminderDefaultDateTime());
+                        setShowReminderForm(value => !value);
+                      }}
+                      className="shrink-0 px-3 py-2 rounded-xl bg-amber-100 text-amber-800 text-xs font-bold hover:bg-amber-200"
+                    >
+                      {showReminderForm ? '收起' : '設定提醒'}
+                    </button>
+                  </div>
+
+                  {showReminderForm && (
+                    <form onSubmit={handleAddCareReminder} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+                      <label className="text-xs font-semibold text-slate-600">
+                        提醒事項
+                        <input
+                          type="text"
+                          value={reminderTitle}
+                          onChange={event => setReminderTitle(event.target.value)}
+                          maxLength={80}
+                          required
+                          placeholder="例如：餵奶、尿布檢查、回診或疫苗"
+                          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
+                        />
+                      </label>
+                      <label className="text-xs font-semibold text-slate-600">
+                        提醒時間
+                        <input
+                          type="datetime-local"
+                          value={reminderDateTime}
+                          onChange={event => setReminderDateTime(event.target.value)}
+                          required
+                          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
+                        />
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button type="submit" className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600">
+                          {editingReminderId !== null ? '更新' : '儲存'}
+                        </button>
+                        {editingReminderId !== null && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingReminderId(null);
+                              setReminderTitle('');
+                              setReminderDateTime(getReminderDefaultDateTime());
+                              setShowReminderForm(false);
+                            }}
+                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
+                          >
+                            取消
+                          </button>
+                        )}
+                      </div>
+                    </form>
+                  )}
+
+                  {careReminders.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {careReminders
+                        .slice()
+                        .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+                        .map(reminder => {
+                          const isDue = new Date(reminder.dueAt).getTime() <= reminderNow;
+                          return (
+                            <div key={reminder.id} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 ${isDue ? 'bg-amber-100 text-amber-900' : 'bg-slate-50 text-slate-700'}`}>
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-semibold">{reminder.title}</div>
+                                <div className="text-xs opacity-75">
+                                  {isDue ? '已到期' : '預定'} · {new Date(reminder.dueAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit', hour12: true })}
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => handleEditCareReminder(reminder)}
+                                  className="rounded-lg px-2 py-1 text-xs font-bold hover:bg-white/70"
+                                  aria-label={`編輯提醒：${reminder.title}`}
+                                >
+                                  編輯
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCareReminders(prevReminders => prevReminders.filter(item => item.id !== reminder.id));
+                                    notifiedReminderIdsRef.current.delete(reminder.id);
+                                  }}
+                                  className="rounded-lg px-2 py-1 text-xs font-bold hover:bg-white/70"
+                                  aria-label={`完成提醒：${reminder.title}`}
+                                >
+                                  完成
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCareReminder(reminder)}
+                                  className="rounded-lg px-2 py-1 text-xs font-bold text-red-700 hover:bg-white/70"
+                                  aria-label={`刪除提醒：${reminder.title}`}
+                                >
+                                  刪除
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  )}
+                  <p className="mt-3 text-[11px] text-slate-400">
+                    提醒時間請依照家長安排與醫療團隊建議設定；這不是醫療建議，也不會在關閉網頁後推播。
+                  </p>
                 </div>
               </div>
             )}
@@ -3799,6 +4040,15 @@
                       </div>
                       <p className="text-slate-600 leading-relaxed">
                         參考安全食材清單並記錄份量、過敏等級與反應，安心追蹤每次嘗試。
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1">
+                      <div className="font-bold text-amber-900 text-sm flex items-center gap-1.5">
+                        ☀️ 照護提醒
+                      </div>
+                      <p className="text-slate-600 leading-relaxed">
+                        設定照護事項與時間，網頁開啟時會提示；提醒也會納入備份與還原，更換裝置時可先備份再匯入。
                       </p>
                     </div>
 
