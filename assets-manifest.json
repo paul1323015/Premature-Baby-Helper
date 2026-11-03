@@ -36,12 +36,16 @@
     "./external/tailwindcss.com/upgrade-guide",
     "./external/www.chartjs.org/index",
     "./css/tailwind.css",
+    "./fonts/OFL.txt",
     "./index.html",
     "./js/app.bundle.js",
     "./js/app.jsx",
     "./js/babel.min.js",
     "./js/chart.min.js",
     "./js/html2pdf.bundle.min.js",
+    "./js/pdfmake.LICENSE.txt",
+    "./js/pdfmake.min.js",
+    "./js/pdfmake-vfs.js",
     "./js/react-dom.production.min.js",
     "./js/react.production.min.js"
   ]

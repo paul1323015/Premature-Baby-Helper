@@ -1,4 +1,4 @@
-const Icon = ({
+﻿const Icon = ({
   name,
   className = "w-5 h-5",
   ...props
@@ -1845,106 +1845,249 @@ function App() {
   const handleDownloadPDF = () => {
     setIsExporting(true);
     showToast('📄 正在生成 PDF 報告，請稍候...');
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const container = document.getElementById('pdf-report-content');
-        if (container) {
-          void container.offsetHeight;
+    try {
+      if (!window.pdfMake || !window.pdfMake.vfs || !window.pdfMake.vfs['NotoSansTC-Variable.ttf']) {
+        throw new Error('PDFMake 或繁體中文字型尚未載入。');
+      }
+
+      const pdfMake = window.pdfMake;
+      pdfMake.fonts = Object.assign({}, pdfMake.fonts || {}, {
+        // MicrosoftJhengHei is the document-wide family alias; the bundled OFL font supplies full Traditional Chinese glyph coverage.
+        MicrosoftJhengHei: {
+          normal: 'NotoSansTC-Variable.ttf',
+          bold: 'NotoSansTC-Variable.ttf',
+          italics: 'NotoSansTC-Variable.ttf',
+          bolditalics: 'NotoSansTC-Variable.ttf'
         }
-        const fontsReady = document.fonts ? document.fonts.ready : Promise.resolve();
-        fontsReady.then(() => new Promise(resolve => {
-          setTimeout(resolve, 100);
-        })).then(() => {
-          const element = document.getElementById('pdf-report-content');
-          if (!element) {
-            setIsExporting(false);
-            showToast('❌ 匯出失敗，無法找到 PDF 報告內容組件。');
-            return;
-          }
-          element.style.visibility = 'visible';
-          element.style.opacity = '1';
-          element.style.clipPath = 'inset(100%)';
-          const exportElement = element.cloneNode(true);
-          exportElement.style.visibility = 'visible';
-          exportElement.style.opacity = '1';
-          exportElement.style.clipPath = 'inset(100%)';
-          const cacheBuster = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-          const exportMarker = `pdf-export-${cacheBuster}`;
-          exportElement.setAttribute('data-pdf-export-id', exportMarker);
-          const divElements = [exportElement, ...exportElement.querySelectorAll('div')];
-          divElements.sort(() => Math.random() - 0.5).slice(0, Math.min(4, divElements.length)).forEach((divElement, index) => {
-            divElement.setAttribute('data-pdf-cache-buster', `${cacheBuster}-${index}`);
-          });
-          const cacheBusterElement = document.createElement('div');
-          cacheBusterElement.style.display = 'none';
-          cacheBusterElement.textContent = cacheBuster;
-          exportElement.appendChild(cacheBusterElement);
-          document.body.appendChild(exportElement);
-          const opt = {
-            margin: 7,
-            filename: `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`,
-            image: {
-              type: 'jpeg',
-              quality: 0.98
-            },
-            html2canvas: {
-              scale: 2,
-              useCORS: true,
-              logging: false,
-              onclone: clonedDocument => {
-                const clonedElement = clonedDocument.querySelector(`[data-pdf-export-id="${exportMarker}"]`);
-                if (clonedElement) {
-                  clonedDocument.body.style.margin = '0';
-                  clonedElement.style.position = 'absolute';
-                  clonedElement.style.left = '0';
-                  clonedElement.style.top = '0';
-                  clonedElement.style.zIndex = '0';
-                  clonedElement.style.opacity = '1';
-                  clonedElement.style.visibility = 'visible';
-                  clonedElement.style.clipPath = 'none';
-                }
-              }
-            },
-            jsPDF: {
-              unit: 'mm',
-              format: 'a4',
-              orientation: 'portrait'
-            },
-            pagebreak: {
-              mode: ['css'],
-              avoid: ['.pdf-footer', '.pdf-item', 'table', 'tr', 'li']
-            }
-          };
-          if (window.html2pdf) {
-            window.html2pdf().set(opt).from(exportElement).save().then(() => {
-              exportElement.remove();
-              element.style.visibility = 'hidden';
-              element.style.clipPath = 'inset(100%)';
-              setIsExporting(false);
-              showToast('✅ PDF 報告已順利匯出下載！');
-            }).catch(err => {
-              console.error(err);
-              exportElement.remove();
-              element.style.visibility = 'hidden';
-              element.style.clipPath = 'inset(100%)';
-              setIsExporting(false);
-              showToast('❌ PDF 產生過程中發生錯誤。');
-            });
-          } else {
-            window.print();
-            exportElement.remove();
-            element.style.visibility = 'hidden';
-            element.style.clipPath = 'inset(100%)';
-            setIsExporting(false);
-          }
-        }).catch(err => {
-          console.error(err);
-          setIsExporting(false);
-          showToast('❌ PDF 產生過程中發生錯誤。');
-        });
       });
-    });
+
+      const docDefinition = {
+        pageSize: 'A4',
+        // 頁面留白，避免表格與卡片貼近紙張邊緣。
+        pageMargins: [40, 42, 40, 42],
+        defaultStyle: {
+          font: 'MicrosoftJhengHei',
+          fontSize: 12,
+          color: '#000000',
+          bold: true
+        },
+        styles: {
+          title: { fontSize: 20, color: '#000000', bold: true, margin: [0, 0, 0, 4] },
+          babyName: { fontSize: 14, color: '#000000', bold: true },
+          subtitle: { fontSize: 10, color: '#000000', bold: true, margin: [0, 2, 0, 0] },
+          sectionTitle: { fontSize: 14, color: '#000000', bold: true, margin: [0, 0, 0, 7] },
+          fact: { fontSize: 12, bold: true, margin: [0, 0, 7, 0] },
+          factLast: { fontSize: 12, bold: true, margin: [0, 2, 0, 0] },
+          tableHeader: { fontSize: 11, bold: true, fillColor: '#F1F5F9', margin: [5, 6, 5, 6] },
+          tableCell: { fontSize: 11, bold: true, margin: [5, 6, 5, 6] },
+          muted: { fontSize: 10, color: '#000000', bold: true },
+          emptyState: { fontSize: 12, color: '#000000', bold: true },
+          listItem: { fontSize: 12, bold: true, margin: [0, 0, 5, 0] },
+          answered: { color: '#000000', bold: true },
+          unanswered: { color: '#000000', bold: true },
+          noteTitle: { fontSize: 12, color: '#000000', bold: true, margin: [0, 0, 3, 0] },
+          noteContent: { fontSize: 12, color: '#000000', bold: true, margin: [0, 2, 0, 0] },
+          footer: { fontSize: 10, color: '#000000', bold: true, alignment: 'center', margin: [0, 14, 0, 0] }
+        },
+        content: [
+          {
+            text: '巴掌小太陽·早產兒門診照護與生長報告',
+            style: 'title',
+            alignment: 'center',
+            margin: [0, 6, 66, 6]
+          },
+          {
+            columns: [
+              {
+                width: '*',
+                text: `匯出時間：${formatLocalDateTime()}`,
+                style: 'subtitle'
+              },
+              {
+                width: 'auto',
+                alignment: 'right',
+                stack: [
+                  { text: `${babyInfo.name || '小太陽'} 寶寶`, style: 'babyName' },
+                  {
+                    text: `${babyInfo.gender === 'girl' ? '女寶' : '男寶'} | ${ageData.correctedText}`,
+                    style: 'subtitle'
+                  }
+                ]
+              }
+            ],
+            columnGap: 16,
+            margin: [0, 0, 0, 14]
+          },
+          {
+            table: {
+              widths: ['*'],
+              body: [[
+                {
+                  fillColor: '#FFFBEB',
+                  // 內距讓單格 table 呈現卡片留白。
+                  margin: [12, 12, 12, 5],
+                  stack: [
+                    {
+                      columns: [
+                        {
+                          width: '*',
+                          stack: [
+                            { text: [{ text: '實際出生日：', bold: true }, babyInfo.birthDate || '未填寫'], style: 'fact' },
+                            {
+                              text: [
+                                { text: '出生週數：', bold: true },
+                                babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'
+                              ],
+                              style: 'fact'
+                            },
+                            { text: [{ text: '實際月齡：', bold: true }, ageData.chronoText], style: 'fact' }
+                          ]
+                        },
+                        {
+                          width: '*',
+                          stack: [
+                            { text: [{ text: '預產期：', bold: true }, babyInfo.dueDate || '未填寫'], style: 'fact' },
+                            {
+                              text: [
+                                { text: '出生體重：', bold: true },
+                                babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'
+                              ],
+                              style: 'fact'
+                            }
+                          ]
+                        }
+                      ],
+                      columnGap: 12
+                    },
+                    {
+                      text: [
+                        { text: '當前體重/身長/頭圍：', bold: true },
+                        `${babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / ${
+                          babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'
+                        } / ${babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}`
+                      ],
+                      style: 'factLast'
+                    }
+                  ]
+                }
+              ]]
+            },
+            layout: { hLineWidth: () => 0, vLineWidth: () => 0 },
+            margin: [0, 0, 0, 16]
+          },
+          {
+            stack: [
+              { text: '歷史測量紀錄表', style: 'sectionTitle' },
+              growthHistory.length === 0
+                ? { text: '尚無測量紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
+                : {
+                    table: {
+                      headerRows: 1,
+                      widths: ['*', '*', '*', '*'],
+                      dontBreakRows: true,
+                      body: [
+                        [
+                          { text: '日期', style: 'tableHeader' },
+                          { text: '體重 (kg)', style: 'tableHeader' },
+                          { text: '身長 (cm)', style: 'tableHeader' },
+                          { text: '頭圍 (cm)', style: 'tableHeader' }
+                        ],
+                        ...growthHistory.map((rec) => [
+                          { text: rec.date || '—', style: 'tableCell' },
+                          { text: rec.weight || '—', style: 'tableCell' },
+                          { text: rec.height || '—', style: 'tableCell' },
+                          { text: rec.head || '—', style: 'tableCell' }
+                        ])
+                      ]
+                    },
+                    layout: {
+                      hLineColor: () => '#E2E8F0',
+                      vLineColor: () => '#E2E8F0',
+                      hLineWidth: () => 0.5,
+                      vLineWidth: () => 0.5
+                    },
+                    margin: [0, 0, 0, 14]
+                  }
+            ]
+          },
+          {
+            stack: [
+              { text: '看診備忘與門診提問', style: 'sectionTitle' },
+              doctorNotes.length === 0
+                ? { text: '無門診提問紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
+                : {
+                    ul: doctorNotes.map((note) => ({
+                      text: [
+                        {
+                          text: `${note.date || '未設定日期'} ${format24HourTime(note.time)}｜${
+                            note.category || note.tag || '門診提問'
+                          }｜${note.question} `
+                        },
+                        {
+                          text: note.answered ? '醫師解答' : '門診提問',
+                          style: note.answered ? 'answered' : 'unanswered'
+                        }
+                      ],
+                      style: 'listItem'
+                    })),
+                    margin: [0, 0, 0, 12]
+                  }
+            ]
+          },
+          {
+            stack: [
+              { text: '筆記本重點摘要', style: 'sectionTitle' },
+              notes.length === 0
+                ? { text: '無筆記紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
+                : {
+                    stack: notes.map((note) => ({
+                      table: {
+                        widths: ['*'],
+                        body: [[
+                          {
+                            fillColor: '#F8FAFC',
+                            margin: [9, 8, 9, 8],
+                            stack: [
+                              {
+                                text: [
+                                  { text: `【${note.category}】${note.title} `, bold: true },
+                                  { text: `(${note.createdAt})`, style: 'muted' }
+                                ],
+                                style: 'noteTitle'
+                              },
+                              ...(note.content
+                                ? [{ text: note.content, style: 'noteContent' }]
+                                : [])
+                            ]
+                          }
+                        ]]
+                      },
+                      layout: { hLineWidth: () => 0, vLineWidth: () => 0 },
+                      margin: [0, 0, 0, 7]
+                    }))
+                  }
+            ],
+            margin: [0, 0, 0, 6]
+          },
+          {
+            text: '本報告由「巴掌小太陽 · 早產兒照護小幫手」自動生成，僅供看診時輔助醫療團隊參考。',
+            style: 'footer'
+          }
+        ]
+      };
+
+      const filename = `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`;
+      pdfMake.createPdf(docDefinition).download(filename, () => {
+        setIsExporting(false);
+        showToast('✅ PDF 報告已順利匯出下載！');
+      });
+    } catch (err) {
+      console.error(err);
+      setIsExporting(false);
+      showToast('❌ PDF 產生過程中發生錯誤。');
+    }
   };
+
   const ageData = React.useMemo(() => {
     return calculateAges(babyInfo.birthDate, babyInfo.dueDate);
   }, [babyInfo.birthDate, babyInfo.dueDate]);
