@@ -1909,7 +1909,7 @@ function App() {
                 stack: [
                   { text: `${babyInfo.name || '小太陽'} 寶寶`, style: 'babyName' },
                   {
-                    text: `${babyInfo.gender === 'girl' ? '女寶' : '男寶'} | ${ageData.correctedText}`,
+                    text: `${babyInfo.gender === 'girl' ? '女寶' : '男寶'} | ${ageData.correctedText.replace(/^矯正 /, '矯正月齡 ')}`,
                     style: 'subtitle'
                   }
                 ]
@@ -2024,7 +2024,7 @@ function App() {
                           }｜${note.question} `
                         },
                         {
-                          text: note.answered ? '醫師解答' : '門診提問',
+                          text: note.answered ? '醫師解答' : '尚未解答',
                           style: note.answered ? 'answered' : 'unanswered'
                         }
                       ],
