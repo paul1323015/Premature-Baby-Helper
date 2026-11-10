@@ -521,7 +521,9 @@
               onClick={() => {
                 const nextUseChronoAxis = !useChronoAxis;
                 setUseChronoAxis(nextUseChronoAxis);
-                showToast(`✅ 已切換為${nextUseChronoAxis ? '實際月齡' : '矯正月齡'}`);
+                showToast(nextUseChronoAxis
+                  ? '✅ 生長曲線已改以實際月齡顯示；此模式僅供趨勢查看，不作 WHO 百分位判讀。'
+                  : '✅ 生長曲線已改以矯正月齡顯示；百分位結果僅供參考，請諮詢醫師判讀。');
               }}
               className="w-full px-2.5 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-[11px] sm:text-xs font-bold transition-colors border border-amber-300 shadow-sm sm:w-auto"
               title={useChronoAxis ? '目前顯示：實際月齡。點擊切換為 矯正月齡。' : '目前顯示：矯正月齡。點擊切換為 實際月齡。'}
@@ -784,7 +786,14 @@
     };
 
     function App() {
-      const [isNightMode, setIsNightMode] = React.useState(false);
+      const [isNightMode, setIsNightMode] = React.useState(() => {
+        try {
+          return localStorage.getItem('sun_baby_night_mode_v1') === 'true';
+        } catch (error) {
+          console.error('Failed to read night mode preference:', error);
+          return false;
+        }
+      });
       const [activeTab, setActiveTab] = React.useState('dashboard');
       const [showHelpModal, setShowHelpModal] = React.useState(false);
       const [showBackupModal, setShowBackupModal] = React.useState(false);
@@ -885,6 +894,12 @@
         }
         return [];
       });
+      const careLogTypeLabels = { feeding: '餵奶', diaper: '尿布', solidFood: '副食品', vaccination: '疫苗' };
+      const formatCareLogDetail = log => (
+        log.type === 'solidFood' || log.type === 'vaccination'
+          ? (log.detail || '').replace(/^(?:🥣|💉)\s*/, '') || '—'
+          : log.detail || '—'
+      );
 
       const isValidCareReminder = reminder => (
         reminder
@@ -999,6 +1014,7 @@
         'sun_baby_notes_v1',
         'sun_baby_milestones_v1',
         'sun_baby_emergency_snapshot_v1',
+        'sun_baby_night_mode_v1',
         AUTO_BACKUP_STORAGE_KEY,
         ADVANCED_RESTORE_SETTING_KEY
       ];
@@ -1030,7 +1046,7 @@
         const usage = refreshStorageUsage();
         const size = Number((usage.bytes / 1024).toFixed(2));
         console.log("計算完成，當前大小為：", size);
-        showToast(`✅ 計算完成，目前使用量為 ${formatStorageUsage(usage.bytes)}`);
+        showToast(`✅ 已重新計算，本機資料估計使用約 ${formatStorageUsage(usage.bytes)}。`);
         return usage;
       };
 
@@ -1139,6 +1155,7 @@
         APP_STORAGE_KEYS.forEach((key) => {
           try { localStorage.removeItem(key); } catch (error) { console.error('Failed to remove key:', key, error); }
         });
+        setIsNightMode(false);
       };
 
       const safeSetStorageItem = (key, value) => {
@@ -1259,6 +1276,7 @@
         careReminders,
         vaccinationLogs,
         solidFoodLogs,
+        nightMode: isNightMode,
         doctorNotes,
         milestones,
         notes,
@@ -1381,6 +1399,11 @@
           return;
         }
 
+        if (typeof backupData.nightMode === 'boolean') {
+          setIsNightMode(backupData.nightMode);
+          safeSetStorageItem('sun_baby_night_mode_v1', String(backupData.nightMode));
+        }
+
         if (backupData.babyInfo) {
           const cleanedProfile = { ...backupData.babyInfo };
           if (cleanedProfile.birthDate) cleanedProfile.birthDate = sanitizeDateStr(cleanedProfile.birthDate);
@@ -1468,6 +1491,10 @@
           } catch (err) {
             showToast('❌ 備份檔案內容不完整，請確認後再試一次。');
           }
+        };
+        reader.onerror = () => {
+          console.error('Failed to read backup file:', reader.error);
+          showToast('❌ 無法讀取備份檔案，請確認檔案可正常開啟後再試一次。');
         };
         reader.readAsText(file);
       };
@@ -1815,6 +1842,21 @@
         showToast('🧴 已重設奶量設定/目標');
       };
 
+      const handleResetNightMode = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將重設夜間模式設定並切回日間模式。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+        try {
+          localStorage.removeItem('sun_baby_night_mode_v1');
+          setIsNightMode(false);
+          showToast('🌙 已重設夜間模式設定，目前為日間模式。');
+        } catch (error) {
+          console.error('Failed to reset night mode preference:', error);
+          showToast('⚠️ 無法重設夜間模式設定，請稍後再試。');
+        }
+      };
+
       const handleDownloadPDF = () => {
         setIsExporting(true);
         showToast('📄 正在生成 PDF 報告，請稍候...');
@@ -1833,6 +1875,79 @@
               bolditalics: 'NotoSansTC-Variable.ttf'
             }
           });
+
+          const growthChartMetrics = [
+            { key: 'weight', label: '體重', unit: 'kg', minY: GrowthChartScale.METRIC_DOMAINS.weight.min, maxY: GrowthChartScale.METRIC_DOMAINS.weight.max, yTicks: [0, 2, 4, 6, 8, 10, 12, 14, 16] },
+            { key: 'height', label: '身長', unit: 'cm', minY: 35, maxY: 95, yTicks: [35, 45, 55, 65, 75, 85, 95] },
+            { key: 'head', label: '頭圍', unit: 'cm', minY: 25, maxY: 52, yTicks: [25, 30, 35, 40, 45, 50] }
+          ];
+          const growthChartColors = ['#cbd5e1', '#94a3b8', '#3b82f6', '#94a3b8', '#cbd5e1'];
+          const growthChartPercentiles = ['3%', '15%', '50%', '85%', '97%'];
+          const createGrowthChartSvg = metricConfig => {
+            const chartWidth = 600;
+            const chartHeight = 300;
+            const chartPadding = { top: 20, right: 32, bottom: 48, left: 52 };
+            const plotBottom = chartHeight - chartPadding.bottom;
+            const referenceData = (WHO_GROWTH_DATA[babyInfo.gender] || WHO_GROWTH_DATA.boy)[metricConfig.key];
+            const points = growthHistory
+              .filter(record => record.plotOnChart !== false)
+              .map(record => {
+                const rawValue = parseFloat(record[metricConfig.key]);
+                const value = !Number.isFinite(rawValue) ? null : metricConfig.key === 'weight' && rawValue > 30 ? rawValue / 1000 : rawValue;
+                const date = sanitizeDateStr(record.date);
+                if (value === null || !babyInfo.dueDate || !parseDateOnly(date)) return null;
+                const age = getAgesForDate(date, babyInfo.birthDate, babyInfo.dueDate);
+                return { age: age.correctedDays / 30.4375, value };
+              })
+              .filter(point => point !== null && point.age <= 36 && point.value >= metricConfig.minY && point.value <= metricConfig.maxY)
+              .sort((a, b) => a.age - b.age);
+            const minX = Math.min(-2, Math.floor((points.length ? Math.min(...points.map(point => point.age)) : 0) - 0.5));
+            const maxX = Math.max(36, Math.ceil(Math.min(36, (points.length ? Math.max(...points.map(point => point.age)) : 12) + 1)));
+            const xScale = month => chartPadding.left + ((month - minX) / (maxX - minX)) * (chartWidth - chartPadding.left - chartPadding.right);
+            const yScale = value => GrowthChartScale.mapValueToY(value, { min: metricConfig.minY, max: metricConfig.maxY }, chartHeight, chartPadding);
+            const svg = [
+              `<svg xmlns="http://www.w3.org/2000/svg" width="${chartWidth}" height="${chartHeight}" viewBox="0 0 ${chartWidth} ${chartHeight}">`,
+              `<rect x="0" y="0" width="${chartWidth}" height="${chartHeight}" fill="#ffffff"/>`
+            ];
+            metricConfig.yTicks.forEach(value => {
+              const y = yScale(value);
+              svg.push(`<line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`);
+              svg.push(`<text x="${chartPadding.left - 8}" y="${y + 4}" text-anchor="end" font-family="sans-serif" font-size="11" fill="#475569">${value}</text>`);
+            });
+            for (let month = Math.ceil(minX / 6) * 6; month <= maxX; month += 6) {
+              const x = xScale(month);
+              svg.push(`<line x1="${x}" y1="${chartPadding.top}" x2="${x}" y2="${plotBottom}" stroke="#f1f5f9" stroke-width="1"/>`);
+              svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
+            }
+            if (minX <= 0 && maxX >= 0) {
+              const zeroX = xScale(0);
+              svg.push(`<line x1="${zeroX}" y1="${chartPadding.top}" x2="${zeroX}" y2="${plotBottom}" stroke="#d97706" stroke-width="2" stroke-dasharray="6 3"/>`);
+            }
+            [1, 2, 3, 4, 5].forEach((percentileIndex, index) => {
+              const path = referenceData.map((row, rowIndex) => (
+                `${rowIndex === 0 ? 'M' : 'L'} ${xScale(row[0]).toFixed(2)} ${yScale(row[percentileIndex]).toFixed(2)}`
+              )).join(' ');
+              svg.push(`<path d="${path}" fill="none" stroke="${growthChartColors[index]}" stroke-width="${percentileIndex === 3 ? 2 : 1.5}"${percentileIndex === 3 ? '' : ' stroke-dasharray="4 3"'}/>`);
+              const last = referenceData[referenceData.length - 1];
+              svg.push(`<text x="${(xScale(last[0]) + 4).toFixed(2)}" y="${(yScale(last[percentileIndex]) + 3).toFixed(2)}" font-family="sans-serif" font-size="9" fill="#64748b">${growthChartPercentiles[index]}</text>`);
+            });
+            if (points.length > 1) {
+              const path = points.map((point, index) => (
+                `${index === 0 ? 'M' : 'L'} ${xScale(point.age).toFixed(2)} ${yScale(point.value).toFixed(2)}`
+              )).join(' ');
+              svg.push(`<path d="${path}" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
+            }
+            points.forEach(point => {
+              svg.push(`<circle cx="${xScale(point.age).toFixed(2)}" cy="${yScale(point.value).toFixed(2)}" r="5" fill="#f59e0b" stroke="#ffffff" stroke-width="2"/>`);
+            });
+            svg.push(`<line x1="${chartPadding.left}" y1="${plotBottom}" x2="${chartWidth - chartPadding.right}" y2="${plotBottom}" stroke="#64748b" stroke-width="1.5"/>`);
+            svg.push('</svg>');
+            return { svg: svg.join(''), pointsCount: points.length };
+          };
+          const growthCharts = growthChartMetrics.map(metricConfig => ({
+            ...metricConfig,
+            ...createGrowthChartSvg(metricConfig)
+          }));
 
           const docDefinition = {
             pageSize: 'A4',
@@ -1985,6 +2100,58 @@
               },
               {
                 stack: [
+                      { text: '生長曲線', style: 'sectionTitle' },
+                      { text: 'X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點，曲線標示 3%、15%、50%、85%、97% 百分位。資料沿用應用程式的 WHO 參考曲線，僅供趨勢參考，請由醫療專業人員判讀。', style: 'muted', margin: [0, 0, 0, 8] },
+                      ...growthCharts.map(chart => ({
+                        unbreakable: true,
+                        stack: [
+                          { text: `${chart.label}（${chart.unit}）｜矯正月齡`, style: 'noteTitle', margin: [0, 8, 0, 3] },
+                          { svg: chart.svg, fit: [510, 250], margin: [0, 0, 0, 2] },
+                          ...(chart.pointsCount === 0 ? [{ text: `目前沒有可繪製的矯正月齡測量點${babyInfo.dueDate ? '' : '；請先設定預產期'}，圖中僅顯示百分位參考曲線。`, style: 'muted', margin: [0, 0, 0, 6] }] : [])
+                        ]
+                      }))
+                ],
+                margin: [0, 0, 0, 14]
+              },
+              {
+                stack: [
+                      { text: '照護日誌', style: 'sectionTitle' },
+                  logs.length === 0
+                    ? { text: '尚無照護日誌', style: 'emptyState', margin: [0, 0, 0, 10] }
+                    : {
+                        table: {
+                          headerRows: 1,
+                          widths: ['auto', 'auto', 'auto', '*', 'auto'],
+                          dontBreakRows: true,
+                          body: [
+                            [
+                              { text: '日期', style: 'tableHeader' },
+                              { text: '時間', style: 'tableHeader' },
+                              { text: '類型', style: 'tableHeader' },
+                              { text: '內容', style: 'tableHeader' },
+                              { text: '份量', style: 'tableHeader' }
+                            ],
+                            ...logs.map((log) => [
+                              { text: log.date || '未設定日期', style: 'tableCell' },
+                              { text: format24HourTime(log.time) || '—', style: 'tableCell' },
+                              { text: careLogTypeLabels[log.type] || log.type || '其他', style: 'tableCell' },
+                              { text: formatCareLogDetail(log), style: 'tableCell' },
+                              { text: log.amount !== null && log.amount !== undefined && log.amount !== '' ? String(log.amount) : '—', style: 'tableCell' }
+                            ])
+                          ]
+                        },
+                        layout: {
+                          hLineColor: () => '#E2E8F0',
+                          vLineColor: () => '#E2E8F0',
+                          hLineWidth: () => 0.5,
+                          vLineWidth: () => 0.5
+                        },
+                        margin: [0, 0, 0, 14]
+                      }
+                ]
+              },
+              {
+                stack: [
                   { text: '看診備忘與門診提問', style: 'sectionTitle' },
                   doctorNotes.length === 0
                     ? { text: '無門診提問紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
@@ -2057,7 +2224,7 @@
         } catch (err) {
           console.error(err);
           setIsExporting(false);
-          showToast('❌ PDF 產生過程中發生錯誤。');
+          showToast('❌ PDF 報告產生失敗，請稍後再試。若問題持續發生，請確認瀏覽器可正常下載檔案。');
         }
       };
 
@@ -2086,6 +2253,7 @@
         return match ? `${String(Number(match[1])).padStart(2, '0')}:${match[2]}` : '';
       };
       const [newDoctorQuestion, setNewDoctorQuestion] = React.useState('');
+      const [newDoctorAnswer, setNewDoctorAnswer] = React.useState('');
       const [editingDoctorNoteId, setEditingDoctorNoteId] = React.useState(null);
       const [doctorNoteDate, setDoctorNoteDate] = React.useState(getLocalDateInputValue);
       const [doctorNoteTime, setDoctorNoteTime] = React.useState(getLocalTimeInputValue);
@@ -2471,7 +2639,7 @@
         if (editingDoctorNoteId !== null) {
           setDoctorNotes(prevNotes => prevNotes.map(note => (
             note.id === editingDoctorNoteId
-              ? { ...note, question: newDoctorQuestion.trim(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory }
+              ? { ...note, question: newDoctorQuestion.trim(), answer: newDoctorAnswer.trim(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory }
               : note
           )).sort((a, b) => `${b.date || ''} ${b.time || ''}`.localeCompare(`${a.date || ''} ${a.time || ''}`)));
           showToast('💾 已儲存看診備忘修改！');
@@ -2479,11 +2647,12 @@
           if (!ensureStorageCapacityForNewData()) return;
           setDoctorNotes(prevNotes => [
             ...prevNotes,
-            { id: Date.now(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory, question: newDoctorQuestion.trim(), answered: false, tag: doctorNoteCategory }
+            { id: Date.now(), date: doctorNoteDate, time: doctorNoteTime, category: doctorNoteCategory, question: newDoctorQuestion.trim(), answer: newDoctorAnswer.trim(), answered: false, tag: doctorNoteCategory }
           ].sort((a, b) => `${b.date || ''} ${b.time || ''}`.localeCompare(`${a.date || ''} ${a.time || ''}`)));
           showToast('🏥 已新增看診問題！');
         }
         setNewDoctorQuestion('');
+        setNewDoctorAnswer('');
         setEditingDoctorNoteId(null);
         setDoctorNoteDate(getLocalDateInputValue());
         setDoctorNoteTime(getLocalTimeInputValue());
@@ -2496,6 +2665,7 @@
         setDoctorNoteTime(note.time || '09:00');
         setDoctorNoteCategory(note.category || note.tag || '門診提問');
         setNewDoctorQuestion(note.question || '');
+        setNewDoctorAnswer(note.answer || '');
       };
 
       const handleCancelEditDoctorNote = () => {
@@ -2504,6 +2674,7 @@
         setDoctorNoteTime(getLocalTimeInputValue());
         setDoctorNoteCategory('門診提問');
         setNewDoctorQuestion('');
+        setNewDoctorAnswer('');
       };
 
       const handleDeleteDoctorNote = (id) => {
@@ -2604,7 +2775,10 @@
                   <span className="hidden md:inline">資料管理</span>
                 </button>
                 <button
-                  onClick={() => { refreshStorageUsage(); setShowStorageManagerModal(true); }}
+                  onClick={() => {
+                    refreshStorageUsage();
+                    setShowStorageManagerModal(true);
+                  }}
                   className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
                   title="應用程式儲存空間管理"
                 >
@@ -2631,7 +2805,13 @@
                   onClick={() => {
                     const nextIsNightMode = !isNightMode;
                     setIsNightMode(nextIsNightMode);
-                    showToast(`✅ 已${nextIsNightMode ? '開啟' : '關閉'}夜間模式`);
+                    try {
+                      localStorage.setItem('sun_baby_night_mode_v1', String(nextIsNightMode));
+                      showToast(`✅ 已${nextIsNightMode ? '開啟' : '關閉'}夜間模式`);
+                    } catch (error) {
+                      console.error('Failed to save night mode preference:', error);
+                      showToast(`⚠️ 已${nextIsNightMode ? '開啟' : '關閉'}夜間模式，但偏好儲存失敗，重新整理後可能恢復原設定。`);
+                    }
                   }}
                   className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
                   title="切換夜間模式"
@@ -3098,6 +3278,16 @@
                       </button>
                     )}
                   </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-[11px] text-slate-500">醫師答覆</label>
+                    <textarea
+                      value={newDoctorAnswer}
+                      onChange={(e) => setNewDoctorAnswer(e.target.value)}
+                      placeholder="記錄醫師答覆..."
+                      rows={2}
+                      className="w-full p-2 border rounded-lg text-xs resize-y"
+                    />
+                  </div>
                 </form>
                 <div className="space-y-2">
                   {doctorNotes.length === 0 ? (
@@ -3143,16 +3333,10 @@
                         </div>
                         <p className="text-[11px] text-slate-400">{note.date || '未設定日期'} {format24HourTime(note.time)}</p>
                         <p className="font-medium text-slate-700">{note.question}</p>
-                        <div className="pt-2 border-t border-slate-100 space-y-1">
+                        {editingDoctorNoteId !== note.id && <div className="pt-2 border-t border-slate-100 space-y-1">
                           <label className="font-bold text-[11px] text-slate-500">醫師答覆</label>
-                          <textarea
-                            value={note.answer || ''}
-                            onChange={(e) => setDoctorNotes(prevNotes => prevNotes.map(n => n.id === note.id ? { ...n, answer: e.target.value } : n))}
-                            placeholder="記錄醫師答覆..."
-                            rows={2}
-                            className="w-full p-2 border rounded-lg text-xs resize-y"
-                          />
-                        </div>
+                          <p className="whitespace-pre-wrap text-slate-700">{note.answer || '尚未記錄醫師答覆'}</p>
+                        </div>}
                       </div>
                     ))
                   )}
@@ -3205,6 +3389,36 @@
                         <td className="p-2">{rec.weight || '—'}</td>
                         <td className="p-2">{rec.height || '—'}</td>
                         <td className="p-2">{rec.head || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="pdf-section space-y-2">
+              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">照護日誌</h3>
+              {logs.length === 0 ? (
+                <p className="text-xs text-slate-400">尚無照護日誌</p>
+              ) : (
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 border-b">
+                      <th className="p-2 border-b">日期</th>
+                      <th className="p-2 border-b">時間</th>
+                      <th className="p-2 border-b">類型</th>
+                      <th className="p-2 border-b">內容</th>
+                      <th className="p-2 border-b">份量</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {logs.map(log => (
+                      <tr key={log.id} className="border-b">
+                        <td className="p-2">{log.date || '未設定日期'}</td>
+                        <td className="p-2">{format24HourTime(log.time) || '—'}</td>
+                        <td className="p-2">{careLogTypeLabels[log.type] || log.type || '其他'}</td>
+                        <td className="p-2">{formatCareLogDetail(log)}</td>
+                        <td className="p-2">{log.amount !== null && log.amount !== undefined && log.amount !== '' ? String(log.amount) : '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -4079,6 +4293,13 @@
                     >
                       <Icon name="trash" className="w-4 h-4" />
                       重設奶量設定/目標
+                    </button>
+                    <button
+                      onClick={handleResetNightMode}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="moon" className="w-4 h-4" />
+                      重設夜間模式設定
                     </button>
                   </div>
 
