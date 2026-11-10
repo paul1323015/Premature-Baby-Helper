@@ -2021,7 +2021,7 @@ function App() {
                         {
                           text: `${note.date || '未設定日期'} ${format24HourTime(note.time)}｜${
                             note.category || note.tag || '門診提問'
-                          }｜${note.question} `
+                          }｜${note.question}${note.answer ? `\n醫師答覆：${note.answer}` : ''}\n`
                         },
                         {
                           text: note.answered ? '醫師解答' : '尚未解答',
@@ -3122,7 +3122,20 @@ function App() {
     className: "text-[11px] text-slate-400"
   }, note.date || '未設定日期', " ", format24HourTime(note.time)), /*#__PURE__*/React.createElement("p", {
     className: "font-medium text-slate-700"
-  }, note.question)))))), /*#__PURE__*/React.createElement("div", {
+  }, note.question), /*#__PURE__*/React.createElement("div", {
+    className: "pt-2 border-t border-slate-100 space-y-1"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold text-[11px] text-slate-500"
+  }, "醫師答覆"), /*#__PURE__*/React.createElement("textarea", {
+    value: note.answer || '',
+    onChange: e => setDoctorNotes(prevNotes => prevNotes.map(n => n.id === note.id ? {
+      ...n,
+      answer: e.target.value
+    } : n)),
+    placeholder: "記錄醫師答覆...",
+    rows: 2,
+    className: "w-full p-2 border rounded-lg text-xs resize-y"
+  }))))))), /*#__PURE__*/React.createElement("div", {
     id: "pdf-report-content",
     style: {
       visibility: 'visible',
@@ -3184,8 +3197,10 @@ function App() {
     className: "space-y-1.5 text-xs"
   }, doctorNotes.map(n => /*#__PURE__*/React.createElement("li", {
     key: n.id,
-    className: "pdf-item p-2 bg-slate-50 border rounded-lg"
-  }, /*#__PURE__*/React.createElement("span", null, "• ", n.date || '未設定日期', " ", format24HourTime(n.time), "｜", n.category || n.tag || '門診提問', "｜", n.question), /*#__PURE__*/React.createElement("span", {
+    className: "pdf-item p-2 bg-slate-50 border rounded-lg space-y-1"
+  }, /*#__PURE__*/React.createElement("span", null, "• ", n.date || '未設定日期', " ", format24HourTime(n.time), "｜", n.category || n.tag || '門診提問', "｜", n.question), n.answer && /*#__PURE__*/React.createElement("span", {
+    className: "text-slate-600 whitespace-pre-wrap"
+  }, "醫師答覆：", n.answer), /*#__PURE__*/React.createElement("span", {
     className: `font-bold text-[10px] px-2 py-0.5 rounded ${n.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`
   }, n.answered ? '醫師解答' : '門診提問'))))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
