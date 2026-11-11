@@ -968,6 +968,7 @@ const PretermGrowthChart = ({
   }, editingRecordId !== null ? '儲存修改' : '儲存數據'))))));
 };
 function App() {
+  const defaultNoteCategories = ['回診提問', '成長大事記', '其他備忘'];
   const [isNightMode, setIsNightMode] = React.useState(() => {
     try {
       return localStorage.getItem('sun_baby_night_mode_v1') === 'true';
@@ -1147,9 +1148,26 @@ function App() {
     }
     return [];
   });
+  const [noteCategories, setNoteCategories] = React.useState(() => {
+    const saved = localStorage.getItem('sun_baby_note_categories_v1');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return [...new Set([...parsed, ...notes.map(note => note.category || note.tag)].filter(category => typeof category === 'string' && category.trim() && category !== '全部' && category !== '未分類'))];
+        }
+      } catch (e) {}
+    }
+    return [...new Set([...defaultNoteCategories, ...notes.map(note => note.category || note.tag)].filter(category => typeof category === 'string' && category.trim() && category !== '全部' && category !== '未分類'))];
+  });
 
   // Notebook Form & Editing States
-  const [noteCategory, setNoteCategory] = React.useState('回診提問');
+  const [noteCategory, setNoteCategory] = React.useState(() => noteCategories.includes('回診提問') ? '回診提問' : '未分類');
+  const [isCustomNoteCategory, setIsCustomNoteCategory] = React.useState(false);
+  const [showNoteCategoryManager, setShowNoteCategoryManager] = React.useState(false);
+  const [newNoteCategory, setNewNoteCategory] = React.useState('');
+  const [editingNoteCategory, setEditingNoteCategory] = React.useState(null);
+  const [editedNoteCategory, setEditedNoteCategory] = React.useState('');
   const [noteTitle, setNoteTitle] = React.useState('');
   const [noteContent, setNoteContent] = React.useState('');
   const [filterNoteCategory, setFilterNoteCategory] = React.useState('全部');
@@ -1192,7 +1210,7 @@ function App() {
   const [pastedJson, setPastedJson] = React.useState('');
   const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
   const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
-  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', 'sun_baby_night_mode_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
+  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', 'sun_baby_night_mode_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
   const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
   const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
   const calculateStorageUsage = () => {
@@ -1266,7 +1284,7 @@ function App() {
       setShowStorageManagerModal(true);
     }
     storageWarningLevelRef.current = nextLevel;
-  }, [babyInfo, growthHistory, logs, doctorNotes, notes, milestones, recentAutoBackups]);
+  }, [babyInfo, growthHistory, logs, doctorNotes, notes, noteCategories, milestones, recentAutoBackups]);
   const persistRecentAutoBackups = entries => {
     const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
     setRecentAutoBackups(trimmed);
@@ -1392,6 +1410,9 @@ function App() {
     safeSetStorageItem('sun_baby_notes_v1', JSON.stringify(notes));
   }, [notes]);
   React.useEffect(() => {
+    safeSetStorageItem('sun_baby_note_categories_v1', JSON.stringify(noteCategories));
+  }, [noteCategories]);
+  React.useEffect(() => {
     safeSetStorageItem('sun_baby_milestones_v1', JSON.stringify(milestones));
   }, [milestones]);
   React.useEffect(() => {
@@ -1428,6 +1449,7 @@ function App() {
     doctorNotes,
     milestones,
     notes,
+    noteCategories,
     notebook: notes,
     notebookNotes: notes,
     doctorQuestions: doctorNotes
@@ -1572,6 +1594,11 @@ function App() {
     if (Array.isArray(backupData.notes) || Array.isArray(backupData.notebook) || Array.isArray(backupData.notebookNotes) || Object.prototype.hasOwnProperty.call(backupData, 'notes') || Object.prototype.hasOwnProperty.call(backupData, 'notebook') || Object.prototype.hasOwnProperty.call(backupData, 'notebookNotes')) {
       setNotes(importedNotebookNotes);
     }
+    if (Array.isArray(backupData.noteCategories)) {
+      setNoteCategories(backupData.noteCategories.filter(category => typeof category === 'string' && category.trim() && category !== '全部' && category !== '未分類'));
+    } else if (Array.isArray(backupData.notes) || Array.isArray(backupData.notebook) || Array.isArray(backupData.notebookNotes)) {
+      setNoteCategories([...new Set([...defaultNoteCategories, ...importedNotebookNotes.map(note => note.category || note.tag).filter(category => typeof category === 'string' && category.trim() && category !== '全部' && category !== '未分類')])]);
+    }
     const restoredSections = [];
     if (backupData.notes || backupData.notebook || backupData.notebookNotes) restoredSections.push('筆記本');
     if (backupData.babyInfo) restoredSections.push('今日快照');
@@ -1627,12 +1654,17 @@ function App() {
       showToast('⚠️ 請輸入筆記標題！');
       return;
     }
+    const category = noteCategory.trim();
+    if (!category || category === '全部') {
+      showToast('⚠️ 請輸入有效的標籤分類！');
+      return;
+    }
     if (editingNoteId !== null) {
       setNotes(notes.map(n => {
         if (n.id === editingNoteId) {
           return {
             ...n,
-            category: noteCategory,
+            category,
             title: noteTitle.slice(0, 30).trim(),
             content: noteContent.slice(0, 1000).trim()
           };
@@ -1653,7 +1685,7 @@ function App() {
       const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       const newNote = {
         id: Date.now(),
-        category: noteCategory,
+        category,
         title: noteTitle.slice(0, 30).trim(),
         content: noteContent.slice(0, 1000).trim(),
         createdAt: dateStr
@@ -1663,19 +1695,22 @@ function App() {
       setNoteContent('');
       showToast('📝 已新增筆記！');
     }
+    if (category !== '未分類' && !noteCategories.includes(category)) setNoteCategories([...noteCategories, category]);
   };
   const handleStartEditNote = note => {
     setEditingNoteId(note.id);
-    setNoteCategory(note.category);
+    setNoteCategory(note.category || note.tag || '未分類');
+    setIsCustomNoteCategory(false);
     setNoteTitle(note.title || '');
     setNoteContent(note.content || '');
   };
   const handleCancelEditNote = (confirmDiscard = true) => {
     const originalNote = notes.find(note => note.id === editingNoteId);
-    const hasUnsavedChanges = originalNote && (noteCategory !== originalNote.category || noteTitle !== (originalNote.title || '') || noteContent !== (originalNote.content || ''));
+    const hasUnsavedChanges = originalNote && (noteCategory !== (originalNote.category || originalNote.tag || '未分類') || noteTitle !== (originalNote.title || '') || noteContent !== (originalNote.content || ''));
     if (confirmDiscard && hasUnsavedChanges && !window.confirm('有尚未儲存的修改，確定要放棄嗎？')) return false;
     setEditingNoteId(null);
-    setNoteCategory('回診提問');
+    setNoteCategory(noteCategories.includes('回診提問') ? '回診提問' : '未分類');
+    setIsCustomNoteCategory(false);
     setNoteTitle('');
     setNoteContent('');
     return true;
@@ -1683,6 +1718,72 @@ function App() {
   const handleCloseNotesModal = () => {
     if (editingNoteId !== null && !handleCancelEditNote()) return;
     setShowNotesModal(false);
+  };
+  const handleAddNoteCategory = () => {
+    const category = newNoteCategory.trim();
+    if (!category || category === '全部' || category === '未分類') {
+      showToast('⚠️ 請輸入有效的分類名稱！');
+      return;
+    }
+    if (noteCategories.includes(category)) {
+      showToast('⚠️ 此分類已存在！');
+      return;
+    }
+    setNoteCategories([...noteCategories, category]);
+    setNewNoteCategory('');
+    showToast('✅ 已新增分類！');
+  };
+  const handleRenameNoteCategory = oldCategory => {
+    const category = editedNoteCategory.trim();
+    if (!category || category === '全部' || category === '未分類') {
+      showToast('⚠️ 請輸入有效的分類名稱！');
+      return;
+    }
+    if (category !== oldCategory && noteCategories.includes(category)) {
+      showToast('⚠️ 此分類已存在！');
+      return;
+    }
+    setNoteCategories(noteCategories.map(item => item === oldCategory ? category : item));
+    setNotes(notes.map(note => (note.category || note.tag || '未分類') === oldCategory ? {
+      ...note,
+      category
+    } : note));
+    if (noteCategory === oldCategory) setNoteCategory(category);
+    if (filterNoteCategory === oldCategory) setFilterNoteCategory(category);
+    setEditingNoteCategory(null);
+    setEditedNoteCategory('');
+    showToast('✏️ 已更新分類名稱！');
+  };
+  const handleDeleteNoteCategory = category => {
+    const matchingNotes = notes.filter(note => (note.category || note.tag || '未分類') === category);
+    const confirmMessage = matchingNotes.length > 0 ? `刪除「${category}」分類？該分類的 ${matchingNotes.length} 則筆記會保留並改歸「未分類」。` : `確定刪除「${category}」分類嗎？`;
+    if (!window.confirm(confirmMessage)) return;
+    setNoteCategories(noteCategories.filter(item => item !== category));
+    if (matchingNotes.length > 0) {
+      setNotes(notes.map(note => (note.category || note.tag || '未分類') === category ? {
+        ...note,
+        category: '未分類'
+      } : note));
+    }
+    if (noteCategory === category) {
+      setNoteCategory('未分類');
+      setIsCustomNoteCategory(false);
+    }
+    if (filterNoteCategory === category) setFilterNoteCategory('未分類');
+    if (editingNoteCategory === category) {
+      setEditingNoteCategory(null);
+      setEditedNoteCategory('');
+    }
+    showToast('🗑️ 已刪除分類，相關筆記已改歸未分類。');
+  };
+  const handleLoadDefaultNoteCategories = () => {
+    const missingCategories = defaultNoteCategories.filter(category => !noteCategories.includes(category));
+    if (missingCategories.length === 0) {
+      showToast('ℹ️ 預設分類已全部載入。');
+      return;
+    }
+    setNoteCategories([...noteCategories, ...missingCategories]);
+    showToast('✅ 已載入預設分類！');
   };
   const handleDeleteNote = id => {
     const note = notes.find(n => n.id === id);
@@ -2890,7 +2991,8 @@ function App() {
     setDoctorNotes(prevNotes => prevNotes.filter(note => note.id !== id));
     showToast('🗑️ 已刪除看診備忘');
   };
-  const filteredNotes = notes.filter(n => (filterNoteCategory === '全部' || n.category === filterNoteCategory) && (!noteSearchQuery.trim() || `${n.title || ''} ${n.content || ''}`.toLowerCase().includes(noteSearchQuery.trim().toLowerCase())));
+  const filteredNotes = notes.filter(n => (filterNoteCategory === '全部' || (n.category || n.tag || '未分類') === filterNoteCategory) && (!noteSearchQuery.trim() || `${n.title || ''} ${n.content || ''}`.toLowerCase().includes(noteSearchQuery.trim().toLowerCase())));
+  const availableNoteCategories = [...new Set(['未分類', ...noteCategories, ...notes.map(note => note.category || note.tag || '未分類')])].filter(category => category && category !== '全部');
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
   const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
   return /*#__PURE__*/React.createElement("div", {
@@ -4226,16 +4328,28 @@ function App() {
   }, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1"
   }, "標籤分類"), /*#__PURE__*/React.createElement("select", {
+    value: isCustomNoteCategory ? '' : noteCategory,
+    onChange: e => {
+      const value = e.target.value;
+      setIsCustomNoteCategory(value === '');
+      setNoteCategory(value);
+    },
+    className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+  }, availableNoteCategories.filter(category => category !== '未分類').map(category => /*#__PURE__*/React.createElement("option", {
+    key: category,
+    value: category
+  }, "【", category, "】")), /*#__PURE__*/React.createElement("option", {
+    value: "未分類"
+  }, "【未分類】"), /*#__PURE__*/React.createElement("option", {
+    value: ""
+  }, "＋ 自訂分類…")), isCustomNoteCategory && /*#__PURE__*/React.createElement("input", {
+    type: "text",
     value: noteCategory,
     onChange: e => setNoteCategory(e.target.value),
-    className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "回診提問"
-  }, "【回診提問】"), /*#__PURE__*/React.createElement("option", {
-    value: "成長大事記"
-  }, "【成長大事記】"), /*#__PURE__*/React.createElement("option", {
-    value: "其他備忘"
-  }, "【其他備忘】"))), /*#__PURE__*/React.createElement("div", {
+    placeholder: "請輸入分類名稱",
+    "aria-label": "自訂標籤分類",
+    className: "w-full mt-2 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "w-full sm:w-2/3"
   }, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
@@ -4279,11 +4393,79 @@ function App() {
     className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-amber-400"
   }), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-1 overflow-x-auto no-scrollbar"
-  }, ['全部', '回診提問', '成長大事記', '其他備忘'].map(cat => /*#__PURE__*/React.createElement("button", {
+  }, ['全部', ...availableNoteCategories].map(cat => /*#__PURE__*/React.createElement("button", {
     key: cat,
     onClick: () => setFilterNoteCategory(cat),
     className: `px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${filterNoteCategory === cat ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`
   }, cat)))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowNoteCategoryManager(!showNoteCategoryManager),
+    className: "flex-1 px-3 py-2 border border-amber-200 text-amber-800 rounded-xl text-xs font-bold hover:bg-amber-50"
+  }, showNoteCategoryManager ? '收起分類管理' : '管理分類'), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleLoadDefaultNoteCategories,
+    className: "flex-1 px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50"
+  }, "載入預設分類")), showNoteCategoryManager && /*#__PURE__*/React.createElement("div", {
+    className: "p-3 border border-amber-200 rounded-xl bg-amber-50/60 space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: newNoteCategory,
+    onChange: e => setNewNoteCategory(e.target.value),
+    onKeyDown: e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddNoteCategory();
+      }
+    },
+    placeholder: "輸入新分類名稱",
+    "aria-label": "新增分類名稱",
+    className: "flex-1 min-w-0 p-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleAddNoteCategory,
+    className: "px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold"
+  }, "新增")), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1.5"
+  }, availableNoteCategories.filter(category => category !== '未分類').map(category => /*#__PURE__*/React.createElement("div", {
+    key: category,
+    className: "flex items-center gap-2 p-2 bg-white rounded-lg border border-amber-100"
+  }, editingNoteCategory === category ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: editedNoteCategory,
+    onChange: e => setEditedNoteCategory(e.target.value),
+    "aria-label": `編輯${category}分類`,
+    className: "flex-1 min-w-0 p-1.5 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => handleRenameNoteCategory(category),
+    className: "text-amber-700 text-xs font-bold"
+  }, "儲存"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setEditingNoteCategory(null);
+      setEditedNoteCategory('');
+    },
+    className: "text-slate-500 text-xs"
+  }, "取消")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "flex-1 min-w-0 truncate text-xs text-slate-700"
+  }, category), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setEditingNoteCategory(category);
+      setEditedNoteCategory(category);
+    },
+    className: "text-amber-700 text-xs font-bold"
+  }, "編輯"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => handleDeleteNoteCategory(category),
+    className: "text-red-500 text-xs font-bold"
+  }, "刪除"))))))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 max-h-60 overflow-y-auto pr-1"
   }, filteredNotes.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50"
@@ -4294,7 +4476,7 @@ function App() {
     className: "flex items-center justify-between"
   }, /*#__PURE__*/React.createElement("span", {
     className: "px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-bold text-[10px]"
-  }, note.category), /*#__PURE__*/React.createElement("div", {
+  }, note.category || note.tag || '未分類'), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-[10px] text-slate-400"
@@ -4652,9 +4834,7 @@ function App() {
     className: "text-slate-600 leading-relaxed"
   }, "我們的網頁伺服器絕對不會收集、傳輸、或留存任何您填寫的隱私資料。整個操作過程完全在您的終端設備獨立執行，網路上沒有任何人能窺探您寶寶的成長數據。"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "『巴掌小太陽』純粹為公益與照護輔助而生。沒有會員登入、沒有廣告追蹤，更沒有資料外洩的風險。您可以百分之百放心地將這裡當作專屬您與寶寶的安心育兒避風港。尊重隱私，請安心使用。")), /*#__PURE__*/React.createElement("div", {
-    className: "text-center text-[11px] text-slate-400 font-medium pt-1"
-  }, "開發日期：2026/7/27")), /*#__PURE__*/React.createElement("div", {
+  }, "『巴掌小太陽』純粹為公益與照護輔助而生。沒有會員登入、沒有廣告追蹤，更沒有資料外洩的風險。您可以百分之百放心地將這裡當作專屬您與寶寶的安心育兒避風港。尊重隱私，請安心使用。"))), /*#__PURE__*/React.createElement("div", {
     className: "pt-3 border-t mt-3 flex justify-end"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowHelpModal(false),
