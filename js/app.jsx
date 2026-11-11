@@ -362,6 +362,7 @@
       const [useChronoAxis, setUseChronoAxis] = React.useState(false);
       const [showPercentiles, setShowPercentiles] = React.useState(true);
       const [recDate, setRecDate] = React.useState(getLocalDateString());
+      const [recTime, setRecTime] = React.useState('');
       const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
       const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
       const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
@@ -496,6 +497,7 @@
           onUpdateGrowthRecord({
             ...editingRecord,
             date: cleanDate,
+            time: recTime,
             weight: recWeight,
             height: recHeight,
             head: recHead
@@ -508,6 +510,7 @@
         onAddGrowthRecord({
           id: Date.now(),
           date: cleanDate,
+          time: recTime,
           weight: recWeight,
           height: recHeight,
           head: recHead,
@@ -588,6 +591,7 @@
                   onClick={() => {
                     setEditingRecordId(null);
                     setRecDate(getLocalDateString());
+                    setRecTime('');
                     setRecWeight(babyInfo.currentWeight || '');
                     setRecHeight(babyInfo.currentHeight || '');
                     setRecHead(babyInfo.currentHead || '');
@@ -724,7 +728,7 @@
                     <div key={rec.id} className="p-2 border rounded-xl flex items-center justify-between bg-slate-50/70 hover:bg-amber-50/50 transition-colors">
                       <div>
                         <div className="font-bold text-slate-800 flex items-center gap-2">
-                          <span>{cleanDate}</span>
+                          <span>{cleanDate}{rec.time ? ` ${rec.time}` : ''}</span>
                           <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">
                             {ages.isSet ? `${ages.correctedText} / ${ages.chronoText}` : '尚未設定生日與預產期'}
                           </span>
@@ -745,6 +749,7 @@
                         onClick={() => {
                           setEditingRecordId(rec.id);
                           setRecDate(cleanDate);
+                          setRecTime(rec.time || '');
                           setRecWeight(rec.weight || '');
                           setRecHeight(rec.height || '');
                           setRecHead(rec.head || '');
@@ -795,6 +800,15 @@
                         對應矯正月齡：{getAgesForDate(recDate, babyInfo.birthDate, babyInfo.dueDate).correctedText}
                       </div>
                     )}
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">測量時間（選填）</label>
+                    <input
+                      type="time"
+                      value={recTime}
+                      onChange={(e) => setRecTime(e.target.value)}
+                      className="w-full p-2 border rounded-xl"
+                    />
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div>
@@ -2234,13 +2248,13 @@
                           dontBreakRows: true,
                           body: [
                             [
-                              { text: '日期', style: 'tableHeader' },
+                              { text: '日期／時間', style: 'tableHeader' },
                               { text: '體重 (kg)', style: 'tableHeader' },
                               { text: '身長 (cm)', style: 'tableHeader' },
                               { text: '頭圍 (cm)', style: 'tableHeader' }
                             ],
                             ...growthHistory.map((rec) => [
-                              { text: rec.date || '—', style: 'tableCell' },
+                              { text: `${rec.date || '—'}${rec.time ? ` ${rec.time}` : ''}`, style: 'tableCell' },
                               { text: rec.weight || '—', style: 'tableCell' },
                               { text: rec.height || '—', style: 'tableCell' },
                               { text: rec.head || '—', style: 'tableCell' }
@@ -3512,7 +3526,7 @@
           </main>
 
           {/* Printable PDF Report Element (Hidden on screen, target for html2pdf) */}
-          <div id="pdf-report-content" style={{ visibility: 'visible', clipPath: 'inset(100%)' }} className="box-border w-[718px] p-8 bg-white text-slate-800 space-y-6 font-sans">
+          <div id="pdf-report-content" style={{ display: 'none' }} className="box-border w-[718px] p-8 bg-white text-slate-800 space-y-6 font-sans">
             <div className="pdf-section border-b pb-4 flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-amber-700">巴掌小太陽·早產兒門診照護與生長報告</h1>
@@ -3541,7 +3555,7 @@
                 <table className="w-full text-xs text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-100 border-b">
-                      <th className="p-2 border-b">日期</th>
+                      <th className="p-2 border-b">日期／時間</th>
                       <th className="p-2 border-b">體重 (kg)</th>
                       <th className="p-2 border-b">身長 (cm)</th>
                       <th className="p-2 border-b">頭圍 (cm)</th>
@@ -3550,7 +3564,7 @@
                   <tbody>
                     {growthHistory.map((rec) => (
                       <tr key={rec.id} className="border-b">
-                        <td className="p-2">{rec.date}</td>
+                        <td className="p-2">{rec.date}{rec.time ? ` ${rec.time}` : ''}</td>
                         <td className="p-2">{rec.weight || '—'}</td>
                         <td className="p-2">{rec.height || '—'}</td>
                         <td className="p-2">{rec.head || '—'}</td>
@@ -4081,10 +4095,9 @@
                       <h3 className="font-bold text-base text-amber-800 flex items-center gap-2">
                         筆記本
                         <span className="text-[11px] font-normal px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full">
-                          已存 {notes.length} / 1000 則
+                          筆記 {notes.length} / 1000 則
                         </span>
                       </h3>
-                      <p className="text-[11px] text-slate-400">家長快速紀錄門診問題、大事記與備忘</p>
                     </div>
                   </div>
                   <button onClick={handleCloseNotesModal} className="text-slate-400 hover:text-slate-600 p-1">
@@ -4536,7 +4549,7 @@
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
                       <Icon name="trash" className="w-4 h-4" />
-                      清除筆記
+                      清除筆記本
                     </button>
                     <button
                       onClick={handleClearGrowthData}

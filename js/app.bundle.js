@@ -413,6 +413,7 @@ const PretermGrowthChart = ({
   const [useChronoAxis, setUseChronoAxis] = React.useState(false);
   const [showPercentiles, setShowPercentiles] = React.useState(true);
   const [recDate, setRecDate] = React.useState(getLocalDateString());
+  const [recTime, setRecTime] = React.useState('');
   const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
   const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
   const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
@@ -555,6 +556,7 @@ const PretermGrowthChart = ({
       onUpdateGrowthRecord({
         ...editingRecord,
         date: cleanDate,
+        time: recTime,
         weight: recWeight,
         height: recHeight,
         head: recHead
@@ -566,6 +568,7 @@ const PretermGrowthChart = ({
     onAddGrowthRecord({
       id: Date.now(),
       date: cleanDate,
+      time: recTime,
       weight: recWeight,
       height: recHeight,
       head: recHead,
@@ -634,6 +637,7 @@ const PretermGrowthChart = ({
     onClick: () => {
       setEditingRecordId(null);
       setRecDate(getLocalDateString());
+      setRecTime('');
       setRecWeight(babyInfo.currentWeight || '');
       setRecHeight(babyInfo.currentHeight || '');
       setRecHead(babyInfo.currentHead || '');
@@ -837,7 +841,7 @@ const PretermGrowthChart = ({
       className: "p-2 border rounded-xl flex items-center justify-between bg-slate-50/70 hover:bg-amber-50/50 transition-colors"
     }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       className: "font-bold text-slate-800 flex items-center gap-2"
-    }, /*#__PURE__*/React.createElement("span", null, cleanDate), /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", null, cleanDate, rec.time ? ` ${rec.time}` : ''), /*#__PURE__*/React.createElement("span", {
       className: "text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold"
     }, ages.isSet ? `${ages.correctedText} / ${ages.chronoText}` : '尚未設定生日與預產期'), ages.inconsistent && /*#__PURE__*/React.createElement("span", {
       className: "ml-2 inline-flex items-center gap-1 text-red-600 font-bold text-[11px]"
@@ -866,6 +870,7 @@ const PretermGrowthChart = ({
       onClick: () => {
         setEditingRecordId(rec.id);
         setRecDate(cleanDate);
+        setRecTime(rec.time || '');
         setRecWeight(rec.weight || '');
         setRecHeight(rec.height || '');
         setRecHead(rec.head || '');
@@ -921,7 +926,14 @@ const PretermGrowthChart = ({
     className: "w-full p-2 border rounded-xl"
   }), babyInfo.dueDate && /*#__PURE__*/React.createElement("div", {
     className: "text-[11px] text-amber-600 mt-1 font-medium"
-  }, "對應矯正月齡：", getAgesForDate(recDate, babyInfo.birthDate, babyInfo.dueDate).correctedText)), /*#__PURE__*/React.createElement("div", {
+  }, "對應矯正月齡：", getAgesForDate(recDate, babyInfo.birthDate, babyInfo.dueDate).correctedText)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "測量時間（選填）"), /*#__PURE__*/React.createElement("input", {
+    type: "time",
+    value: recTime,
+    onChange: e => setRecTime(e.target.value),
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-3 gap-2"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
@@ -2338,7 +2350,7 @@ function App() {
               widths: ['*', '*', '*', '*'],
               dontBreakRows: true,
               body: [[{
-                text: '日期',
+                text: '日期／時間',
                 style: 'tableHeader'
               }, {
                 text: '體重 (kg)',
@@ -2350,7 +2362,7 @@ function App() {
                 text: '頭圍 (cm)',
                 style: 'tableHeader'
               }], ...growthHistory.map(rec => [{
-                text: rec.date || '—',
+                text: `${rec.date || '—'}${rec.time ? ` ${rec.time}` : ''}`,
                 style: 'tableCell'
               }, {
                 text: rec.weight || '—',
@@ -3590,8 +3602,7 @@ function App() {
   }, note.answer || '尚未記錄醫師答覆'))))))), /*#__PURE__*/React.createElement("div", {
     id: "pdf-report-content",
     style: {
-      visibility: 'visible',
-      clipPath: 'inset(100%)'
+      display: 'none'
     },
     className: "box-border w-[718px] p-8 bg-white text-slate-800 space-y-6 font-sans"
   }, /*#__PURE__*/React.createElement("div", {
@@ -3622,7 +3633,7 @@ function App() {
     className: "bg-slate-100 border-b"
   }, /*#__PURE__*/React.createElement("th", {
     className: "p-2 border-b"
-  }, "日期"), /*#__PURE__*/React.createElement("th", {
+  }, "日期／時間"), /*#__PURE__*/React.createElement("th", {
     className: "p-2 border-b"
   }, "體重 (kg)"), /*#__PURE__*/React.createElement("th", {
     className: "p-2 border-b"
@@ -3633,7 +3644,7 @@ function App() {
     className: "border-b"
   }, /*#__PURE__*/React.createElement("td", {
     className: "p-2"
-  }, rec.date), /*#__PURE__*/React.createElement("td", {
+  }, rec.date, rec.time ? ` ${rec.time}` : ''), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
   }, rec.weight || '—'), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
@@ -4297,9 +4308,7 @@ function App() {
     className: "font-bold text-base text-amber-800 flex items-center gap-2"
   }, "筆記本", /*#__PURE__*/React.createElement("span", {
     className: "text-[11px] font-normal px-2 py-0.5 bg-amber-100 text-amber-800 rounded-full"
-  }, "已存 ", notes.length, " / 1000 則")), /*#__PURE__*/React.createElement("p", {
-    className: "text-[11px] text-slate-400"
-  }, "家長快速紀錄門診問題、大事記與備忘"))), /*#__PURE__*/React.createElement("button", {
+  }, "筆記 ", notes.length, " / 1000 則")))), /*#__PURE__*/React.createElement("button", {
     onClick: handleCloseNotesModal,
     className: "text-slate-400 hover:text-slate-600 p-1"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -4669,7 +4678,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-4 h-4"
-  }), "清除筆記"), /*#__PURE__*/React.createElement("button", {
+  }), "清除筆記本"), /*#__PURE__*/React.createElement("button", {
     onClick: handleClearGrowthData,
     className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
   }, /*#__PURE__*/React.createElement(Icon, {
