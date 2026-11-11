@@ -403,11 +403,13 @@ const PretermGrowthChart = ({
   babyInfo,
   growthHistory,
   onAddGrowthRecord,
+  onUpdateGrowthRecord,
   onDeleteGrowthRecord,
   onToggleGrowthRecordPlot,
   showToast
 }) => {
   const [showRecordModal, setShowRecordModal] = React.useState(false);
+  const [editingRecordId, setEditingRecordId] = React.useState(null);
   const [useChronoAxis, setUseChronoAxis] = React.useState(false);
   const [showPercentiles, setShowPercentiles] = React.useState(true);
   const [recDate, setRecDate] = React.useState(getLocalDateString());
@@ -547,6 +549,20 @@ const PretermGrowthChart = ({
     e.preventDefault();
     if (!recDate) return;
     const cleanDate = sanitizeDateStr(recDate);
+    if (editingRecordId !== null) {
+      const editingRecord = growthHistory.find(item => item.id === editingRecordId);
+      if (!editingRecord) return;
+      onUpdateGrowthRecord({
+        ...editingRecord,
+        date: cleanDate,
+        weight: recWeight,
+        height: recHeight,
+        head: recHead
+      });
+      setEditingRecordId(null);
+      setShowRecordModal(false);
+      return;
+    }
     onAddGrowthRecord({
       id: Date.now(),
       date: cleanDate,
@@ -615,7 +631,14 @@ const PretermGrowthChart = ({
     className: "px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 transition-colors",
     title: "在 Console 中輸出 Debug 表格（只於按下時執行）"
   }, /*#__PURE__*/React.createElement("span", null, "輸出 Debug")), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setShowRecordModal(true),
+    onClick: () => {
+      setEditingRecordId(null);
+      setRecDate(getLocalDateString());
+      setRecWeight(babyInfo.currentWeight || '');
+      setRecHeight(babyInfo.currentHeight || '');
+      setRecHead(babyInfo.currentHead || '');
+      setShowRecordModal(true);
+    },
     className: "px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "plus",
@@ -840,6 +863,21 @@ const PretermGrowthChart = ({
     }, rec.height, " cm")), rec.head && /*#__PURE__*/React.createElement("span", null, "頭圍: ", /*#__PURE__*/React.createElement("b", {
       className: "text-slate-700"
     }, rec.head, " cm")))), /*#__PURE__*/React.createElement("button", {
+      onClick: () => {
+        setEditingRecordId(rec.id);
+        setRecDate(cleanDate);
+        setRecWeight(rec.weight || '');
+        setRecHeight(rec.height || '');
+        setRecHead(rec.head || '');
+        setShowRecordModal(true);
+      },
+      className: "p-1 text-slate-400 hover:text-amber-600 transition-colors",
+      title: "編輯紀錄",
+      "aria-label": "編輯紀錄"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "edit",
+      className: "w-4 h-4"
+    })), /*#__PURE__*/React.createElement("button", {
       onClick: () => onToggleGrowthRecordPlot(rec.id),
       className: `px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${rec.plotOnChart === false ? 'bg-slate-200 text-slate-500' : 'bg-amber-100 text-amber-700'}`,
       title: rec.plotOnChart === false ? '繪製此測量點' : '隱藏此測量點'
@@ -859,8 +897,11 @@ const PretermGrowthChart = ({
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-amber-700"
-  }, "新增生長數據紀錄"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => setShowRecordModal(false),
+  }, editingRecordId !== null ? '編輯生長數據紀錄' : '新增生長數據紀錄'), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setShowRecordModal(false);
+      setEditingRecordId(null);
+    },
     className: "text-slate-400 hover:text-slate-600"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "x",
@@ -886,39 +927,45 @@ const PretermGrowthChart = ({
     className: "font-bold block mb-1"
   }, "體重(kg)"), /*#__PURE__*/React.createElement("input", {
     type: "number",
+    min: "0",
     step: "0.01",
     placeholder: "3.2",
     value: recWeight,
-    onChange: e => setRecWeight(e.target.value),
+    onChange: e => setRecWeight(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value),
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "身長(cm)"), /*#__PURE__*/React.createElement("input", {
     type: "number",
+    min: "0",
     step: "0.1",
     placeholder: "48",
     value: recHeight,
-    onChange: e => setRecHeight(e.target.value),
+    onChange: e => setRecHeight(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value),
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "頭圍(cm)"), /*#__PURE__*/React.createElement("input", {
     type: "number",
+    min: "0",
     step: "0.1",
     placeholder: "34",
     value: recHead,
-    onChange: e => setRecHead(e.target.value),
+    onChange: e => setRecHead(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value),
     className: "w-full p-2 border rounded-xl"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 pt-2"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: () => setShowRecordModal(false),
+    onClick: () => {
+      setShowRecordModal(false);
+      setEditingRecordId(null);
+    },
     className: "flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold"
   }, "取消"), /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: "flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
-  }, "儲存數據"))))));
+  }, editingRecordId !== null ? '儲存修改' : '儲存數據'))))));
 };
 function App() {
   const [isNightMode, setIsNightMode] = React.useState(() => {
@@ -1716,6 +1763,14 @@ function App() {
     }));
     showToast('📈 已新增測量數據點！');
   };
+  const handleUpdateGrowthRecord = updatedRec => {
+    const cleanedRec = {
+      ...updatedRec,
+      date: sanitizeDateStr(updatedRec.date)
+    };
+    setGrowthHistory(prevHistory => prevHistory.map(item => item.id === cleanedRec.id ? cleanedRec : item));
+    showToast('💾 已更新測量紀錄！');
+  };
   const handleDeleteGrowthRecord = id => {
     setGrowthHistory(growthHistory.filter(item => item.id !== id));
     showToast('🗑️ 已刪除測量點');
@@ -1843,10 +1898,10 @@ function App() {
     showToast('🗑️ 已清除筆記');
   };
   const handleClearGrowthData = () => {
-    const confirmed = window.confirm('⚠️ 此操作將清除所有生長測量數據。確定要繼續嗎？');
+    const confirmed = window.confirm('⚠️ 此操作將刪除所有生長測量紀錄，且無法復原。確定要繼續嗎？');
     if (!confirmed) return;
     setGrowthHistory([]);
-    showToast('🗑️ 已清除生長數據');
+    showToast('🗑️ 已清除所有生長測量紀錄');
   };
   const handleClearMilestones = () => {
     const confirmed = window.confirm('⚠️ 此操作將清除所有發展里程碑。確定要繼續嗎？');
@@ -3228,6 +3283,7 @@ function App() {
     babyInfo: babyInfo,
     growthHistory: growthHistory,
     onAddGrowthRecord: handleAddGrowthRecord,
+    onUpdateGrowthRecord: handleUpdateGrowthRecord,
     onDeleteGrowthRecord: handleDeleteGrowthRecord,
     onToggleGrowthRecordPlot: handleToggleGrowthRecordPlot,
     showToast: showToast
@@ -3776,10 +3832,11 @@ function App() {
     className: "font-bold block mb-1"
   }, "餵奶量 (ml)"), /*#__PURE__*/React.createElement("input", {
     type: "number",
+    min: "0",
     required: true,
     placeholder: "例如：60",
     value: newLogAmount,
-    onChange: e => setNewLogAmount(e.target.value),
+    onChange: e => setNewLogAmount(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value),
     className: "w-full p-2 border rounded-xl"
   })), newLogType === 'solidFood' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
@@ -4436,7 +4493,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "trash",
     className: "w-4 h-4"
-  }), "清除生長數據"), /*#__PURE__*/React.createElement("button", {
+  }), "清除所有生長測量紀錄"), /*#__PURE__*/React.createElement("button", {
     onClick: handleClearMilestones,
     className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
   }, /*#__PURE__*/React.createElement(Icon, {

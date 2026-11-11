@@ -356,8 +356,9 @@
       return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
     };
 
-    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onDeleteGrowthRecord, onToggleGrowthRecordPlot, showToast }) => {
+    const PretermGrowthChart = ({ metric, gender, babyInfo, growthHistory, onAddGrowthRecord, onUpdateGrowthRecord, onDeleteGrowthRecord, onToggleGrowthRecordPlot, showToast }) => {
       const [showRecordModal, setShowRecordModal] = React.useState(false);
+      const [editingRecordId, setEditingRecordId] = React.useState(null);
       const [useChronoAxis, setUseChronoAxis] = React.useState(false);
       const [showPercentiles, setShowPercentiles] = React.useState(true);
       const [recDate, setRecDate] = React.useState(getLocalDateString());
@@ -489,6 +490,20 @@
         if (!recDate) return;
 
         const cleanDate = sanitizeDateStr(recDate);
+        if (editingRecordId !== null) {
+          const editingRecord = growthHistory.find(item => item.id === editingRecordId);
+          if (!editingRecord) return;
+          onUpdateGrowthRecord({
+            ...editingRecord,
+            date: cleanDate,
+            weight: recWeight,
+            height: recHeight,
+            head: recHead
+          });
+          setEditingRecordId(null);
+          setShowRecordModal(false);
+          return;
+        }
 
         onAddGrowthRecord({
           id: Date.now(),
@@ -570,7 +585,14 @@
                   </button>
                 )}
                 <button
-                  onClick={() => setShowRecordModal(true)}
+                  onClick={() => {
+                    setEditingRecordId(null);
+                    setRecDate(getLocalDateString());
+                    setRecWeight(babyInfo.currentWeight || '');
+                    setRecHeight(babyInfo.currentHeight || '');
+                    setRecHead(babyInfo.currentHead || '');
+                    setShowRecordModal(true);
+                  }}
                   className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
                 >
                   <Icon name="plus" className="w-3.5 h-3.5" />
@@ -719,6 +741,21 @@
                           {rec.head && <span>頭圍: <b className="text-slate-700">{rec.head} cm</b></span>}
                         </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          setEditingRecordId(rec.id);
+                          setRecDate(cleanDate);
+                          setRecWeight(rec.weight || '');
+                          setRecHeight(rec.height || '');
+                          setRecHead(rec.head || '');
+                          setShowRecordModal(true);
+                        }}
+                        className="p-1 text-slate-400 hover:text-amber-600 transition-colors"
+                        title="編輯紀錄"
+                        aria-label="編輯紀錄"
+                      >
+                        <Icon name="edit" className="w-4 h-4" />
+                      </button>
                       <button onClick={() => onToggleGrowthRecordPlot(rec.id)} className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${rec.plotOnChart === false ? 'bg-slate-200 text-slate-500' : 'bg-amber-100 text-amber-700'}`} title={rec.plotOnChart === false ? '繪製此測量點' : '隱藏此測量點'}>
                         {rec.plotOnChart === false ? '繪製此點' : '隱藏此點'}
                       </button>
@@ -736,8 +773,8 @@
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
                 <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-amber-700">新增生長數據紀錄</h3>
-                  <button onClick={() => setShowRecordModal(false)} className="text-slate-400 hover:text-slate-600">
+                  <h3 className="font-bold text-sm text-amber-700">{editingRecordId !== null ? '編輯生長數據紀錄' : '新增生長數據紀錄'}</h3>
+                  <button onClick={() => { setShowRecordModal(false); setEditingRecordId(null); }} className="text-slate-400 hover:text-slate-600">
                     <Icon name="x" className="w-4 h-4" />
                   </button>
                 </div>
@@ -762,20 +799,20 @@
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="font-bold block mb-1">體重(kg)</label>
-                      <input type="number" step="0.01" placeholder="3.2" value={recWeight} onChange={(e) => setRecWeight(e.target.value)} className="w-full p-2 border rounded-xl" />
+                      <input type="number" min="0" step="0.01" placeholder="3.2" value={recWeight} onChange={(e) => setRecWeight(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value)} className="w-full p-2 border rounded-xl" />
                     </div>
                     <div>
                       <label className="font-bold block mb-1">身長(cm)</label>
-                      <input type="number" step="0.1" placeholder="48" value={recHeight} onChange={(e) => setRecHeight(e.target.value)} className="w-full p-2 border rounded-xl" />
+                      <input type="number" min="0" step="0.1" placeholder="48" value={recHeight} onChange={(e) => setRecHeight(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value)} className="w-full p-2 border rounded-xl" />
                     </div>
                     <div>
                       <label className="font-bold block mb-1">頭圍(cm)</label>
-                      <input type="number" step="0.1" placeholder="34" value={recHead} onChange={(e) => setRecHead(e.target.value)} className="w-full p-2 border rounded-xl" />
+                      <input type="number" min="0" step="0.1" placeholder="34" value={recHead} onChange={(e) => setRecHead(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value)} className="w-full p-2 border rounded-xl" />
                     </div>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <button type="button" onClick={() => setShowRecordModal(false)} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
-                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">儲存數據</button>
+                    <button type="button" onClick={() => { setShowRecordModal(false); setEditingRecordId(null); }} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
+                    <button type="submit" className="flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">{editingRecordId !== null ? '儲存修改' : '儲存數據'}</button>
                   </div>
                 </form>
               </div>
@@ -1666,6 +1703,15 @@
         showToast('📈 已新增測量數據點！');
       };
 
+      const handleUpdateGrowthRecord = (updatedRec) => {
+        const cleanedRec = {
+          ...updatedRec,
+          date: sanitizeDateStr(updatedRec.date)
+        };
+        setGrowthHistory(prevHistory => prevHistory.map(item => item.id === cleanedRec.id ? cleanedRec : item));
+        showToast('💾 已更新測量紀錄！');
+      };
+
       const handleDeleteGrowthRecord = (id) => {
         setGrowthHistory(growthHistory.filter(item => item.id !== id));
         showToast('🗑️ 已刪除測量點');
@@ -1812,11 +1858,11 @@
 
       const handleClearGrowthData = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將清除所有生長測量數據。確定要繼續嗎？'
+          '⚠️ 此操作將刪除所有生長測量紀錄，且無法復原。確定要繼續嗎？'
         );
         if (!confirmed) return;
         setGrowthHistory([]);
-        showToast('🗑️ 已清除生長數據');
+        showToast('🗑️ 已清除所有生長測量紀錄');
       };
 
       const handleClearMilestones = () => {
@@ -3114,6 +3160,7 @@
                   babyInfo={babyInfo}
                   growthHistory={growthHistory}
                   onAddGrowthRecord={handleAddGrowthRecord}
+                  onUpdateGrowthRecord={handleUpdateGrowthRecord}
                   onDeleteGrowthRecord={handleDeleteGrowthRecord}
                   onToggleGrowthRecordPlot={handleToggleGrowthRecordPlot}
                   showToast={showToast}
@@ -3678,10 +3725,11 @@
                       <label className="font-bold block mb-1">餵奶量 (ml)</label>
                       <input
                         type="number"
+                        min="0"
                         required
                         placeholder="例如：60"
                         value={newLogAmount}
-                        onChange={(e) => setNewLogAmount(e.target.value)}
+                        onChange={(e) => setNewLogAmount(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value)}
                         className="w-full p-2 border rounded-xl"
                       />
                     </div>
@@ -4278,7 +4326,7 @@
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
                       <Icon name="trash" className="w-4 h-4" />
-                      清除生長數據
+                      清除所有生長測量紀錄
                     </button>
                     <button
                       onClick={handleClearMilestones}
