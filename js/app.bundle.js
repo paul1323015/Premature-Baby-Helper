@@ -220,7 +220,7 @@ const formatLocalDateTimeForFileName = (date = new Date()) => {
   const hours = pad(date.getHours());
   const minutes = pad(date.getMinutes());
   const seconds = pad(date.getSeconds());
-  return `${year}${month}${day}_${hours}-${minutes}-${seconds}`;
+  return `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
 };
 const getLocalDateString = (date = new Date()) => {
   const pad = value => String(value).padStart(2, '0');
@@ -1446,7 +1446,7 @@ function App() {
   }, []);
   const buildBackupFileName = (label = '備份') => {
     const safeName = (babyInfo.name || '寶寶').replace(/[\\/:*?"<>|]/g, '').trim() || '寶寶';
-    return `巴掌小太陽_照護與歷史測量${label}_${safeName}_${formatLocalDateTimeForFileName()}.json`;
+    return `巴掌小太陽_${label}_${safeName}_${formatLocalDateTimeForFileName()}.json`;
   };
   const createBackupPayload = () => ({
     version: '1.3',
