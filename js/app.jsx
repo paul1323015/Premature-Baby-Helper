@@ -857,9 +857,11 @@
       const [isExporting, setIsExporting] = React.useState(false);
 
       const [toastMsg, setToastMsg] = React.useState('');
+      const [isInfoToast, setIsInfoToast] = React.useState(false);
       const toastTimeoutRef = React.useRef(null);
 
-      const showToast = (msg) => {
+      const showToast = (msg, type = 'default') => {
+              setIsInfoToast(type === 'info');
               setToastMsg(msg);
               if (toastTimeoutRef.current !== null) {
                 clearTimeout(toastTimeoutRef.current);
@@ -1130,7 +1132,7 @@
         const key = 'sun_baby_emergency_snapshot_v1';
         const value = localStorage.getItem(key);
         const bytes = value === null ? 0 : key.length + value.length;
-        showToast(`可清理資料約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`);
+        showToast(`可清理資料約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`, 'info');
       };
 
       const cleanupStorageTemporaryData = () => {
@@ -2961,6 +2963,7 @@
                   textAlign: 'center'
                 }}
               >
+                  {isInfoToast && <Icon name="info" className="w-4 h-4 text-blue-300 shrink-0" />}
                 <span>{toastMsg}</span>
               </div>
             </div>

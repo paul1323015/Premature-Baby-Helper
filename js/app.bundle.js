@@ -1002,8 +1002,10 @@ function App() {
   const [showNotesModal, setShowNotesModal] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
   const [toastMsg, setToastMsg] = React.useState('');
+  const [isInfoToast, setIsInfoToast] = React.useState(false);
   const toastTimeoutRef = React.useRef(null);
-  const showToast = msg => {
+  const showToast = (msg, type = 'default') => {
+    setIsInfoToast(type === 'info');
     setToastMsg(msg);
     if (toastTimeoutRef.current !== null) {
       clearTimeout(toastTimeoutRef.current);
@@ -1257,7 +1259,7 @@ function App() {
     const key = 'sun_baby_emergency_snapshot_v1';
     const value = localStorage.getItem(key);
     const bytes = value === null ? 0 : key.length + value.length;
-    showToast(`可清理資料約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`);
+    showToast(`可清理資料約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`, 'info');
   };
   const cleanupStorageTemporaryData = () => {
     const confirmed = window.confirm('將清理可移除的暫存資料，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
@@ -3086,7 +3088,10 @@ function App() {
       gap: '8px',
       textAlign: 'center'
     }
-  }, /*#__PURE__*/React.createElement("span", null, toastMsg))), /*#__PURE__*/React.createElement("header", {
+  }, isInfoToast && /*#__PURE__*/React.createElement(Icon, {
+    name: "info",
+    className: "w-4 h-4 text-blue-300 shrink-0"
+  }), /*#__PURE__*/React.createElement("span", null, toastMsg))), /*#__PURE__*/React.createElement("header", {
     className: `sticky top-0 z-30 border-b overflow-hidden ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-4xl mx-auto min-w-0 px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
