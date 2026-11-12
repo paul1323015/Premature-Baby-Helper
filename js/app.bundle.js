@@ -4524,7 +4524,15 @@ function App() {
     type: "button",
     onClick: () => handleDeleteNoteCategory(category),
     className: "text-red-500 text-xs font-bold"
-  }, "刪除"))))))), /*#__PURE__*/React.createElement("div", {
+  }, "刪除"))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      if (safeSetStorageItem('sun_baby_note_categories_v1', JSON.stringify(noteCategories))) {
+        showToast('✅ 分類已儲存至此瀏覽器。');
+      }
+    },
+    className: "w-full px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600"
+  }, "儲存分類"))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 max-h-60 overflow-y-auto pr-1"
   }, filteredNotes.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50"

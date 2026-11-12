@@ -4368,6 +4368,17 @@
                             </div>
                           ))}
                         </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (safeSetStorageItem('sun_baby_note_categories_v1', JSON.stringify(noteCategories))) {
+                              showToast('✅ 分類已儲存至此瀏覽器。');
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold hover:bg-amber-600"
+                        >
+                          儲存分類
+                        </button>
                       </div>
                     )}
                   </div>
