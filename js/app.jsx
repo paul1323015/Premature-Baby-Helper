@@ -852,7 +852,6 @@
       const [showDataMgmtModal, setShowDataMgmtModal] = React.useState(false);
       const [showStorageManagerModal, setShowStorageManagerModal] = React.useState(false);
       const [storageUsage, setStorageUsage] = React.useState({ bytes: 0, percent: 0 });
-      const [cleanableStorageBytes, setCleanableStorageBytes] = React.useState(null);
       const storageWarningLevelRef = React.useRef(0);
       const [showNotesModal, setShowNotesModal] = React.useState(false);
       const [isExporting, setIsExporting] = React.useState(false);
@@ -1130,7 +1129,8 @@
       const handleCalculateCleanableStorage = () => {
         const key = 'sun_baby_emergency_snapshot_v1';
         const value = localStorage.getItem(key);
-        setCleanableStorageBytes(value === null ? 0 : key.length + value.length);
+        const bytes = value === null ? 0 : key.length + value.length;
+        showToast(`緊急還原快照可清理約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`);
       };
 
       const cleanupStorageTemporaryData = () => {
@@ -1138,7 +1138,6 @@
         if (!confirmed) return;
         localStorage.removeItem('sun_baby_emergency_snapshot_v1');
         const usage = refreshStorageUsage();
-        setCleanableStorageBytes(0);
         showToast(`🧹 已清理本機儲存空間中的緊急還原快照；正式資料與最近自動備份未變更。目前使用約 ${formatStorageUsage(usage.bytes)}。`);
       };
 
@@ -3007,7 +3006,6 @@
                 <button
                   onClick={() => {
                     refreshStorageUsage();
-                    setCleanableStorageBytes(null);
                     setShowStorageManagerModal(true);
                   }}
                   className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
@@ -4456,11 +4454,6 @@
                   >
                     計算可清理空間
                   </button>
-                  {cleanableStorageBytes !== null && (
-                    <p className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-slate-600">
-                      緊急還原快照可清理約 <b>{formatBytes(cleanableStorageBytes)}</b>；正式資料與最近自動備份不計入。
-                    </p>
-                  )}
                   <button
                     onClick={() => { setShowStorageManagerModal(false); setShowBackupModal(true); }}
                     className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold"
