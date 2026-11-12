@@ -1257,14 +1257,14 @@ function App() {
     const key = 'sun_baby_emergency_snapshot_v1';
     const value = localStorage.getItem(key);
     const bytes = value === null ? 0 : key.length + value.length;
-    showToast(`緊急還原快照可清理約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`);
+    showToast(`可清理資料約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`);
   };
   const cleanupStorageTemporaryData = () => {
-    const confirmed = window.confirm('將清理本機儲存空間中的緊急還原快照，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
+    const confirmed = window.confirm('將清理可移除的暫存資料，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
     if (!confirmed) return;
     localStorage.removeItem('sun_baby_emergency_snapshot_v1');
     const usage = refreshStorageUsage();
-    showToast(`🧹 已清理本機儲存空間中的緊急還原快照；正式資料與最近自動備份未變更。目前使用約 ${formatStorageUsage(usage.bytes)}。`);
+    showToast(`🧹 已清理可移除的暫存資料；正式資料與最近自動備份未變更。本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
   };
   const ensureStorageCapacityForNewData = () => {
     const usage = refreshStorageUsage();
