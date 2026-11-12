@@ -1127,11 +1127,11 @@
       };
 
       const cleanupStorageTemporaryData = () => {
-        const confirmed = window.confirm('將清除暫存檔案，不會刪除正式資料。確定要繼續嗎？');
+        const confirmed = window.confirm('將清除緊急還原快照，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
         if (!confirmed) return;
         localStorage.removeItem('sun_baby_emergency_snapshot_v1');
         const usage = refreshStorageUsage();
-        showToast(`🧹 已清理暫存檔案，目前使用量約 ${formatBytes(usage.bytes)}`);
+        showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。目前使用量約 ${formatBytes(usage.bytes)}。`);
       };
 
       const ensureStorageCapacityForNewData = () => {
@@ -4451,7 +4451,7 @@
                     onClick={cleanupStorageTemporaryData}
                     className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
                   >
-                    清理暫存檔案
+                    清除緊急還原快照
                   </button>
                 </div>
               </div>
