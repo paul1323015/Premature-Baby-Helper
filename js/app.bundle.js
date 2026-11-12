@@ -1250,7 +1250,7 @@ function App() {
     const usage = refreshStorageUsage();
     const size = Number((usage.bytes / 1024).toFixed(2));
     console.log("計算完成，當前大小為：", size);
-    showToast(`✅ 已重新計算，本機資料估計使用約 ${formatStorageUsage(usage.bytes)}。`);
+    showToast(`✅ 已重新計算，本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
     return usage;
   };
   const cleanupStorageTemporaryData = () => {
@@ -1258,7 +1258,7 @@ function App() {
     if (!confirmed) return;
     localStorage.removeItem('sun_baby_emergency_snapshot_v1');
     const usage = refreshStorageUsage();
-    showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。目前 Local Storage 使用量約 ${formatStorageUsage(usage.bytes)}。`);
+    showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
   };
   const ensureStorageCapacityForNewData = () => {
     const usage = refreshStorageUsage();
@@ -4567,7 +4567,7 @@ function App() {
     className: `rounded-xl border p-3 ${storageUsage.percent >= 100 ? 'bg-red-50 border-red-200 text-red-800' : storageUsage.percent >= 80 ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-slate-50 border-slate-200 text-slate-700'}`
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold"
-  }, "Local Storage 使用量"), /*#__PURE__*/React.createElement("p", {
+  }, "本機儲存空間（Local Storage）"), /*#__PURE__*/React.createElement("p", {
     className: "text-lg font-black mt-1"
   }, formatStorageUsage(storageUsage.bytes), " / 5 MB（約 ", storageUsage.percent, "%）"), /*#__PURE__*/React.createElement("p", {
     className: "text-[10px] leading-relaxed mt-1"
