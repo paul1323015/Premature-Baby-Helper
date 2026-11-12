@@ -2963,7 +2963,7 @@
                   textAlign: 'center'
                 }}
               >
-                  {isInfoToast && <Icon name="info" className="w-4 h-4 text-blue-300 shrink-0" />}
+                  {isInfoToast && <span className="shrink-0" aria-hidden="true">ℹ️</span>}
                 <span>{toastMsg}</span>
               </div>
             </div>

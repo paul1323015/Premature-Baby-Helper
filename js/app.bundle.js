@@ -3088,10 +3088,10 @@ function App() {
       gap: '8px',
       textAlign: 'center'
     }
-  }, isInfoToast && /*#__PURE__*/React.createElement(Icon, {
-    name: "info",
-    className: "w-4 h-4 text-blue-300 shrink-0"
-  }), /*#__PURE__*/React.createElement("span", null, toastMsg))), /*#__PURE__*/React.createElement("header", {
+  }, isInfoToast && /*#__PURE__*/React.createElement("span", {
+    className: "shrink-0",
+    "aria-hidden": "true"
+  }, "ℹ️"), /*#__PURE__*/React.createElement("span", null, toastMsg))), /*#__PURE__*/React.createElement("header", {
     className: `sticky top-0 z-30 border-b overflow-hidden ${isNightMode ? 'bg-slate-900 border-slate-800' : 'bg-amber-500 text-white border-amber-600'}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "max-w-4xl mx-auto min-w-0 px-3 py-3 sm:px-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
