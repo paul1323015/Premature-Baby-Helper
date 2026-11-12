@@ -1258,7 +1258,7 @@ function App() {
     if (!confirmed) return;
     localStorage.removeItem('sun_baby_emergency_snapshot_v1');
     const usage = refreshStorageUsage();
-    showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。目前使用量約 ${formatBytes(usage.bytes)}。`);
+    showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。目前 Local Storage 使用量約 ${formatStorageUsage(usage.bytes)}。`);
   };
   const ensureStorageCapacityForNewData = () => {
     const usage = refreshStorageUsage();
