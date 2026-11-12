@@ -998,6 +998,7 @@ function App() {
     bytes: 0,
     percent: 0
   });
+  const [cleanableStorageBytes, setCleanableStorageBytes] = React.useState(null);
   const storageWarningLevelRef = React.useRef(0);
   const [showNotesModal, setShowNotesModal] = React.useState(false);
   const [isExporting, setIsExporting] = React.useState(false);
@@ -1253,12 +1254,18 @@ function App() {
     showToast(`✅ 已重新計算，本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
     return usage;
   };
+  const handleCalculateCleanableStorage = () => {
+    const key = 'sun_baby_emergency_snapshot_v1';
+    const value = localStorage.getItem(key);
+    setCleanableStorageBytes(value === null ? 0 : key.length + value.length);
+  };
   const cleanupStorageTemporaryData = () => {
-    const confirmed = window.confirm('將清除緊急還原快照，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
+    const confirmed = window.confirm('將清理本機儲存空間中的緊急還原快照，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
     if (!confirmed) return;
     localStorage.removeItem('sun_baby_emergency_snapshot_v1');
     const usage = refreshStorageUsage();
-    showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
+    setCleanableStorageBytes(0);
+    showToast(`🧹 已清理本機儲存空間中的緊急還原快照；正式資料與最近自動備份未變更。目前使用約 ${formatStorageUsage(usage.bytes)}。`);
   };
   const ensureStorageCapacityForNewData = () => {
     const usage = refreshStorageUsage();
@@ -3129,10 +3136,11 @@ function App() {
   }, "資料管理")), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       refreshStorageUsage();
+      setCleanableStorageBytes(null);
       setShowStorageManagerModal(true);
     },
     className: "px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0",
-    title: "應用程式儲存空間管理"
+    title: "儲存空間管理"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "hardDrive",
     className: "w-4 h-4"
@@ -4557,7 +4565,7 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "hardDrive",
     className: "w-4 h-4"
-  }), "應用程式儲存空間管理"), /*#__PURE__*/React.createElement("button", {
+  }), "儲存空間管理"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowStorageManagerModal(false),
     className: "text-slate-400 hover:text-slate-600"
   }, /*#__PURE__*/React.createElement(Icon, {
@@ -4579,6 +4587,11 @@ function App() {
     onClick: handleRefreshStorageUsage,
     className: "w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold"
   }, "重新計算目前使用量"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleCalculateCleanableStorage,
+    className: "w-full py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold"
+  }, "計算可清理空間"), cleanableStorageBytes !== null && /*#__PURE__*/React.createElement("p", {
+    className: "rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-slate-600"
+  }, "緊急還原快照可清理約 ", /*#__PURE__*/React.createElement("b", null, formatBytes(cleanableStorageBytes)), "；正式資料與最近自動備份不計入。"), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setShowStorageManagerModal(false);
       setShowBackupModal(true);
@@ -4587,7 +4600,7 @@ function App() {
   }, "先下載完整備份"), /*#__PURE__*/React.createElement("button", {
     onClick: cleanupStorageTemporaryData,
     className: "w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
-  }, "清除緊急還原快照")))), showStorageRecoveryModal && /*#__PURE__*/React.createElement("div", {
+  }, "清理本機儲存空間")))), showStorageRecoveryModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
   }, /*#__PURE__*/React.createElement("div", {
     className: "w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4"

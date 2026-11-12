@@ -852,6 +852,7 @@
       const [showDataMgmtModal, setShowDataMgmtModal] = React.useState(false);
       const [showStorageManagerModal, setShowStorageManagerModal] = React.useState(false);
       const [storageUsage, setStorageUsage] = React.useState({ bytes: 0, percent: 0 });
+      const [cleanableStorageBytes, setCleanableStorageBytes] = React.useState(null);
       const storageWarningLevelRef = React.useRef(0);
       const [showNotesModal, setShowNotesModal] = React.useState(false);
       const [isExporting, setIsExporting] = React.useState(false);
@@ -1126,12 +1127,19 @@
         return usage;
       };
 
+      const handleCalculateCleanableStorage = () => {
+        const key = 'sun_baby_emergency_snapshot_v1';
+        const value = localStorage.getItem(key);
+        setCleanableStorageBytes(value === null ? 0 : key.length + value.length);
+      };
+
       const cleanupStorageTemporaryData = () => {
-        const confirmed = window.confirm('將清除緊急還原快照，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
+        const confirmed = window.confirm('將清理本機儲存空間中的緊急還原快照，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
         if (!confirmed) return;
         localStorage.removeItem('sun_baby_emergency_snapshot_v1');
         const usage = refreshStorageUsage();
-        showToast(`🧹 已清除緊急還原快照；正式資料與最近自動備份未變更。本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
+        setCleanableStorageBytes(0);
+        showToast(`🧹 已清理本機儲存空間中的緊急還原快照；正式資料與最近自動備份未變更。目前使用約 ${formatStorageUsage(usage.bytes)}。`);
       };
 
       const ensureStorageCapacityForNewData = () => {
@@ -2999,10 +3007,11 @@
                 <button
                   onClick={() => {
                     refreshStorageUsage();
+                    setCleanableStorageBytes(null);
                     setShowStorageManagerModal(true);
                   }}
                   className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm flex-shrink-0"
-                  title="應用程式儲存空間管理"
+                  title="儲存空間管理"
                 >
                   <Icon name="hardDrive" className="w-4 h-4" />
                   <span className="hidden md:inline">儲存空間</span>
@@ -4416,7 +4425,7 @@
                 <div className="flex justify-between items-center border-b pb-2">
                   <h3 className="font-bold text-sm text-amber-700 flex items-center gap-1.5">
                     <Icon name="hardDrive" className="w-4 h-4" />
-                    應用程式儲存空間管理
+                    儲存空間管理
                   </h3>
                   <button onClick={() => setShowStorageManagerModal(false)} className="text-slate-400 hover:text-slate-600">
                     <Icon name="x" className="w-4 h-4" />
@@ -4442,6 +4451,17 @@
                     重新計算目前使用量
                   </button>
                   <button
+                    onClick={handleCalculateCleanableStorage}
+                    className="w-full py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold"
+                  >
+                    計算可清理空間
+                  </button>
+                  {cleanableStorageBytes !== null && (
+                    <p className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-center text-slate-600">
+                      緊急還原快照可清理約 <b>{formatBytes(cleanableStorageBytes)}</b>；正式資料與最近自動備份不計入。
+                    </p>
+                  )}
+                  <button
                     onClick={() => { setShowStorageManagerModal(false); setShowBackupModal(true); }}
                     className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold"
                   >
@@ -4451,7 +4471,7 @@
                     onClick={cleanupStorageTemporaryData}
                     className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
                   >
-                    清除緊急還原快照
+                    清理本機儲存空間
                   </button>
                 </div>
               </div>
