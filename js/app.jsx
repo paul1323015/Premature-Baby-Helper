@@ -1742,14 +1742,37 @@
         showToast('🗑️ 已刪除分類，相關筆記已改歸未分類。');
       };
 
-      const handleLoadDefaultNoteCategories = () => {
-        const missingCategories = defaultNoteCategories.filter(category => !noteCategories.includes(category));
-        if (missingCategories.length === 0) {
-          showToast('ℹ️ 預設分類已全部載入。');
+      const handleRestoreDefaultNoteCategories = () => {
+        const hasCustomNotes = notes.some(note => !defaultNoteCategories.includes(note.category || note.tag || '未分類'));
+        const hasCustomCategories = noteCategories.some(category => !defaultNoteCategories.includes(category));
+        if (!hasCustomNotes && !hasCustomCategories && defaultNoteCategories.every(category => noteCategories.includes(category))) {
+          showToast('ℹ️ 目前已是預設分類。');
           return;
         }
-        setNoteCategories([...noteCategories, ...missingCategories]);
-        showToast('✅ 已載入預設分類！');
+        const confirmed = window.confirm(
+          hasCustomNotes
+            ? '還原預設分類並刪除所有自訂分類？使用自訂分類的筆記會保留，並改歸「未分類」。'
+            : '還原為預設分類並刪除所有自訂分類？'
+        );
+        if (!confirmed) return;
+        setNoteCategories(defaultNoteCategories);
+        if (hasCustomNotes) {
+          setNotes(notes.map(note => (
+            defaultNoteCategories.includes(note.category || note.tag || '未分類')
+              ? note
+              : { ...note, category: '未分類' }
+          )));
+        }
+        if (!defaultNoteCategories.includes(noteCategory)) {
+          setNoteCategory('未分類');
+          setIsCustomNoteCategory(false);
+        }
+        if (filterNoteCategory !== '全部' && !defaultNoteCategories.includes(filterNoteCategory)) {
+          setFilterNoteCategory('未分類');
+        }
+        setEditingNoteCategory(null);
+        setEditedNoteCategory('');
+        showToast('✅ 已還原預設分類，自訂分類已清除。');
       };
 
       const handleDeleteNote = (id) => {
@@ -1976,11 +1999,18 @@
 
       const handleClearNotes = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將清除所有筆記，但不會刪除看診備忘。確定要繼續嗎？'
+          '⚠️ 此操作將清除所有筆記與自訂分類，並還原預設分類；不會刪除看診備忘。確定要繼續嗎？'
         );
         if (!confirmed) return;
         setNotes([]);
-        showToast('🗑️ 已清除筆記');
+        setNoteCategories(defaultNoteCategories);
+        setNoteCategory('回診提問');
+        setIsCustomNoteCategory(false);
+        setFilterNoteCategory('全部');
+        setEditingNoteId(null);
+        setNoteTitle('');
+        setNoteContent('');
+        showToast('🗑️ 已清除筆記本並還原預設分類');
       };
 
       const handleClearGrowthData = () => {
@@ -4246,10 +4276,10 @@
                       </button>
                       <button
                         type="button"
-                        onClick={handleLoadDefaultNoteCategories}
+                        onClick={handleRestoreDefaultNoteCategories}
                         className="flex-1 px-3 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50"
                       >
-                        載入預設分類
+                        還原預設分類
                       </button>
                     </div>
                     {showNoteCategoryManager && (
