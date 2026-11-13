@@ -1920,7 +1920,7 @@
           showToast('ℹ️ 預設發展里程碑都已存在');
           return;
         }
-        if (!window.confirm(`將載入 ${missingDefaults.length} 項預設發展里程碑，不會刪除現有自訂項目。確定要繼續嗎？`)) return;
+        if (!window.confirm(`將補回 ${missingDefaults.length} 項目前缺少的預設發展里程碑，不會覆蓋或刪除現有項目。確定要繼續嗎？`)) return;
         if (!ensureStorageCapacityForNewData()) return;
         setMilestones([...milestones, ...missingDefaults]);
         showToast(`🌱 已載入 ${missingDefaults.length} 項預設發展里程碑`);
@@ -3360,14 +3360,14 @@
                         onClick={handleRestoreDefaultMilestones}
                         className="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold"
                       >
-                        載入預設
+                        還原預設項目
                       </button>
                       <button
                         onClick={() => openMilestoneEditor()}
                         className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1"
                       >
                         <Icon name="plus" className="w-3 h-3" />
-                        新增
+                        新增發展里程碑
                       </button>
                     </div>
                   </div>
