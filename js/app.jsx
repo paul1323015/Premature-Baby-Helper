@@ -1132,7 +1132,10 @@
         const key = 'sun_baby_emergency_snapshot_v1';
         const value = localStorage.getItem(key);
         const bytes = value === null ? 0 : key.length + value.length;
-        showToast(`可清理資料約 ${formatBytes(bytes)}；正式資料與最近自動備份不計入。`, 'info');
+        const message = bytes === 0
+          ? '目前沒有可清理的暫存資料。正式資料與最近的自動備份會保留。'
+          : `可清理的暫存資料約 ${formatBytes(bytes)}。正式資料與最近的自動備份會保留。`;
+        showToast(message, 'info');
       };
 
       const cleanupStorageTemporaryData = () => {
