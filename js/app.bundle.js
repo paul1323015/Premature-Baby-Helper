@@ -1153,6 +1153,12 @@ function App() {
     }
     return [];
   });
+  const [doctorVisitSummary, setDoctorVisitSummary] = React.useState(() => {
+    const saved = localStorage.getItem('sun_baby_doctor_visit_summary_v1');
+    return typeof saved === 'string' ? saved : '';
+  });
+  const [doctorVisitSummaryDraft, setDoctorVisitSummaryDraft] = React.useState(doctorVisitSummary);
+  const [isEditingDoctorVisitSummary, setIsEditingDoctorVisitSummary] = React.useState(false);
   const [notes, setNotes] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_notes_v1');
     if (saved) {
@@ -1224,7 +1230,7 @@ function App() {
   const [pastedJson, setPastedJson] = React.useState('');
   const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
   const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
-  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', 'sun_baby_night_mode_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
+  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_doctor_visit_summary_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', 'sun_baby_night_mode_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
   const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
   const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
   const calculateStorageUsage = () => {
@@ -1305,7 +1311,7 @@ function App() {
       setShowStorageManagerModal(true);
     }
     storageWarningLevelRef.current = nextLevel;
-  }, [babyInfo, growthHistory, logs, doctorNotes, notes, noteCategories, milestones, recentAutoBackups]);
+  }, [babyInfo, growthHistory, logs, doctorNotes, doctorVisitSummary, notes, noteCategories, milestones, recentAutoBackups]);
   const persistRecentAutoBackups = entries => {
     const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
     setRecentAutoBackups(trimmed);
@@ -1428,6 +1434,9 @@ function App() {
     safeSetStorageItem('sun_baby_doctor_notes_v1', JSON.stringify(doctorNotes));
   }, [doctorNotes]);
   React.useEffect(() => {
+    safeSetStorageItem('sun_baby_doctor_visit_summary_v1', doctorVisitSummary);
+  }, [doctorVisitSummary]);
+  React.useEffect(() => {
     safeSetStorageItem('sun_baby_notes_v1', JSON.stringify(notes));
   }, [notes]);
   React.useEffect(() => {
@@ -1468,6 +1477,7 @@ function App() {
     solidFoodLogs,
     nightMode: isNightMode,
     doctorNotes,
+    doctorVisitSummary,
     milestones,
     notes,
     noteCategories,
@@ -1610,6 +1620,10 @@ function App() {
     } else if (Object.prototype.hasOwnProperty.call(backupData, 'doctorNotes') || Object.prototype.hasOwnProperty.call(backupData, 'doctorQuestions')) {
       setDoctorNotes([]);
     }
+    const restoredDoctorVisitSummary = typeof backupData.doctorVisitSummary === 'string' ? backupData.doctorVisitSummary : '';
+    setDoctorVisitSummary(restoredDoctorVisitSummary);
+    setDoctorVisitSummaryDraft(restoredDoctorVisitSummary);
+    setIsEditingDoctorVisitSummary(false);
     if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
     const importedNotebookNotes = Array.isArray(backupData.notes) ? backupData.notes : Array.isArray(backupData.notebook) ? backupData.notebook : Array.isArray(backupData.notebookNotes) ? backupData.notebookNotes : [];
     if (Array.isArray(backupData.notes) || Array.isArray(backupData.notebook) || Array.isArray(backupData.notebookNotes) || Object.prototype.hasOwnProperty.call(backupData, 'notes') || Object.prototype.hasOwnProperty.call(backupData, 'notebook') || Object.prototype.hasOwnProperty.call(backupData, 'notebookNotes')) {
@@ -1628,7 +1642,7 @@ function App() {
     if (backupData.careReminders) restoredSections.push('照護提醒');
     if (backupData.vaccinationLogs) restoredSections.push('疫苗接種紀錄');
     if (backupData.solidFoodLogs) restoredSections.push('副食品試吃紀錄');
-    if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
+    if (backupData.doctorNotes || backupData.doctorQuestions || Object.prototype.hasOwnProperty.call(backupData, 'doctorVisitSummary')) restoredSections.push('看診備忘');
     setShowBackupModal(false);
     setPastedJson('');
     showToast('✅ 備份檔案已還原成功！');
@@ -1990,6 +2004,9 @@ function App() {
     setVaccinationLogs([]);
     setSolidFoodLogs([]);
     setDoctorNotes([]);
+    setDoctorVisitSummary('');
+    setDoctorVisitSummaryDraft('');
+    setIsEditingDoctorVisitSummary(false);
     setNotes([]);
     setNoteCategories(defaultNoteCategories);
     setNoteCategory('回診提問');
@@ -2040,9 +2057,12 @@ function App() {
     showToast('🧹 已清除寶寶基本資料');
   };
   const handleClearDoctorNotes = () => {
-    const confirmed = window.confirm('⚠️ 此操作將清除所有看診備忘，但不會刪除筆記。確定要繼續嗎？');
+    const confirmed = window.confirm('⚠️ 此操作將清除看診摘要與所有看診備忘，但不會刪除筆記。確定要繼續嗎？');
     if (!confirmed) return;
     setDoctorNotes([]);
+    setDoctorVisitSummary('');
+    setDoctorVisitSummaryDraft('');
+    setIsEditingDoctorVisitSummary(false);
     showToast('🗑️ 已清除看診備忘');
   };
   const handleClearNotes = () => {
@@ -2508,6 +2528,19 @@ function App() {
               vLineWidth: () => 0.5
             },
             margin: [0, 0, 0, 14]
+          }]
+        }, {
+          stack: [{
+            text: '看診摘要',
+            style: 'sectionTitle'
+          }, doctorVisitSummary.trim() ? {
+            text: doctorVisitSummary.trim(),
+            style: 'listItem',
+            margin: [0, 0, 0, 10]
+          } : {
+            text: '尚未填寫',
+            style: 'emptyState',
+            margin: [0, 0, 0, 10]
           }]
         }, {
           stack: [{
@@ -3051,6 +3084,33 @@ function App() {
     setDoctorNotes(prevNotes => prevNotes.filter(note => note.id !== id));
     showToast('🗑️ 已刪除看診備忘');
   };
+  const handleStartEditDoctorVisitSummary = () => {
+    setDoctorVisitSummaryDraft(doctorVisitSummary);
+    setIsEditingDoctorVisitSummary(true);
+  };
+  const handleCancelEditDoctorVisitSummary = () => {
+    setDoctorVisitSummaryDraft(doctorVisitSummary);
+    setIsEditingDoctorVisitSummary(false);
+  };
+  const handleSaveDoctorVisitSummary = () => {
+    const summary = doctorVisitSummaryDraft.trim();
+    if (!summary) {
+      showToast('⚠️ 請先輸入看診摘要內容');
+      return;
+    }
+    if (!doctorVisitSummary.trim() && !ensureStorageCapacityForNewData()) return;
+    setDoctorVisitSummary(summary);
+    setDoctorVisitSummaryDraft(summary);
+    setIsEditingDoctorVisitSummary(false);
+    showToast('💾 已儲存看診摘要');
+  };
+  const handleDeleteDoctorVisitSummary = () => {
+    if (!window.confirm('確定要刪除看診摘要嗎？')) return;
+    setDoctorVisitSummary('');
+    setDoctorVisitSummaryDraft('');
+    setIsEditingDoctorVisitSummary(false);
+    showToast('🗑️ 已刪除看診摘要');
+  };
   const filteredNotes = notes.filter(n => (filterNoteCategory === '全部' || (n.category || n.tag || '未分類') === filterNoteCategory) && (!noteSearchQuery.trim() || `${n.title || ''} ${n.content || ''}`.toLowerCase().includes(noteSearchQuery.trim().toLowerCase())));
   const availableNoteCategories = [...new Set(['未分類', ...noteCategories, ...notes.map(note => note.category || note.tag || '未分類')])].filter(category => category && category !== '全部');
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
@@ -3553,7 +3613,47 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "stethoscope",
     className: "text-amber-500"
-  }), " 看診備忘與門診提問")), /*#__PURE__*/React.createElement("form", {
+  }), " 看診備忘與門診提問")), /*#__PURE__*/React.createElement("div", {
+    className: "p-3 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start justify-between gap-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1"
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: "font-bold text-xs text-slate-700"
+  }, "看診摘要"), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-slate-500"
+  }, "整理近期狀況、變化及想與醫師討論的重點。")), !isEditingDoctorVisitSummary && /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleStartEditDoctorVisitSummary,
+    className: "text-amber-600 hover:text-amber-800 font-bold text-xs"
+  }, doctorVisitSummary.trim() ? '編輯' : '新增看診摘要'), doctorVisitSummary.trim() && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleDeleteDoctorVisitSummary,
+    className: "text-slate-400 hover:text-red-500 font-bold text-xs"
+  }, "刪除"))), isEditingDoctorVisitSummary ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("textarea", {
+    id: "doctor-visit-summary",
+    value: doctorVisitSummaryDraft,
+    onChange: e => setDoctorVisitSummaryDraft(e.target.value),
+    placeholder: "寫下本次看診想說明的重點...",
+    rows: 4,
+    className: "w-full p-2.5 border rounded-xl text-xs resize-y bg-white"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex justify-end gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleCancelEditDoctorVisitSummary,
+    className: "px-3 py-1.5 border rounded-lg text-xs font-bold text-slate-600"
+  }, "取消"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleSaveDoctorVisitSummary,
+    disabled: !doctorVisitSummaryDraft.trim(),
+    className: "px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+  }, "儲存"))) : /*#__PURE__*/React.createElement("p", {
+    className: `text-xs whitespace-pre-wrap ${doctorVisitSummary.trim() ? 'text-slate-700' : 'text-slate-400'}`
+  }, doctorVisitSummary.trim() || '尚未填寫')), /*#__PURE__*/React.createElement("form", {
     onSubmit: handleAddDoctorNote,
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("input", {
@@ -3735,6 +3835,12 @@ function App() {
   }, formatCareLogDetail(log)), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
   }, log.amount !== null && log.amount !== undefined && log.amount !== '' ? String(log.amount) : '—')))))), /*#__PURE__*/React.createElement("div", {
+    className: "pdf-section space-y-2"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold text-sm text-slate-800 border-b pb-1"
+  }, "看診摘要"), /*#__PURE__*/React.createElement("p", {
+    className: `text-xs whitespace-pre-wrap ${doctorVisitSummary.trim() ? 'text-slate-700' : 'text-slate-400'}`
+  }, doctorVisitSummary.trim() || '尚未填寫')), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-slate-800 border-b pb-1"

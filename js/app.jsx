@@ -1015,6 +1015,12 @@
         }
         return [];
       });
+      const [doctorVisitSummary, setDoctorVisitSummary] = React.useState(() => {
+        const saved = localStorage.getItem('sun_baby_doctor_visit_summary_v1');
+        return typeof saved === 'string' ? saved : '';
+      });
+      const [doctorVisitSummaryDraft, setDoctorVisitSummaryDraft] = React.useState(doctorVisitSummary);
+      const [isEditingDoctorVisitSummary, setIsEditingDoctorVisitSummary] = React.useState(false);
 
       const [notes, setNotes] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_notes_v1');
@@ -1088,6 +1094,7 @@
         'sun_baby_vaccination_logs_v1',
         'sun_baby_solid_food_logs_v1',
         'sun_baby_doctor_notes_v1',
+        'sun_baby_doctor_visit_summary_v1',
         'sun_baby_notes_v1',
         'sun_baby_note_categories_v1',
         'sun_baby_milestones_v1',
@@ -1185,7 +1192,7 @@
           setShowStorageManagerModal(true);
         }
         storageWarningLevelRef.current = nextLevel;
-      }, [babyInfo, growthHistory, logs, doctorNotes, notes, noteCategories, milestones, recentAutoBackups]);
+      }, [babyInfo, growthHistory, logs, doctorNotes, doctorVisitSummary, notes, noteCategories, milestones, recentAutoBackups]);
 
       const persistRecentAutoBackups = (entries) => {
         const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
@@ -1328,6 +1335,10 @@
       }, [doctorNotes]);
 
       React.useEffect(() => {
+        safeSetStorageItem('sun_baby_doctor_visit_summary_v1', doctorVisitSummary);
+      }, [doctorVisitSummary]);
+
+      React.useEffect(() => {
         safeSetStorageItem('sun_baby_notes_v1', JSON.stringify(notes));
       }, [notes]);
 
@@ -1370,6 +1381,7 @@
         solidFoodLogs,
         nightMode: isNightMode,
         doctorNotes,
+        doctorVisitSummary,
         milestones,
         notes,
         noteCategories,
@@ -1536,6 +1548,10 @@
         } else if (Object.prototype.hasOwnProperty.call(backupData, 'doctorNotes') || Object.prototype.hasOwnProperty.call(backupData, 'doctorQuestions')) {
           setDoctorNotes([]);
         }
+        const restoredDoctorVisitSummary = typeof backupData.doctorVisitSummary === 'string' ? backupData.doctorVisitSummary : '';
+        setDoctorVisitSummary(restoredDoctorVisitSummary);
+        setDoctorVisitSummaryDraft(restoredDoctorVisitSummary);
+        setIsEditingDoctorVisitSummary(false);
 
         if (Array.isArray(backupData.milestones)) setMilestones(backupData.milestones);
 
@@ -1567,7 +1583,7 @@
         if (backupData.careReminders) restoredSections.push('照護提醒');
         if (backupData.vaccinationLogs) restoredSections.push('疫苗接種紀錄');
         if (backupData.solidFoodLogs) restoredSections.push('副食品試吃紀錄');
-        if (backupData.doctorNotes || backupData.doctorQuestions) restoredSections.push('看診備忘');
+        if (backupData.doctorNotes || backupData.doctorQuestions || Object.prototype.hasOwnProperty.call(backupData, 'doctorVisitSummary')) restoredSections.push('看診備忘');
 
         setShowBackupModal(false);
         setPastedJson('');
@@ -1955,6 +1971,9 @@
         setVaccinationLogs([]);
         setSolidFoodLogs([]);
         setDoctorNotes([]);
+        setDoctorVisitSummary('');
+        setDoctorVisitSummaryDraft('');
+        setIsEditingDoctorVisitSummary(false);
         setNotes([]);
         setNoteCategories(defaultNoteCategories);
         setNoteCategory('回診提問');
@@ -2016,10 +2035,13 @@
 
       const handleClearDoctorNotes = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將清除所有看診備忘，但不會刪除筆記。確定要繼續嗎？'
+          '⚠️ 此操作將清除看診摘要與所有看診備忘，但不會刪除筆記。確定要繼續嗎？'
         );
         if (!confirmed) return;
         setDoctorNotes([]);
+        setDoctorVisitSummary('');
+        setDoctorVisitSummaryDraft('');
+        setIsEditingDoctorVisitSummary(false);
         showToast('🗑️ 已清除看診備忘');
       };
 
@@ -2377,6 +2399,14 @@
                         },
                         margin: [0, 0, 0, 14]
                       }
+                ]
+              },
+              {
+                stack: [
+                  { text: '看診摘要', style: 'sectionTitle' },
+                  doctorVisitSummary.trim()
+                    ? { text: doctorVisitSummary.trim(), style: 'listItem', margin: [0, 0, 0, 10] }
+                    : { text: '尚未填寫', style: 'emptyState', margin: [0, 0, 0, 10] }
                 ]
               },
               {
@@ -2911,6 +2941,37 @@
         if (editingDoctorNoteId === id) handleCancelEditDoctorNote();
         setDoctorNotes(prevNotes => prevNotes.filter(note => note.id !== id));
         showToast('🗑️ 已刪除看診備忘');
+      };
+
+      const handleStartEditDoctorVisitSummary = () => {
+        setDoctorVisitSummaryDraft(doctorVisitSummary);
+        setIsEditingDoctorVisitSummary(true);
+      };
+
+      const handleCancelEditDoctorVisitSummary = () => {
+        setDoctorVisitSummaryDraft(doctorVisitSummary);
+        setIsEditingDoctorVisitSummary(false);
+      };
+
+      const handleSaveDoctorVisitSummary = () => {
+        const summary = doctorVisitSummaryDraft.trim();
+        if (!summary) {
+          showToast('⚠️ 請先輸入看診摘要內容');
+          return;
+        }
+        if (!doctorVisitSummary.trim() && !ensureStorageCapacityForNewData()) return;
+        setDoctorVisitSummary(summary);
+        setDoctorVisitSummaryDraft(summary);
+        setIsEditingDoctorVisitSummary(false);
+        showToast('💾 已儲存看診摘要');
+      };
+
+      const handleDeleteDoctorVisitSummary = () => {
+        if (!window.confirm('確定要刪除看診摘要嗎？')) return;
+        setDoctorVisitSummary('');
+        setDoctorVisitSummaryDraft('');
+        setIsEditingDoctorVisitSummary(false);
+        showToast('🗑️ 已刪除看診摘要');
       };
 
       const filteredNotes = notes.filter(n => (
@@ -3469,6 +3530,67 @@
                     <Icon name="stethoscope" className="text-amber-500" /> 看診備忘與門診提問
                   </h3>
                 </div>
+                <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-xs text-slate-700">看診摘要</h4>
+                      <p className="text-[11px] text-slate-500">整理近期狀況、變化及想與醫師討論的重點。</p>
+                    </div>
+                    {!isEditingDoctorVisitSummary && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={handleStartEditDoctorVisitSummary}
+                          className="text-amber-600 hover:text-amber-800 font-bold text-xs"
+                        >
+                          {doctorVisitSummary.trim() ? '編輯' : '新增看診摘要'}
+                        </button>
+                        {doctorVisitSummary.trim() && (
+                          <button
+                            type="button"
+                            onClick={handleDeleteDoctorVisitSummary}
+                            className="text-slate-400 hover:text-red-500 font-bold text-xs"
+                          >
+                            刪除
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {isEditingDoctorVisitSummary ? (
+                    <>
+                      <textarea
+                        id="doctor-visit-summary"
+                        value={doctorVisitSummaryDraft}
+                        onChange={(e) => setDoctorVisitSummaryDraft(e.target.value)}
+                        placeholder="寫下本次看診想說明的重點..."
+                        rows={4}
+                        className="w-full p-2.5 border rounded-xl text-xs resize-y bg-white"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={handleCancelEditDoctorVisitSummary}
+                          className="px-3 py-1.5 border rounded-lg text-xs font-bold text-slate-600"
+                        >
+                          取消
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveDoctorVisitSummary}
+                          disabled={!doctorVisitSummaryDraft.trim()}
+                          className="px-3 py-1.5 bg-amber-500 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                        >
+                          儲存
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className={`text-xs whitespace-pre-wrap ${doctorVisitSummary.trim() ? 'text-slate-700' : 'text-slate-400'}`}>
+                      {doctorVisitSummary.trim() || '尚未填寫'}
+                    </p>
+                  )}
+                </div>
                 <form onSubmit={handleAddDoctorNote} className="space-y-2">
                   <input
                     type="date"
@@ -3660,6 +3782,13 @@
                   </tbody>
                 </table>
               )}
+            </div>
+
+            <div className="pdf-section space-y-2">
+              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">看診摘要</h3>
+              <p className={`text-xs whitespace-pre-wrap ${doctorVisitSummary.trim() ? 'text-slate-700' : 'text-slate-400'}`}>
+                {doctorVisitSummary.trim() || '尚未填寫'}
+              </p>
             </div>
 
             <div className="pdf-section space-y-2">
