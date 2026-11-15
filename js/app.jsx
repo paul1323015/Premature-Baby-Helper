@@ -1281,7 +1281,7 @@
         const backupData = createBackupPayload();
         const fileName = `巴掌小太陽_緊急備份_${(babyInfo.name || '寶寶').replace(/[\\/:*?\"<>|]/g, '').trim() || '寶寶'}_${formatLocalDateTimeForFileName()}.json`;
         downloadBackupPayload('緊急備份', fileName);
-        showToast('💾 已下載緊急備份，請先保留備份後再重新操作。若沒有看到下載檔案，請查看瀏覽器是否詢問是否允許下載。');
+        showToast('💾 已下載緊急備份，請先保留備份後再重新操作。若沒有看到下載檔案，請確認瀏覽器是否阻擋自動下載。');
       };
 
       React.useEffect(() => {
@@ -1428,7 +1428,7 @@
           const fileName = `巴掌小太陽_還原前自動備份_${safeName}_${formatLocalDateTimeForFileName()}.json`;
           const backupData = downloadBackupPayload('還原前自動備份', fileName);
           recordBackupHistoryEntry('還原前自動備份', fileName, backupData);
-          showToast('📦 已先自動備份目前資料，將在還原前下載。若沒有看到下載檔案，請查看瀏覽器是否詢問是否允許下載。');
+          showToast('📦 已先自動備份目前資料，將在還原前下載。若沒有看到下載檔案，請確認瀏覽器是否阻擋自動下載。');
           return true;
         } catch (error) {
           console.error('Auto backup before restore failed:', error);
@@ -1441,7 +1441,7 @@
         const backupData = downloadBackupPayload('備份');
         const fileName = buildBackupFileName('備份');
         recordBackupHistoryEntry('手動備份', fileName, backupData);
-        showToast('✅ 備份檔案已成功下載！若沒有看到下載檔案，請查看瀏覽器是否詢問是否允許下載。');
+        showToast('✅ 備份檔案已成功下載！若沒有看到下載檔案，請確認瀏覽器是否阻擋自動下載。');
       };
 
       const handleRestoreRecentAutoBackup = (entry) => {
@@ -2478,7 +2478,7 @@
           const filename = `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`;
           pdfMake.createPdf(docDefinition).download(filename, () => {
             setIsExporting(false);
-            showToast('✅ PDF 報告已順利匯出下載！若沒有看到下載檔案，請查看瀏覽器是否詢問是否允許下載。');
+            showToast('✅ PDF 報告已順利匯出下載！若沒有看到下載檔案，請確認瀏覽器是否阻擋自動下載。');
           });
         } catch (err) {
           console.error(err);
