@@ -519,6 +519,13 @@
         setShowRecordModal(false);
       };
 
+      const handleSetRecordDateTimeToNow = () => {
+        const now = new Date();
+        const pad = (value) => String(value).padStart(2, '0');
+        setRecDate(getLocalDateString(now));
+        setRecTime(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
+      };
+
       return (
         <div className="space-y-3">
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex flex-col gap-2 shadow-sm sm:flex-row sm:items-start">
@@ -785,7 +792,19 @@
                 </div>
                 <form onSubmit={handleFormSubmit} className="space-y-3 text-xs">
                   <div>
-                    <label className="font-bold block mb-1">測量日期</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold">測量日期</label>
+                      {editingRecordId !== null && (
+                        <button
+                          type="button"
+                          onClick={handleSetRecordDateTimeToNow}
+                          className="text-amber-600 hover:text-amber-800 font-bold"
+                          title="將日期與時間更新為目前時間，儲存後才會套用"
+                        >
+                          設為現在
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="date"
                       required

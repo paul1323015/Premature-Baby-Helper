@@ -576,6 +576,12 @@ const PretermGrowthChart = ({
     });
     setShowRecordModal(false);
   };
+  const handleSetRecordDateTimeToNow = () => {
+    const now = new Date();
+    const pad = value => String(value).padStart(2, '0');
+    setRecDate(getLocalDateString(now));
+    setRecTime(`${pad(now.getHours())}:${pad(now.getMinutes())}`);
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "space-y-3"
   }, /*#__PURE__*/React.createElement("div", {
@@ -914,9 +920,16 @@ const PretermGrowthChart = ({
   }))), /*#__PURE__*/React.createElement("form", {
     onSubmit: handleFormSubmit,
     className: "space-y-3 text-xs"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
-    className: "font-bold block mb-1"
-  }, "測量日期"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-1"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold"
+  }, "測量日期"), editingRecordId !== null && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleSetRecordDateTimeToNow,
+    className: "text-amber-600 hover:text-amber-800 font-bold",
+    title: "將日期與時間更新為目前時間，儲存後才會套用"
+  }, "設為現在")), /*#__PURE__*/React.createElement("input", {
     type: "date",
     required: true,
     min: "2020-01-01",
