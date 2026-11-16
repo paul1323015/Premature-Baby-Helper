@@ -983,6 +983,19 @@
         && typeof reminder.dueAt === 'string'
         && Number.isFinite(new Date(reminder.dueAt).getTime())
       );
+      const getCareReminderRepeatInterval = reminder => (
+        Number.isInteger(reminder.repeatIntervalMinutes)
+        && reminder.repeatIntervalMinutes >= 1
+        && reminder.repeatIntervalMinutes <= 1440
+          ? reminder.repeatIntervalMinutes
+          : null
+      );
+      const getCareReminderNotificationTime = reminder => {
+        const nextRepeatAt = new Date(reminder.nextRepeatToastAt || '').getTime();
+        return getCareReminderRepeatInterval(reminder) !== null && Number.isFinite(nextRepeatAt)
+          ? nextRepeatAt
+          : new Date(reminder.dueAt).getTime();
+      };
       const [careReminders, setCareReminders] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_care_reminders_v1');
         if (saved) {
@@ -996,6 +1009,14 @@
       const [showReminderForm, setShowReminderForm] = React.useState(false);
       const [reminderTitle, setReminderTitle] = React.useState('');
       const [editingReminderId, setEditingReminderId] = React.useState(null);
+      const [repeatReminder, setRepeatReminder] = React.useState(false);
+      const [repeatIntervalValue, setRepeatIntervalValue] = React.useState('1');
+      const [repeatIntervalUnit, setRepeatIntervalUnit] = React.useState('hours');
+      const resetReminderRepeatSettings = () => {
+        setRepeatReminder(false);
+        setRepeatIntervalValue('1');
+        setRepeatIntervalUnit('hours');
+      };
       const formatReminderDateTimeInput = date => {
         const pad = value => String(value).padStart(2, '0');
         return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -1007,6 +1028,7 @@
       const [reminderDateTime, setReminderDateTime] = React.useState(getReminderDefaultDateTime);
       const [reminderNow, setReminderNow] = React.useState(Date.now());
       const notifiedReminderIdsRef = React.useRef(new Set());
+      const repeatedReminderToastTimesRef = React.useRef(new Map());
 
       const [vaccinationLogs, setVaccinationLogs] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_vaccination_logs_v1');
@@ -1336,19 +1358,58 @@
       }, [careReminders]);
 
       React.useEffect(() => {
-        const timer = setInterval(() => setReminderNow(Date.now()), 30000);
-        return () => clearInterval(timer);
+        const refreshReminderNow = () => setReminderNow(Date.now());
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') refreshReminderNow();
+        };
+        const timer = setInterval(refreshReminderNow, 30000);
+        window.addEventListener('focus', refreshReminderNow);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => {
+          clearInterval(timer);
+          window.removeEventListener('focus', refreshReminderNow);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
       }, []);
 
       React.useEffect(() => {
-        const dueReminders = careReminders.filter(reminder => (
-          new Date(reminder.dueAt).getTime() <= reminderNow
-          && !notifiedReminderIdsRef.current.has(reminder.id)
-        ));
-        dueReminders.forEach(reminder => {
-          notifiedReminderIdsRef.current.add(reminder.id);
-          showToast(`☀️ 照護提醒：${reminder.title}`);
+        const dueReminders = careReminders.filter(reminder => {
+          const notificationTime = getCareReminderNotificationTime(reminder);
+          const repeatInterval = getCareReminderRepeatInterval(reminder);
+          const alreadyNotified = repeatInterval !== null
+            ? repeatedReminderToastTimesRef.current.get(reminder.id) === notificationTime
+            : notifiedReminderIdsRef.current.has(reminder.id);
+          return notificationTime <= reminderNow && !alreadyNotified;
         });
+        dueReminders.forEach(reminder => {
+          const repeatInterval = getCareReminderRepeatInterval(reminder);
+          if (repeatInterval === null) {
+            notifiedReminderIdsRef.current.add(reminder.id);
+          } else {
+            const notificationTime = getCareReminderNotificationTime(reminder);
+            repeatedReminderToastTimesRef.current.set(reminder.id, notificationTime);
+            const nextRepeatToastAt = new Date(Date.now() + repeatInterval * 60 * 1000).toISOString();
+            setCareReminders(prevReminders => prevReminders.map(item => (
+              item.id === reminder.id ? { ...item, nextRepeatToastAt } : item
+            )));
+          }
+          showToast(`☀️ 照護提醒：${reminder.title || '照護提醒'}`);
+        });
+      }, [careReminders, reminderNow]);
+
+      React.useEffect(() => {
+        const nextDueAt = careReminders
+          .filter(reminder => (
+            getCareReminderRepeatInterval(reminder) !== null
+            || !notifiedReminderIdsRef.current.has(reminder.id)
+          ))
+          .map(getCareReminderNotificationTime)
+          .filter(timestamp => Number.isFinite(timestamp) && timestamp > reminderNow)
+          .sort((a, b) => a - b)[0];
+        if (nextDueAt === undefined) return;
+        const delay = Math.max(0, Math.min(nextDueAt - Date.now(), 2147483647));
+        const timer = setTimeout(() => setReminderNow(Date.now()), delay);
+        return () => clearTimeout(timer);
       }, [careReminders, reminderNow]);
 
       React.useEffect(() => {
@@ -1550,6 +1611,7 @@
           ? backupData.careReminders.filter(isValidCareReminder)
           : [];
         notifiedReminderIdsRef.current.clear();
+        repeatedReminderToastTimesRef.current.clear();
         const dueReminderIds = restoredCareReminders
           .filter(reminder => new Date(reminder.dueAt).getTime() <= Date.now())
           .map(reminder => reminder.id);
@@ -1989,6 +2051,8 @@
         setGrowthHistory([]);
         setLogs([]);
         setCareReminders([]);
+        notifiedReminderIdsRef.current.clear();
+        repeatedReminderToastTimesRef.current.clear();
         setVaccinationLogs([]);
         setSolidFoodLogs([]);
         setDoctorNotes([]);
@@ -2030,6 +2094,8 @@
         );
         if (!confirmed) return;
         setCareReminders([]);
+        notifiedReminderIdsRef.current.clear();
+        repeatedReminderToastTimesRef.current.clear();
         showToast('🗑️ 已清除照護提醒');
       };
 
@@ -2733,22 +2799,34 @@
 
       const handleAddCareReminder = (e) => {
         e.preventDefault();
-        const title = reminderTitle.trim();
+        const title = reminderTitle.trim() || '照護提醒';
         const dueAt = new Date(reminderDateTime);
-        if (!title || !reminderDateTime || Number.isNaN(dueAt.getTime())) {
-          showToast('⚠️ 請填寫提醒事項與有效時間。');
+        const intervalValue = Number(repeatIntervalValue);
+        const intervalMax = repeatIntervalUnit === 'hours' ? 24 : 1440;
+        if (
+          !reminderDateTime
+          || Number.isNaN(dueAt.getTime())
+          || (repeatReminder && (!Number.isInteger(intervalValue) || intervalValue < 1 || intervalValue > intervalMax))
+        ) {
+          showToast('⚠️ 請填寫有效的提醒時間與重複間隔。');
           return;
         }
+        const repeatIntervalMinutes = repeatReminder
+          ? intervalValue * (repeatIntervalUnit === 'hours' ? 60 : 1)
+          : null;
         if (editingReminderId !== null) {
           setCareReminders(prevReminders => prevReminders.map(reminder => (
             reminder.id === editingReminderId
-              ? { ...reminder, title, dueAt: dueAt.toISOString() }
+              ? { ...reminder, title, dueAt: dueAt.toISOString(), repeatIntervalMinutes, nextRepeatToastAt: null }
               : reminder
           )));
           notifiedReminderIdsRef.current.delete(editingReminderId);
+          repeatedReminderToastTimesRef.current.delete(editingReminderId);
+          setReminderNow(Date.now());
           setEditingReminderId(null);
           setReminderTitle('');
           setReminderDateTime(getReminderDefaultDateTime());
+          resetReminderRepeatSettings();
           setShowReminderForm(false);
           showToast('✅ 已更新照護提醒！');
           return;
@@ -2757,10 +2835,14 @@
         setCareReminders(prevReminders => [{
           id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           title,
-          dueAt: dueAt.toISOString()
+          dueAt: dueAt.toISOString(),
+          repeatIntervalMinutes,
+          nextRepeatToastAt: null
         }, ...prevReminders]);
+        setReminderNow(Date.now());
         setReminderTitle('');
         setReminderDateTime(getReminderDefaultDateTime());
+        resetReminderRepeatSettings();
         setShowReminderForm(false);
         showToast('✅ 已新增照護提醒！');
       };
@@ -2774,14 +2856,38 @@
         setEditingReminderId(reminder.id);
         setReminderTitle(reminder.title);
         setReminderDateTime(formatReminderDateTimeInput(dueAt));
+        const interval = reminder.repeatIntervalMinutes;
+        const isRepeating = Number.isInteger(interval) && interval >= 1 && interval <= 1440;
+        setRepeatReminder(isRepeating);
+        setRepeatIntervalUnit(isRepeating && interval % 60 === 0 ? 'hours' : 'minutes');
+        setRepeatIntervalValue(isRepeating && interval % 60 === 0 ? String(interval / 60) : String(interval || 1));
         setShowReminderForm(true);
       };
 
       const handleDeleteCareReminder = reminder => {
-        if (!window.confirm(`確定要刪除「${reminder.title}」提醒嗎？`)) return;
+        if (!window.confirm(`確定要刪除「${reminder.title || '照護提醒'}」提醒嗎？`)) return;
         setCareReminders(prevReminders => prevReminders.filter(item => item.id !== reminder.id));
         notifiedReminderIdsRef.current.delete(reminder.id);
+        repeatedReminderToastTimesRef.current.delete(reminder.id);
         showToast('🗑️ 已刪除照護提醒。');
+      };
+
+      const handleCompleteCareReminder = reminder => {
+        const interval = getCareReminderRepeatInterval(reminder);
+        if (interval !== null) {
+          const nextDueAt = new Date(Date.now() + interval * 60 * 1000);
+          setCareReminders(prevReminders => prevReminders.map(item => (
+            item.id === reminder.id ? { ...item, dueAt: nextDueAt.toISOString(), nextRepeatToastAt: null } : item
+          )));
+          notifiedReminderIdsRef.current.delete(reminder.id);
+          repeatedReminderToastTimesRef.current.delete(reminder.id);
+          setReminderNow(Date.now());
+          showToast(`🔁 已完成本次提醒，將於 ${formatReminderDateTimeInput(nextDueAt).replace('T', ' ')} 再提醒。`);
+          return;
+        }
+        setCareReminders(prevReminders => prevReminders.filter(item => item.id !== reminder.id));
+        notifiedReminderIdsRef.current.delete(reminder.id);
+        repeatedReminderToastTimesRef.current.delete(reminder.id);
       };
 
       const handleStartEditLog = (log) => {
@@ -3270,6 +3376,7 @@
                         } else {
                           setEditingReminderId(null);
                         }
+                        resetReminderRepeatSettings();
                         setReminderDateTime(getReminderDefaultDateTime());
                         setShowReminderForm(value => !value);
                       }}
@@ -3288,13 +3395,12 @@
                           value={reminderTitle}
                           onChange={event => setReminderTitle(event.target.value)}
                           maxLength={80}
-                          required
-                          placeholder="例如：餵奶、尿布檢查、回診或疫苗"
+                          placeholder="例如：餵奶、尿布檢查、回診或疫苗（可留空）"
                           className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
                         />
                       </label>
-                      <label className="text-xs font-semibold text-slate-600">
-                        提醒時間
+                      <div className="text-xs font-semibold text-slate-600">
+                        <div>提醒時間</div>
                         <div className="mt-1 grid grid-cols-[1.2fr_1fr] gap-2">
                           <input
                             type="date"
@@ -3317,7 +3423,46 @@
                             className="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
                           />
                         </div>
-                      </label>
+                        <label className="mt-3 flex items-center gap-2 font-medium">
+                          <input
+                            type="checkbox"
+                            checked={repeatReminder}
+                            onChange={event => setRepeatReminder(event.target.checked)}
+                            className="h-4 w-4 accent-amber-500"
+                          />
+                          重複提醒
+                        </label>
+                        {repeatReminder && (
+                          <div className="mt-2 space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="shrink-0">每隔</span>
+                              <input
+                                type="number"
+                                min="1"
+                                max={repeatIntervalUnit === 'hours' ? 24 : 1440}
+                                step="1"
+                                value={repeatIntervalValue}
+                                onChange={event => setRepeatIntervalValue(event.target.value)}
+                                required
+                                aria-label="重複提醒間隔"
+                                className="w-20 rounded-xl border border-slate-200 px-2 py-2 text-sm font-normal text-slate-800"
+                              />
+                              <select
+                                value={repeatIntervalUnit}
+                                onChange={event => setRepeatIntervalUnit(event.target.value)}
+                                aria-label="重複提醒間隔單位"
+                                className="rounded-xl border border-slate-200 px-2 py-2 text-sm font-normal text-slate-800"
+                              >
+                                <option value="minutes">分鐘</option>
+                                <option value="hours">小時</option>
+                              </select>
+                            </div>
+                            <p className="text-[11px] font-normal text-slate-500">
+                              未完成時會每隔所選時間再次提醒；按「完成本次」後重新計時。
+                            </p>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2">
                         <button type="submit" className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600">
                           {editingReminderId !== null ? '更新' : '儲存'}
@@ -3329,6 +3474,7 @@
                               setEditingReminderId(null);
                               setReminderTitle('');
                               setReminderDateTime(getReminderDefaultDateTime());
+                              resetReminderRepeatSettings();
                               setShowReminderForm(false);
                             }}
                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50"
@@ -3347,12 +3493,21 @@
                         .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
                         .map(reminder => {
                           const isDue = new Date(reminder.dueAt).getTime() <= reminderNow;
+                          const isRepeating = getCareReminderRepeatInterval(reminder) !== null;
                           return (
                             <div key={reminder.id} className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2 ${isDue ? 'bg-amber-100 text-amber-900' : 'bg-slate-50 text-slate-700'}`}>
                               <div className="min-w-0">
-                                <div className="truncate text-sm font-semibold">{reminder.title}</div>
+                                <div className="truncate text-sm font-semibold">{reminder.title || '照護提醒'}</div>
                                 <div className="text-xs opacity-75">
                                   {isDue ? '已到期' : '預定'} · {new Date(reminder.dueAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}
+                                  {isRepeating && (
+                                    <span>
+                                      {' · 每隔 '}
+                                      {reminder.repeatIntervalMinutes % 60 === 0
+                                        ? `${reminder.repeatIntervalMinutes / 60} 小時`
+                                        : `${reminder.repeatIntervalMinutes} 分鐘`}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                               <div className="flex shrink-0 items-center gap-1">
@@ -3360,26 +3515,23 @@
                                   type="button"
                                   onClick={() => handleEditCareReminder(reminder)}
                                   className="rounded-lg px-2 py-1 text-xs font-bold hover:bg-white/70"
-                                  aria-label={`編輯提醒：${reminder.title}`}
+                                  aria-label={`編輯提醒：${reminder.title || '照護提醒'}`}
                                 >
                                   編輯
                                 </button>
                                 <button
                                   type="button"
-                                  onClick={() => {
-                                    setCareReminders(prevReminders => prevReminders.filter(item => item.id !== reminder.id));
-                                    notifiedReminderIdsRef.current.delete(reminder.id);
-                                  }}
+                                  onClick={() => handleCompleteCareReminder(reminder)}
                                   className="rounded-lg px-2 py-1 text-xs font-bold hover:bg-white/70"
-                                  aria-label={`完成提醒：${reminder.title}`}
+                                  aria-label={isRepeating ? `完成本次提醒：${reminder.title || '照護提醒'}` : `完成提醒：${reminder.title || '照護提醒'}`}
                                 >
-                                  完成
+                                  {isRepeating ? '完成本次' : '完成'}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteCareReminder(reminder)}
                                   className="rounded-lg px-2 py-1 text-xs font-bold text-red-700 hover:bg-white/70"
-                                  aria-label={`刪除提醒：${reminder.title}`}
+                                  aria-label={`刪除提醒：${reminder.title || '照護提醒'}`}
                                 >
                                   刪除
                                 </button>
