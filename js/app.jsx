@@ -821,7 +821,11 @@
                   <div>
                     <label className="font-bold block mb-1">測量時間（選填）</label>
                     <input
-                      type="time"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="例如：15:38"
+                      pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+                      title="請輸入 24 小時制時間，例如 15:38"
                       value={recTime}
                       onChange={(e) => setRecTime(e.target.value)}
                       className="w-full p-2 border rounded-xl"
@@ -3291,13 +3295,28 @@
                       </label>
                       <label className="text-xs font-semibold text-slate-600">
                         提醒時間
-                        <input
-                          type="datetime-local"
-                          value={reminderDateTime}
-                          onChange={event => setReminderDateTime(event.target.value)}
-                          required
-                          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
-                        />
+                        <div className="mt-1 grid grid-cols-[1.2fr_1fr] gap-2">
+                          <input
+                            type="date"
+                            aria-label="提醒日期"
+                            value={reminderDateTime.slice(0, 10)}
+                            onChange={event => setReminderDateTime(`${event.target.value}T${reminderDateTime.slice(11, 16)}`)}
+                            required
+                            className="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
+                          />
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            aria-label="提醒時間（24 小時制）"
+                            placeholder="HH:mm"
+                            pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+                            title="請輸入 24 小時制時間，例如 16:41"
+                            value={reminderDateTime.slice(11, 16)}
+                            onChange={event => setReminderDateTime(`${reminderDateTime.slice(0, 10)}T${event.target.value}`)}
+                            required
+                            className="w-full min-w-0 rounded-xl border border-slate-200 px-3 py-2 text-sm font-normal text-slate-800"
+                          />
+                        </div>
                       </label>
                       <div className="flex items-center gap-2">
                         <button type="submit" className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white hover:bg-amber-600">
@@ -3333,7 +3352,7 @@
                               <div className="min-w-0">
                                 <div className="truncate text-sm font-semibold">{reminder.title}</div>
                                 <div className="text-xs opacity-75">
-                                  {isDue ? '已到期' : '預定'} · {new Date(reminder.dueAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: 'numeric', minute: '2-digit', hour12: true })}
+                                  {isDue ? '已到期' : '預定'} · {new Date(reminder.dueAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })}
                                 </div>
                               </div>
                               <div className="flex shrink-0 items-center gap-1">
