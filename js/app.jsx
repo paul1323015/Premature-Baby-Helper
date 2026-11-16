@@ -794,16 +794,14 @@
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="font-bold">測量日期</label>
-                      {editingRecordId !== null && (
-                        <button
-                          type="button"
-                          onClick={handleSetRecordDateTimeToNow}
-                          className="text-amber-600 hover:text-amber-800 font-bold"
-                          title="將日期與時間更新為目前時間，儲存後才會套用"
-                        >
-                          設為現在
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={handleSetRecordDateTimeToNow}
+                        className="text-amber-600 hover:text-amber-800 font-bold"
+                        title="將日期與時間更新為目前時間，儲存後才會套用"
+                      >
+                        設為現在
+                      </button>
                     </div>
                     <input
                       type="date"

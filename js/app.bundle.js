@@ -924,7 +924,7 @@ const PretermGrowthChart = ({
     className: "flex items-center justify-between mb-1"
   }, /*#__PURE__*/React.createElement("label", {
     className: "font-bold"
-  }, "測量日期"), editingRecordId !== null && /*#__PURE__*/React.createElement("button", {
+  }, "測量日期"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: handleSetRecordDateTimeToNow,
     className: "text-amber-600 hover:text-amber-800 font-bold",
