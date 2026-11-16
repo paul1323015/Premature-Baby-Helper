@@ -1383,17 +1383,22 @@
         });
         dueReminders.forEach(reminder => {
           const repeatInterval = getCareReminderRepeatInterval(reminder);
+          let nextRepeatToastAt = null;
           if (repeatInterval === null) {
             notifiedReminderIdsRef.current.add(reminder.id);
           } else {
             const notificationTime = getCareReminderNotificationTime(reminder);
             repeatedReminderToastTimesRef.current.set(reminder.id, notificationTime);
-            const nextRepeatToastAt = new Date(Date.now() + repeatInterval * 60 * 1000).toISOString();
+            nextRepeatToastAt = new Date(Date.now() + repeatInterval * 60 * 1000).toISOString();
             setCareReminders(prevReminders => prevReminders.map(item => (
               item.id === reminder.id ? { ...item, nextRepeatToastAt } : item
             )));
           }
-          showToast(`☀️ 照護提醒：${reminder.title || '照護提醒'}`);
+          if (repeatInterval !== null) {
+            showToast(`☀️ 照護提醒：${reminder.title || '照護提醒'}。下一次提醒時間：${formatReminderDateTimeInput(new Date(nextRepeatToastAt)).replace('T', ' ')}`);
+          } else {
+            showToast(`☀️ 照護提醒：${reminder.title || '照護提醒'}`);
+          }
         });
       }, [careReminders, reminderNow]);
 
@@ -2828,7 +2833,9 @@
           setReminderDateTime(getReminderDefaultDateTime());
           resetReminderRepeatSettings();
           setShowReminderForm(false);
-          showToast('✅ 已更新照護提醒！');
+          showToast(repeatIntervalMinutes === null
+            ? '✅ 已更新照護提醒！'
+            : `✅ 已更新照護提醒！下一次提醒時間：${formatReminderDateTimeInput(dueAt).replace('T', ' ')}`);
           return;
         }
         if (!ensureStorageCapacityForNewData()) return;
@@ -2844,7 +2851,9 @@
         setReminderDateTime(getReminderDefaultDateTime());
         resetReminderRepeatSettings();
         setShowReminderForm(false);
-        showToast('✅ 已新增照護提醒！');
+        showToast(repeatIntervalMinutes === null
+          ? '✅ 已新增照護提醒！'
+          : `✅ 已新增照護提醒！下一次提醒時間：${formatReminderDateTimeInput(dueAt).replace('T', ' ')}`);
       };
 
       const handleEditCareReminder = reminder => {
