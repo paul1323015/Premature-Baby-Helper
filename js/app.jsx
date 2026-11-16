@@ -2325,7 +2325,7 @@
                 text: '巴掌小太陽·早產兒門診照護與生長報告',
                 style: 'title',
                 alignment: 'center',
-                margin: [0, 6, 66, 6]
+                margin: [0, 6, 0, 18]
               },
               {
                 columns: [
@@ -2347,6 +2347,12 @@
                   }
                 ],
                 columnGap: 16,
+                margin: [0, 0, 0, 8]
+              },
+              {
+                canvas: [
+                  { type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#CBD5E1' }
+                ],
                 margin: [0, 0, 0, 14]
               },
               {
@@ -2448,7 +2454,16 @@
                       ...growthCharts.map(chart => ({
                         unbreakable: true,
                         stack: [
-                          { text: `${chart.label}（${chart.unit}）｜矯正月齡`, style: 'noteTitle', margin: [0, 8, 0, 3] },
+                          {
+                            columns: [
+                              { text: `${chart.label}（${chart.unit}）`, width: 'auto' },
+                              { text: '|', width: 'auto', alignment: 'center', margin: [0, 0, 8, 0] },
+                              { text: '矯正月齡', width: 'auto' }
+                            ],
+                            columnGap: 0,
+                            style: 'noteTitle',
+                            margin: [0, 8, 0, 3]
+                          },
                           { svg: chart.svg, fit: [510, 250], margin: [0, 0, 0, 2] },
                           ...(chart.pointsCount === 0 ? [{ text: `目前沒有可繪製的矯正月齡測量點${babyInfo.dueDate ? '' : '；請先設定預產期'}，圖中僅顯示百分位參考曲線。`, style: 'muted', margin: [0, 0, 0, 6] }] : [])
                         ]

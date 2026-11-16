@@ -2399,7 +2399,7 @@ function App() {
           text: '巴掌小太陽·早產兒門診照護與生長報告',
           style: 'title',
           alignment: 'center',
-          margin: [0, 6, 66, 6]
+          margin: [0, 6, 0, 18]
         }, {
           columns: [{
             width: '*',
@@ -2417,6 +2417,17 @@ function App() {
             }]
           }],
           columnGap: 16,
+          margin: [0, 0, 0, 8]
+        }, {
+          canvas: [{
+            type: 'line',
+            x1: 0,
+            y1: 0,
+            x2: 515,
+            y2: 0,
+            lineWidth: 0.5,
+            lineColor: '#CBD5E1'
+          }],
           margin: [0, 0, 0, 14]
         }, {
           table: {
@@ -2536,7 +2547,19 @@ function App() {
           }, ...growthCharts.map(chart => ({
             unbreakable: true,
             stack: [{
-              text: `${chart.label}（${chart.unit}）｜矯正月齡`,
+              columns: [{
+                text: `${chart.label}（${chart.unit}）`,
+                width: 'auto'
+              }, {
+                text: '|',
+                width: 'auto',
+                alignment: 'center',
+                margin: [0, 0, 8, 0]
+              }, {
+                text: '矯正月齡',
+                width: 'auto'
+              }],
+              columnGap: 0,
               style: 'noteTitle',
               margin: [0, 8, 0, 3]
             }, {
