@@ -10,6 +10,15 @@ const Icon = ({
     edit: /*#__PURE__*/React.createElement("path", {
       d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
     }),
+    mic: /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("rect", {
+      x: "9",
+      y: "2",
+      width: "6",
+      height: "12",
+      rx: "3"
+    }), /*#__PURE__*/React.createElement("path", {
+      d: "M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"
+    })),
     heart: /*#__PURE__*/React.createElement("path", {
       d: "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
     }),
@@ -1221,6 +1230,13 @@ function App() {
   const [editedNoteCategory, setEditedNoteCategory] = React.useState('');
   const [noteTitle, setNoteTitle] = React.useState('');
   const [noteContent, setNoteContent] = React.useState('');
+  const [noteVoiceField, setNoteVoiceField] = React.useState(null);
+  const noteTitleInputRef = React.useRef(null);
+  const noteContentInputRef = React.useRef(null);
+  const noteVoiceRecognitionRef = React.useRef(null);
+  const noteVoiceFieldRef = React.useRef(null);
+  const noteVoiceTargetFieldRef = React.useRef('content');
+  const noteVoiceSelectionRef = React.useRef(null);
   const [filterNoteCategory, setFilterNoteCategory] = React.useState('全部');
   const [noteSearchQuery, setNoteSearchQuery] = React.useState('');
   const [editingNoteId, setEditingNoteId] = React.useState(null);
@@ -1753,7 +1769,120 @@ function App() {
       showToast('❌ 備份資料格式不正確，還原失敗');
     }
   };
+  const stopNoteVoiceInput = (abort = false) => {
+    const recognition = noteVoiceRecognitionRef.current;
+    if (!recognition) return;
+    if (abort) {
+      noteVoiceRecognitionRef.current = null;
+      noteVoiceFieldRef.current = null;
+      setNoteVoiceField(null);
+      recognition.abort();
+    } else {
+      recognition.stop();
+    }
+  };
+  const handleToggleNoteVoiceInput = () => {
+    const currentRecognition = noteVoiceRecognitionRef.current;
+    if (currentRecognition) {
+      stopNoteVoiceInput();
+      return;
+    }
+    const field = noteVoiceTargetFieldRef.current;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('⚠️ 目前瀏覽器不支援語音輸入，請使用鍵盤或裝置內建的語音輸入。');
+      return;
+    }
+    const input = field === 'title' ? noteTitleInputRef.current : noteContentInputRef.current;
+    if (!input) return;
+    let recognition;
+    try {
+      recognition = new SpeechRecognition();
+    } catch (error) {
+      console.error('Unable to create notebook speech recognition:', error);
+      showToast('❌ 無法啟動語音輸入，請確認瀏覽器支援及麥克風權限。');
+      return;
+    }
+    const selectionStart = input.selectionStart ?? input.value.length;
+    const selectionEnd = input.selectionEnd ?? selectionStart;
+    const maxLength = field === 'title' ? 30 : 1000;
+    noteVoiceRecognitionRef.current = recognition;
+    noteVoiceFieldRef.current = field;
+    noteVoiceSelectionRef.current = {
+      field,
+      start: selectionStart,
+      end: selectionEnd
+    };
+    setNoteVoiceField(field);
+    recognition.lang = 'zh-TW';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.onresult = event => {
+      if (noteVoiceRecognitionRef.current !== recognition) return;
+      const transcript = Array.from(event.results).slice(event.resultIndex).map(result => result[0].transcript).join('').trim();
+      if (!transcript) return;
+      const value = input.value;
+      const selection = noteVoiceSelectionRef.current;
+      const start = Math.min(selection && selection.field === field ? selection.start : value.length, value.length);
+      const end = Math.min(selection && selection.field === field ? selection.end : start, value.length);
+      const availableLength = Math.max(0, maxLength - (value.length - (end - start)));
+      const insertedText = transcript.slice(0, availableLength);
+      if (!insertedText) {
+        showToast(`⚠️ ${field === 'title' ? '標題' : '筆記內容'}已達字數上限，無法加入語音辨識結果。`);
+        return;
+      }
+      const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
+      if (field === 'title') setNoteTitle(updatedValue);else setNoteContent(updatedValue);
+      const caretPosition = start + insertedText.length;
+      noteVoiceSelectionRef.current = {
+        field,
+        start: caretPosition,
+        end: caretPosition
+      };
+      window.requestAnimationFrame(() => input.setSelectionRange(caretPosition, caretPosition));
+      if (insertedText.length < transcript.length) {
+        showToast(`⚠️ 語音內容已加入至${field === 'title' ? '標題' : '筆記內容'}字數上限。`);
+      }
+    };
+    recognition.onerror = event => {
+      if (noteVoiceRecognitionRef.current !== recognition || event.error === 'aborted') return;
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        showToast('⚠️ 麥克風未獲允許，請在瀏覽器設定中允許麥克風後再試。');
+      } else if (event.error === 'no-speech') {
+        showToast('⚠️ 沒有辨識到語音，請再試一次。');
+      } else {
+        console.error('Notebook speech recognition failed:', event.error);
+        showToast('❌ 語音辨識發生問題，請稍後再試或改用鍵盤輸入。');
+      }
+    };
+    recognition.onnomatch = () => {
+      if (noteVoiceRecognitionRef.current === recognition) {
+        showToast('⚠️ 沒有辨識到語音，請再試一次。');
+      }
+    };
+    recognition.onend = () => {
+      if (noteVoiceRecognitionRef.current !== recognition) return;
+      noteVoiceRecognitionRef.current = null;
+      noteVoiceFieldRef.current = null;
+      setNoteVoiceField(null);
+    };
+    try {
+      recognition.start();
+    } catch (error) {
+      noteVoiceRecognitionRef.current = null;
+      noteVoiceFieldRef.current = null;
+      setNoteVoiceField(null);
+      console.error('Unable to start notebook speech recognition:', error);
+      showToast('❌ 無法啟動語音輸入，請確認瀏覽器的麥克風權限後再試。');
+    }
+  };
+  React.useEffect(() => () => {
+    const recognition = noteVoiceRecognitionRef.current;
+    noteVoiceRecognitionRef.current = null;
+    if (recognition) recognition.abort();
+  }, []);
   const handleSaveNote = e => {
+    stopNoteVoiceInput(true);
     e.preventDefault();
     if (!noteTitle.trim()) {
       showToast('⚠️ 請輸入筆記標題！');
@@ -1803,6 +1932,7 @@ function App() {
     if (category !== '未分類' && !noteCategories.includes(category)) setNoteCategories([...noteCategories, category]);
   };
   const handleStartEditNote = note => {
+    stopNoteVoiceInput(true);
     setEditingNoteId(note.id);
     setNoteCategory(note.category || note.tag || '未分類');
     setIsCustomNoteCategory(false);
@@ -1813,6 +1943,7 @@ function App() {
     const originalNote = notes.find(note => note.id === editingNoteId);
     const hasUnsavedChanges = originalNote && (noteCategory !== (originalNote.category || originalNote.tag || '未分類') || noteTitle !== (originalNote.title || '') || noteContent !== (originalNote.content || ''));
     if (confirmDiscard && hasUnsavedChanges && !window.confirm('有尚未儲存的修改，確定要放棄嗎？')) return false;
+    stopNoteVoiceInput(true);
     setEditingNoteId(null);
     setNoteCategory(noteCategories.includes('回診提問') ? '回診提問' : '未分類');
     setIsCustomNoteCategory(false);
@@ -1822,6 +1953,7 @@ function App() {
   };
   const handleCloseNotesModal = () => {
     if (editingNoteId !== null && !handleCancelEditNote()) return;
+    stopNoteVoiceInput(true);
     setShowNotesModal(false);
   };
   const handleAddNoteCategory = () => {
@@ -4703,24 +4835,50 @@ function App() {
   }, /*#__PURE__*/React.createElement("span", null, "標題 (最多 30 字)"), /*#__PURE__*/React.createElement("span", {
     className: "text-[10px] text-slate-400"
   }, noteTitle.length, "/30")), /*#__PURE__*/React.createElement("input", {
+    ref: noteTitleInputRef,
     type: "text",
     maxLength: 30,
     placeholder: "例如：下次回診請教醫師...",
     value: noteTitle,
+    onFocus: () => {
+      noteVoiceTargetFieldRef.current = 'title';
+    },
     onChange: e => setNoteTitle(e.target.value),
     className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
   }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
   }, /*#__PURE__*/React.createElement("span", null, "筆記內容 (純文字，最多 1000 字)"), /*#__PURE__*/React.createElement("span", {
     className: `text-[10px] ${noteContent.length >= 1000 ? 'text-red-500 font-bold' : 'text-slate-400'}`
-  }, noteContent.length, "/1000")), /*#__PURE__*/React.createElement("textarea", {
+  }, noteContent.length, "/1000")), /*#__PURE__*/React.createElement("div", {
+    className: "flex items-start gap-2"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    ref: noteContentInputRef,
     rows: 3,
     maxLength: 1000,
     placeholder: "在此輸入筆記細節...",
     value: noteContent,
+    onFocus: () => {
+      noteVoiceTargetFieldRef.current = 'content';
+    },
     onChange: e => setNoteContent(e.target.value),
-    className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  })), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleToggleNoteVoiceInput,
+    "aria-label": noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位',
+    "aria-pressed": noteVoiceField !== null,
+    title: noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位',
+    className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteVoiceField !== null ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'}`
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: noteVoiceField !== null ? 'x' : 'mic',
+    className: "w-4 h-4"
+  }), noteVoiceField !== null ? '停止' : '語音輸入')), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    "aria-live": "polite",
+    className: "mt-1 text-[10px] font-bold text-red-600"
+  }, "正在聆聽，辨識結果將輸入至", noteVoiceField === 'title' ? '標題' : '筆記內容', "；再次點擊可停止。"), /*#__PURE__*/React.createElement("p", {
+    className: "mt-1 text-[10px] text-slate-400"
+  }, "語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。")), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     type: "submit",
