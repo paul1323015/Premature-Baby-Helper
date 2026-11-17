@@ -1231,6 +1231,8 @@ function App() {
   const [noteTitle, setNoteTitle] = React.useState('');
   const [noteContent, setNoteContent] = React.useState('');
   const [noteVoiceField, setNoteVoiceField] = React.useState(null);
+  const [noteVoiceTargetField, setNoteVoiceTargetField] = React.useState('content');
+  const newNoteCategoryInputRef = React.useRef(null);
   const noteCategoryInputRef = React.useRef(null);
   const noteTitleInputRef = React.useRef(null);
   const noteContentInputRef = React.useRef(null);
@@ -1782,6 +1784,11 @@ function App() {
       recognition.stop();
     }
   };
+  const setNoteVoiceTarget = field => {
+    if (noteVoiceRecognitionRef.current) return;
+    noteVoiceTargetFieldRef.current = field;
+    setNoteVoiceTargetField(field);
+  };
   const handleToggleNoteVoiceInput = () => {
     const currentRecognition = noteVoiceRecognitionRef.current;
     if (currentRecognition) {
@@ -1794,7 +1801,7 @@ function App() {
       showToast('⚠️ 目前瀏覽器不支援語音輸入，請使用鍵盤或裝置內建的語音輸入。');
       return;
     }
-    const input = field === 'title' ? noteTitleInputRef.current : field === 'content' ? noteContentInputRef.current : isCustomNoteCategory ? noteCategoryInputRef.current : null;
+    const input = field === 'title' ? noteTitleInputRef.current : field === 'content' ? noteContentInputRef.current : field === 'newCategory' ? newNoteCategoryInputRef.current : isCustomNoteCategory ? noteCategoryInputRef.current : null;
     let recognition;
     try {
       recognition = new SpeechRecognition();
@@ -1803,7 +1810,7 @@ function App() {
       showToast('❌ 無法啟動語音輸入，請確認瀏覽器支援及麥克風權限。');
       return;
     }
-    const selectionStart = field === 'category' && !isCustomNoteCategory ? 0 : input?.selectionStart ?? (field === 'category' ? noteCategory.length : input.value.length);
+    const selectionStart = field === 'category' && !isCustomNoteCategory ? 0 : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : input.value.length);
     const selectionEnd = field === 'category' && !isCustomNoteCategory ? noteCategory.length : input?.selectionEnd ?? selectionStart;
     const maxLength = field === 'title' ? 30 : field === 'content' ? 1000 : Infinity;
     noteVoiceRecognitionRef.current = recognition;
@@ -1822,8 +1829,8 @@ function App() {
       if (noteVoiceRecognitionRef.current !== recognition) return;
       const transcript = Array.from(event.results).slice(event.resultIndex).map(result => result[0].transcript).join('').trim();
       if (!transcript) return;
-      const currentInput = field === 'category' ? noteCategoryInputRef.current : input;
-      const value = currentInput ? currentInput.value : noteCategory;
+      const currentInput = field === 'category' ? noteCategoryInputRef.current : field === 'newCategory' ? newNoteCategoryInputRef.current : input;
+      const value = currentInput ? currentInput.value : field === 'newCategory' ? newNoteCategory : noteCategory;
       const selection = noteVoiceSelectionRef.current;
       const start = Math.min(selection && selection.field === field ? selection.start : value.length, value.length);
       const end = Math.min(selection && selection.field === field ? selection.end : start, value.length);
@@ -1834,7 +1841,7 @@ function App() {
         return;
       }
       const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
-      if (field === 'title') setNoteTitle(updatedValue);else if (field === 'content') setNoteContent(updatedValue);else {
+      if (field === 'title') setNoteTitle(updatedValue);else if (field === 'content') setNoteContent(updatedValue);else if (field === 'newCategory') setNewNoteCategory(updatedValue);else {
         setIsCustomNoteCategory(true);
         setNoteCategory(updatedValue);
       }
@@ -1888,6 +1895,17 @@ function App() {
     noteVoiceRecognitionRef.current = null;
     if (recognition) recognition.abort();
   }, []);
+  const noteVoiceButton = /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleToggleNoteVoiceInput,
+    "aria-label": noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位',
+    "aria-pressed": noteVoiceField !== null,
+    title: noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位',
+    className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteVoiceField !== null ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'}`
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: noteVoiceField !== null ? 'x' : 'mic',
+    className: "w-4 h-4"
+  }), noteVoiceField !== null ? '停止' : '語音輸入');
   const handleSaveNote = e => {
     stopNoteVoiceInput(true);
     e.preventDefault();
@@ -4815,9 +4833,7 @@ function App() {
     className: "block text-[11px] font-bold text-slate-600 mb-1"
   }, "標籤分類"), /*#__PURE__*/React.createElement("select", {
     value: isCustomNoteCategory ? '' : noteCategory,
-    onFocus: () => {
-      noteVoiceTargetFieldRef.current = 'category';
-    },
+    onFocus: () => setNoteVoiceTarget('category'),
     onChange: e => {
       const value = e.target.value;
       setIsCustomNoteCategory(value === '');
@@ -4831,18 +4847,20 @@ function App() {
     value: "未分類"
   }, "【未分類】"), /*#__PURE__*/React.createElement("option", {
     value: ""
-  }, "＋ 自訂分類…")), isCustomNoteCategory && /*#__PURE__*/React.createElement("input", {
+  }, "＋ 自訂分類…")), !isCustomNoteCategory && noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && /*#__PURE__*/React.createElement("div", {
+    className: "mt-2"
+  }, noteVoiceButton), isCustomNoteCategory && /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2 mt-2"
+  }, /*#__PURE__*/React.createElement("input", {
     ref: noteCategoryInputRef,
     type: "text",
     value: noteCategory,
-    onFocus: () => {
-      noteVoiceTargetFieldRef.current = 'category';
-    },
+    onFocus: () => setNoteVoiceTarget('category'),
     onChange: e => setNoteCategory(e.target.value),
     placeholder: "請輸入分類名稱",
     "aria-label": "自訂標籤分類",
-    className: "w-full mt-2 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  })), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+  }), noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && noteVoiceButton)), /*#__PURE__*/React.createElement("div", {
     className: "w-full sm:w-2/3"
   }, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
@@ -4854,12 +4872,12 @@ function App() {
     maxLength: 30,
     placeholder: "例如：下次回診請教醫師...",
     value: noteTitle,
-    onFocus: () => {
-      noteVoiceTargetFieldRef.current = 'title';
-    },
+    onFocus: () => setNoteVoiceTarget('title'),
     onChange: e => setNoteTitle(e.target.value),
     className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }), noteVoiceTargetField === 'title' && noteVoiceField !== 'newCategory' && /*#__PURE__*/React.createElement("div", {
+    className: "mt-2"
+  }, noteVoiceButton))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
   }, /*#__PURE__*/React.createElement("span", null, "筆記內容 (純文字，最多 1000 字)"), /*#__PURE__*/React.createElement("span", {
     className: `text-[10px] ${noteContent.length >= 1000 ? 'text-red-500 font-bold' : 'text-slate-400'}`
@@ -4871,26 +4889,14 @@ function App() {
     maxLength: 1000,
     placeholder: "在此輸入筆記細節...",
     value: noteContent,
-    onFocus: () => {
-      noteVoiceTargetFieldRef.current = 'content';
-    },
+    onFocus: () => setNoteVoiceTarget('content'),
     onChange: e => setNoteContent(e.target.value),
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: handleToggleNoteVoiceInput,
-    "aria-label": noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位',
-    "aria-pressed": noteVoiceField !== null,
-    title: noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位',
-    className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteVoiceField !== null ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'}`
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: noteVoiceField !== null ? 'x' : 'mic',
-    className: "w-4 h-4"
-  }), noteVoiceField !== null ? '停止' : '語音輸入')), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
+  }), noteVoiceTargetField === 'content' && noteVoiceField !== 'newCategory' && noteVoiceButton), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
     className: "mt-1 text-[10px] font-bold text-red-600"
-  }, "正在聆聽，辨識結果將輸入至", noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : '筆記內容', "；再次點擊可停止。"), /*#__PURE__*/React.createElement("p", {
+  }, "正在聆聽，辨識結果將輸入至", noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容', "；再次點擊可停止。"), /*#__PURE__*/React.createElement("p", {
     className: "mt-1 text-[10px] text-slate-400"
   }, "語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。")), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2"
@@ -4922,7 +4928,13 @@ function App() {
     className: "flex gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: () => setShowNoteCategoryManager(!showNoteCategoryManager),
+    onClick: () => {
+      if (showNoteCategoryManager && noteVoiceTargetField === 'newCategory') {
+        stopNoteVoiceInput(true);
+        setNoteVoiceTarget('content');
+      }
+      setShowNoteCategoryManager(!showNoteCategoryManager);
+    },
     className: "flex-1 px-3 py-2 border border-amber-200 text-amber-800 rounded-xl text-xs font-bold hover:bg-amber-50"
   }, showNoteCategoryManager ? '收起分類管理' : '管理分類'), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -4933,8 +4945,10 @@ function App() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2"
   }, /*#__PURE__*/React.createElement("input", {
+    ref: newNoteCategoryInputRef,
     type: "text",
     value: newNoteCategory,
+    onFocus: () => setNoteVoiceTarget('newCategory'),
     onChange: e => setNewNoteCategory(e.target.value),
     onKeyDown: e => {
       if (e.key === 'Enter') {
@@ -4945,7 +4959,7 @@ function App() {
     placeholder: "輸入新分類名稱",
     "aria-label": "新增分類名稱",
     className: "flex-1 min-w-0 p-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), noteVoiceTargetField === 'newCategory' && noteVoiceField !== 'title' && noteVoiceField !== 'content' && noteVoiceField !== 'category' && noteVoiceButton, /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: handleAddNoteCategory,
     className: "px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold"

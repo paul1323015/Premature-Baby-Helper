@@ -1102,6 +1102,8 @@
       const [noteTitle, setNoteTitle] = React.useState('');
       const [noteContent, setNoteContent] = React.useState('');
       const [noteVoiceField, setNoteVoiceField] = React.useState(null);
+      const [noteVoiceTargetField, setNoteVoiceTargetField] = React.useState('content');
+      const newNoteCategoryInputRef = React.useRef(null);
       const noteCategoryInputRef = React.useRef(null);
       const noteTitleInputRef = React.useRef(null);
       const noteContentInputRef = React.useRef(null);
@@ -1739,6 +1741,12 @@
         }
       };
 
+      const setNoteVoiceTarget = (field) => {
+        if (noteVoiceRecognitionRef.current) return;
+        noteVoiceTargetFieldRef.current = field;
+        setNoteVoiceTargetField(field);
+      };
+
       const handleToggleNoteVoiceInput = () => {
         const currentRecognition = noteVoiceRecognitionRef.current;
         if (currentRecognition) {
@@ -1757,6 +1765,8 @@
           ? noteTitleInputRef.current
           : field === 'content'
             ? noteContentInputRef.current
+            : field === 'newCategory'
+              ? newNoteCategoryInputRef.current
             : isCustomNoteCategory
               ? noteCategoryInputRef.current
               : null;
@@ -1771,7 +1781,7 @@
         }
         const selectionStart = field === 'category' && !isCustomNoteCategory
           ? 0
-          : input?.selectionStart ?? (field === 'category' ? noteCategory.length : input.value.length);
+          : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : input.value.length);
         const selectionEnd = field === 'category' && !isCustomNoteCategory
           ? noteCategory.length
           : input?.selectionEnd ?? selectionStart;
@@ -1794,8 +1804,16 @@
             .trim();
           if (!transcript) return;
 
-          const currentInput = field === 'category' ? noteCategoryInputRef.current : input;
-          const value = currentInput ? currentInput.value : noteCategory;
+          const currentInput = field === 'category'
+            ? noteCategoryInputRef.current
+            : field === 'newCategory'
+              ? newNoteCategoryInputRef.current
+              : input;
+          const value = currentInput
+            ? currentInput.value
+            : field === 'newCategory'
+              ? newNoteCategory
+              : noteCategory;
           const selection = noteVoiceSelectionRef.current;
           const start = Math.min(selection && selection.field === field ? selection.start : value.length, value.length);
           const end = Math.min(selection && selection.field === field ? selection.end : start, value.length);
@@ -1809,6 +1827,7 @@
           const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
           if (field === 'title') setNoteTitle(updatedValue);
           else if (field === 'content') setNoteContent(updatedValue);
+          else if (field === 'newCategory') setNewNoteCategory(updatedValue);
           else {
             setIsCustomNoteCategory(true);
             setNoteCategory(updatedValue);
@@ -1861,6 +1880,24 @@
         noteVoiceRecognitionRef.current = null;
         if (recognition) recognition.abort();
       }, []);
+
+      const noteVoiceButton = (
+        <button
+          type="button"
+          onClick={handleToggleNoteVoiceInput}
+          aria-label={noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位'}
+          aria-pressed={noteVoiceField !== null}
+          title={noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位'}
+          className={`shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${
+            noteVoiceField !== null
+              ? 'bg-red-100 border-red-300 text-red-700'
+              : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'
+          }`}
+        >
+          <Icon name={noteVoiceField !== null ? 'x' : 'mic'} className="w-4 h-4" />
+          {noteVoiceField !== null ? '停止' : '語音輸入'}
+        </button>
+      );
 
       const handleSaveNote = (e) => {
         stopNoteVoiceInput(true);
@@ -4679,7 +4716,7 @@
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">標籤分類</label>
                         <select
                           value={isCustomNoteCategory ? '' : noteCategory}
-                          onFocus={() => { noteVoiceTargetFieldRef.current = 'category'; }}
+                          onFocus={() => setNoteVoiceTarget('category')}
                           onChange={(e) => {
                             const value = e.target.value;
                             setIsCustomNoteCategory(value === '');
@@ -4693,17 +4730,23 @@
                           <option value="未分類">【未分類】</option>
                           <option value="">＋ 自訂分類…</option>
                         </select>
+                        {!isCustomNoteCategory && noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && (
+                          <div className="mt-2">{noteVoiceButton}</div>
+                        )}
                         {isCustomNoteCategory && (
-                          <input
-                            ref={noteCategoryInputRef}
-                            type="text"
-                            value={noteCategory}
-                            onFocus={() => { noteVoiceTargetFieldRef.current = 'category'; }}
-                            onChange={(e) => setNoteCategory(e.target.value)}
-                            placeholder="請輸入分類名稱"
-                            aria-label="自訂標籤分類"
-                            className="w-full mt-2 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-                          />
+                          <div className="flex items-center gap-2 mt-2">
+                            <input
+                              ref={noteCategoryInputRef}
+                              type="text"
+                              value={noteCategory}
+                              onFocus={() => setNoteVoiceTarget('category')}
+                              onChange={(e) => setNoteCategory(e.target.value)}
+                              placeholder="請輸入分類名稱"
+                              aria-label="自訂標籤分類"
+                              className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                            />
+                            {noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && noteVoiceButton}
+                          </div>
                         )}
                       </div>
                       <div className="w-full sm:w-2/3">
@@ -4717,10 +4760,13 @@
                           maxLength={30}
                           placeholder="例如：下次回診請教醫師..."
                           value={noteTitle}
-                          onFocus={() => { noteVoiceTargetFieldRef.current = 'title'; }}
+                          onFocus={() => setNoteVoiceTarget('title')}
                           onChange={(e) => setNoteTitle(e.target.value)}
                           className="w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
+                        {noteVoiceTargetField === 'title' && noteVoiceField !== 'newCategory' && (
+                          <div className="mt-2">{noteVoiceButton}</div>
+                        )}
                       </div>
                     </div>
 
@@ -4738,28 +4784,14 @@
                           maxLength={1000}
                           placeholder="在此輸入筆記細節..."
                           value={noteContent}
-                          onFocus={() => { noteVoiceTargetFieldRef.current = 'content'; }}
+                          onFocus={() => setNoteVoiceTarget('content')}
                           onChange={(e) => setNoteContent(e.target.value)}
                           className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
-                        <button
-                          type="button"
-                          onClick={handleToggleNoteVoiceInput}
-                          aria-label={noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位'}
-                          aria-pressed={noteVoiceField !== null}
-                          title={noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位'}
-                          className={`shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${
-                            noteVoiceField !== null
-                              ? 'bg-red-100 border-red-300 text-red-700'
-                              : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'
-                          }`}
-                        >
-                          <Icon name={noteVoiceField !== null ? 'x' : 'mic'} className="w-4 h-4" />
-                          {noteVoiceField !== null ? '停止' : '語音輸入'}
-                        </button>
+                        {noteVoiceTargetField === 'content' && noteVoiceField !== 'newCategory' && noteVoiceButton}
                       </div>
                       {noteVoiceField !== null && (
-                        <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : '筆記內容'}；再次點擊可停止。</p>
+                        <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容'}；再次點擊可停止。</p>
                       )}
                       <p className="mt-1 text-[10px] text-slate-400">語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。</p>
                     </div>
@@ -4814,7 +4846,13 @@
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => setShowNoteCategoryManager(!showNoteCategoryManager)}
+                        onClick={() => {
+                          if (showNoteCategoryManager && noteVoiceTargetField === 'newCategory') {
+                            stopNoteVoiceInput(true);
+                            setNoteVoiceTarget('content');
+                          }
+                          setShowNoteCategoryManager(!showNoteCategoryManager);
+                        }}
                         className="flex-1 px-3 py-2 border border-amber-200 text-amber-800 rounded-xl text-xs font-bold hover:bg-amber-50"
                       >
                         {showNoteCategoryManager ? '收起分類管理' : '管理分類'}
@@ -4831,8 +4869,10 @@
                       <div className="p-3 border border-amber-200 rounded-xl bg-amber-50/60 space-y-2">
                         <div className="flex gap-2">
                           <input
+                            ref={newNoteCategoryInputRef}
                             type="text"
                             value={newNoteCategory}
+                            onFocus={() => setNoteVoiceTarget('newCategory')}
                             onChange={(e) => setNewNoteCategory(e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') {
@@ -4844,6 +4884,7 @@
                             aria-label="新增分類名稱"
                             className="flex-1 min-w-0 p-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                           />
+                          {noteVoiceTargetField === 'newCategory' && noteVoiceField !== 'title' && noteVoiceField !== 'content' && noteVoiceField !== 'category' && noteVoiceButton}
                           <button
                             type="button"
                             onClick={handleAddNoteCategory}
