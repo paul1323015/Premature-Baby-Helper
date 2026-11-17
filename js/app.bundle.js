@@ -1236,6 +1236,7 @@ function App() {
   const noteCategoryInputRef = React.useRef(null);
   const noteTitleInputRef = React.useRef(null);
   const noteContentInputRef = React.useRef(null);
+  const noteSearchInputRef = React.useRef(null);
   const noteVoiceRecognitionRef = React.useRef(null);
   const noteVoiceFieldRef = React.useRef(null);
   const noteVoiceTargetFieldRef = React.useRef('content');
@@ -1801,7 +1802,7 @@ function App() {
       showToast('⚠️ 目前瀏覽器不支援語音輸入，請使用鍵盤或裝置內建的語音輸入。');
       return;
     }
-    const input = field === 'title' ? noteTitleInputRef.current : field === 'content' ? noteContentInputRef.current : field === 'newCategory' ? newNoteCategoryInputRef.current : isCustomNoteCategory ? noteCategoryInputRef.current : null;
+    const input = field === 'title' ? noteTitleInputRef.current : field === 'content' ? noteContentInputRef.current : field === 'search' ? noteSearchInputRef.current : field === 'newCategory' ? newNoteCategoryInputRef.current : isCustomNoteCategory ? noteCategoryInputRef.current : null;
     let recognition;
     try {
       recognition = new SpeechRecognition();
@@ -1810,7 +1811,7 @@ function App() {
       showToast('❌ 無法啟動語音輸入，請確認瀏覽器支援及麥克風權限。');
       return;
     }
-    const selectionStart = field === 'category' && !isCustomNoteCategory ? 0 : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : input.value.length);
+    const selectionStart = field === 'category' && !isCustomNoteCategory ? 0 : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : field === 'search' ? noteSearchQuery.length : input.value.length);
     const selectionEnd = field === 'category' && !isCustomNoteCategory ? noteCategory.length : input?.selectionEnd ?? selectionStart;
     const maxLength = field === 'title' ? 30 : field === 'content' ? 1000 : Infinity;
     noteVoiceRecognitionRef.current = recognition;
@@ -1841,7 +1842,7 @@ function App() {
         return;
       }
       const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
-      if (field === 'title') setNoteTitle(updatedValue);else if (field === 'content') setNoteContent(updatedValue);else if (field === 'newCategory') setNewNoteCategory(updatedValue);else {
+      if (field === 'title') setNoteTitle(updatedValue);else if (field === 'content') setNoteContent(updatedValue);else if (field === 'search') setNoteSearchQuery(updatedValue);else if (field === 'newCategory') setNewNoteCategory(updatedValue);else {
         setIsCustomNoteCategory(true);
         setNoteCategory(updatedValue);
       }
@@ -1898,7 +1899,7 @@ function App() {
   const noteVoiceButton = /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: handleToggleNoteVoiceInput,
-    "aria-label": noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位',
+    "aria-label": noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位',
     "aria-pressed": noteVoiceField !== null,
     title: noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位',
     className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteVoiceField !== null ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'}`
@@ -4892,11 +4893,11 @@ function App() {
     onFocus: () => setNoteVoiceTarget('content'),
     onChange: e => setNoteContent(e.target.value),
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), noteVoiceTargetField === 'content' && noteVoiceField !== 'newCategory' && noteVoiceButton), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
+  }), (noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
     className: "mt-1 text-[10px] font-bold text-red-600"
-  }, "正在聆聽，辨識結果將輸入至", noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容', "；再次點擊可停止。"), /*#__PURE__*/React.createElement("p", {
+  }, "正在聆聽，辨識結果將輸入至", noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容', "；再次點擊可停止。"), /*#__PURE__*/React.createElement("p", {
     className: "mt-1 text-[10px] text-slate-400"
   }, "語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。")), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2"
@@ -4909,14 +4910,18 @@ function App() {
     className: "px-4 py-2 border border-slate-300 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-100 transition-colors"
   }, "取消"))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 pt-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-2"
   }, /*#__PURE__*/React.createElement("input", {
+    ref: noteSearchInputRef,
     type: "search",
     value: noteSearchQuery,
+    onFocus: () => setNoteVoiceTarget('search'),
     onChange: e => setNoteSearchQuery(e.target.value),
     placeholder: "搜尋筆記標題或內容...",
     "aria-label": "搜尋筆記標題或內容",
-    className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-amber-400"
-  }), /*#__PURE__*/React.createElement("div", {
+    className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-amber-400"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-1 overflow-x-auto no-scrollbar"
   }, ['全部', ...availableNoteCategories].map(cat => /*#__PURE__*/React.createElement("button", {
     key: cat,

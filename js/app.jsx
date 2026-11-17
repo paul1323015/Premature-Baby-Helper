@@ -1107,6 +1107,7 @@
       const noteCategoryInputRef = React.useRef(null);
       const noteTitleInputRef = React.useRef(null);
       const noteContentInputRef = React.useRef(null);
+      const noteSearchInputRef = React.useRef(null);
       const noteVoiceRecognitionRef = React.useRef(null);
       const noteVoiceFieldRef = React.useRef(null);
       const noteVoiceTargetFieldRef = React.useRef('content');
@@ -1765,6 +1766,8 @@
           ? noteTitleInputRef.current
           : field === 'content'
             ? noteContentInputRef.current
+            : field === 'search'
+              ? noteSearchInputRef.current
             : field === 'newCategory'
               ? newNoteCategoryInputRef.current
             : isCustomNoteCategory
@@ -1781,7 +1784,7 @@
         }
         const selectionStart = field === 'category' && !isCustomNoteCategory
           ? 0
-          : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : input.value.length);
+          : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : field === 'search' ? noteSearchQuery.length : input.value.length);
         const selectionEnd = field === 'category' && !isCustomNoteCategory
           ? noteCategory.length
           : input?.selectionEnd ?? selectionStart;
@@ -1827,6 +1830,7 @@
           const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
           if (field === 'title') setNoteTitle(updatedValue);
           else if (field === 'content') setNoteContent(updatedValue);
+          else if (field === 'search') setNoteSearchQuery(updatedValue);
           else if (field === 'newCategory') setNewNoteCategory(updatedValue);
           else {
             setIsCustomNoteCategory(true);
@@ -1885,7 +1889,7 @@
         <button
           type="button"
           onClick={handleToggleNoteVoiceInput}
-          aria-label={noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位'}
+          aria-label={noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位'}
           aria-pressed={noteVoiceField !== null}
           title={noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位'}
           className={`shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${
@@ -4788,10 +4792,10 @@
                           onChange={(e) => setNoteContent(e.target.value)}
                           className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
-                        {noteVoiceTargetField === 'content' && noteVoiceField !== 'newCategory' && noteVoiceButton}
+                        {(noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton}
                       </div>
                       {noteVoiceField !== null && (
-                        <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : '筆記內容'}；再次點擊可停止。</p>
+                        <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容'}；再次點擊可停止。</p>
                       )}
                       <p className="mt-1 text-[10px] text-slate-400">語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。</p>
                     </div>
@@ -4817,14 +4821,18 @@
 
                   {/* Filter tabs */}
                   <div className="space-y-2 pt-1">
-                    <input
-                      type="search"
-                      value={noteSearchQuery}
-                      onChange={(e) => setNoteSearchQuery(e.target.value)}
-                      placeholder="搜尋筆記標題或內容..."
-                      aria-label="搜尋筆記標題或內容"
-                      className="w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-amber-400"
-                    />
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={noteSearchInputRef}
+                        type="search"
+                        value={noteSearchQuery}
+                        onFocus={() => setNoteVoiceTarget('search')}
+                        onChange={(e) => setNoteSearchQuery(e.target.value)}
+                        placeholder="搜尋筆記標題或內容..."
+                        aria-label="搜尋筆記標題或內容"
+                        className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:border-amber-400"
+                      />
+                    </div>
                     <div className="flex gap-1 overflow-x-auto no-scrollbar">
                       {['全部', ...availableNoteCategories].map((cat) => (
                         <button
