@@ -1102,6 +1102,7 @@
       const [noteTitle, setNoteTitle] = React.useState('');
       const [noteContent, setNoteContent] = React.useState('');
       const [noteVoiceField, setNoteVoiceField] = React.useState(null);
+      const noteCategoryInputRef = React.useRef(null);
       const noteTitleInputRef = React.useRef(null);
       const noteContentInputRef = React.useRef(null);
       const noteVoiceRecognitionRef = React.useRef(null);
@@ -1752,8 +1753,13 @@
           return;
         }
 
-        const input = field === 'title' ? noteTitleInputRef.current : noteContentInputRef.current;
-        if (!input) return;
+        const input = field === 'title'
+          ? noteTitleInputRef.current
+          : field === 'content'
+            ? noteContentInputRef.current
+            : isCustomNoteCategory
+              ? noteCategoryInputRef.current
+              : null;
 
         let recognition;
         try {
@@ -1763,13 +1769,18 @@
           showToast('❌ 無法啟動語音輸入，請確認瀏覽器支援及麥克風權限。');
           return;
         }
-        const selectionStart = input.selectionStart ?? input.value.length;
-        const selectionEnd = input.selectionEnd ?? selectionStart;
-        const maxLength = field === 'title' ? 30 : 1000;
+        const selectionStart = field === 'category' && !isCustomNoteCategory
+          ? 0
+          : input?.selectionStart ?? (field === 'category' ? noteCategory.length : input.value.length);
+        const selectionEnd = field === 'category' && !isCustomNoteCategory
+          ? noteCategory.length
+          : input?.selectionEnd ?? selectionStart;
+        const maxLength = field === 'title' ? 30 : field === 'content' ? 1000 : Infinity;
         noteVoiceRecognitionRef.current = recognition;
         noteVoiceFieldRef.current = field;
         noteVoiceSelectionRef.current = { field, start: selectionStart, end: selectionEnd };
         setNoteVoiceField(field);
+        if (field === 'category') setIsCustomNoteCategory(true);
 
         recognition.lang = 'zh-TW';
         recognition.continuous = true;
@@ -1783,7 +1794,8 @@
             .trim();
           if (!transcript) return;
 
-          const value = input.value;
+          const currentInput = field === 'category' ? noteCategoryInputRef.current : input;
+          const value = currentInput ? currentInput.value : noteCategory;
           const selection = noteVoiceSelectionRef.current;
           const start = Math.min(selection && selection.field === field ? selection.start : value.length, value.length);
           const end = Math.min(selection && selection.field === field ? selection.end : start, value.length);
@@ -1796,10 +1808,16 @@
 
           const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
           if (field === 'title') setNoteTitle(updatedValue);
-          else setNoteContent(updatedValue);
+          else if (field === 'content') setNoteContent(updatedValue);
+          else {
+            setIsCustomNoteCategory(true);
+            setNoteCategory(updatedValue);
+          }
           const caretPosition = start + insertedText.length;
           noteVoiceSelectionRef.current = { field, start: caretPosition, end: caretPosition };
-          window.requestAnimationFrame(() => input.setSelectionRange(caretPosition, caretPosition));
+          if (currentInput) {
+            window.requestAnimationFrame(() => currentInput.setSelectionRange(caretPosition, caretPosition));
+          }
           if (insertedText.length < transcript.length) {
             showToast(`⚠️ 語音內容已加入至${field === 'title' ? '標題' : '筆記內容'}字數上限。`);
           }
@@ -4661,6 +4679,7 @@
                         <label className="block text-[11px] font-bold text-slate-600 mb-1">標籤分類</label>
                         <select
                           value={isCustomNoteCategory ? '' : noteCategory}
+                          onFocus={() => { noteVoiceTargetFieldRef.current = 'category'; }}
                           onChange={(e) => {
                             const value = e.target.value;
                             setIsCustomNoteCategory(value === '');
@@ -4676,8 +4695,10 @@
                         </select>
                         {isCustomNoteCategory && (
                           <input
+                            ref={noteCategoryInputRef}
                             type="text"
                             value={noteCategory}
+                            onFocus={() => { noteVoiceTargetFieldRef.current = 'category'; }}
                             onChange={(e) => setNoteCategory(e.target.value)}
                             placeholder="請輸入分類名稱"
                             aria-label="自訂標籤分類"
@@ -4724,7 +4745,7 @@
                         <button
                           type="button"
                           onClick={handleToggleNoteVoiceInput}
-                          aria-label={noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位'}
+                          aria-label={noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位'}
                           aria-pressed={noteVoiceField !== null}
                           title={noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位'}
                           className={`shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${
@@ -4738,7 +4759,7 @@
                         </button>
                       </div>
                       {noteVoiceField !== null && (
-                        <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : '筆記內容'}；再次點擊可停止。</p>
+                        <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : '筆記內容'}；再次點擊可停止。</p>
                       )}
                       <p className="mt-1 text-[10px] text-slate-400">語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。</p>
                     </div>
