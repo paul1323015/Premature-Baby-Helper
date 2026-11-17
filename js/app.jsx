@@ -4768,9 +4768,6 @@
                           onChange={(e) => setNoteTitle(e.target.value)}
                           className="w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
-                        {noteVoiceTargetField === 'title' && noteVoiceField !== 'newCategory' && (
-                          <div className="mt-2">{noteVoiceButton}</div>
-                        )}
                       </div>
                     </div>
 
@@ -4792,7 +4789,7 @@
                           onChange={(e) => setNoteContent(e.target.value)}
                           className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
-                        {(noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton}
+                        {(noteVoiceTargetField === 'title' || noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton}
                       </div>
                       {noteVoiceField !== null && (
                         <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容'}；再次點擊可停止。</p>

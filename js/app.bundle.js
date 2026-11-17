@@ -4876,9 +4876,7 @@ function App() {
     onFocus: () => setNoteVoiceTarget('title'),
     onChange: e => setNoteTitle(e.target.value),
     className: "w-full p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), noteVoiceTargetField === 'title' && noteVoiceField !== 'newCategory' && /*#__PURE__*/React.createElement("div", {
-    className: "mt-2"
-  }, noteVoiceButton))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
   }, /*#__PURE__*/React.createElement("span", null, "筆記內容 (純文字，最多 1000 字)"), /*#__PURE__*/React.createElement("span", {
     className: `text-[10px] ${noteContent.length >= 1000 ? 'text-red-500 font-bold' : 'text-slate-400'}`
@@ -4893,7 +4891,7 @@ function App() {
     onFocus: () => setNoteVoiceTarget('content'),
     onChange: e => setNoteContent(e.target.value),
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), (noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
+  }), (noteVoiceTargetField === 'title' || noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
     className: "mt-1 text-[10px] font-bold text-red-600"
