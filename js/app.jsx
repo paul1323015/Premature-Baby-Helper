@@ -4190,6 +4190,20 @@
                   )}
                 </div>
                 <form onSubmit={handleAddDoctorNote} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="font-bold text-xs">日期</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDoctorNoteDate(getLocalDateInputValue());
+                        setDoctorNoteTime(getLocalTimeInputValue());
+                      }}
+                      className="text-amber-600 hover:text-amber-800 font-bold text-xs"
+                      title="將日期與時間更新為目前時間，儲存後才會套用"
+                    >
+                      設為現在
+                    </button>
+                  </div>
                   <input
                     type="date"
                     required
@@ -4607,7 +4621,23 @@
                   </div>
 
                   <div>
-                    <label className="font-bold block mb-1">日期</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="font-bold">日期</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const date = getLocalDateInputValue();
+                          setNewLogDate(date);
+                          setNewLogTime(getLocalTimeInputValue());
+                          if (newLogType === 'solidFood') setSolidFoodForm(prev => ({ ...prev, date }));
+                          if (newLogType === 'vaccination') setVaccinationForm(prev => ({ ...prev, date }));
+                        }}
+                        className="text-amber-600 hover:text-amber-800 font-bold"
+                        title="將日期與時間更新為目前時間，儲存後才會套用"
+                      >
+                        設為現在
+                      </button>
+                    </div>
                     <input
                       type="date"
                       required
