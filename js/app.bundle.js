@@ -2796,7 +2796,7 @@ function App() {
                     text: [{
                       text: '實際月齡：',
                       bold: true
-                    }, ageData.chronoText],
+                    }, ageData.chronoText.replace(/^實際\s*/, '')],
                     style: 'fact'
                   }]
                 }, {
@@ -4307,7 +4307,7 @@ function App() {
     className: "text-xs text-slate-500"
   }, babyInfo.gender === 'girl' ? '👧 女寶' : '👦 男寶', " | ", ageData.correctedText))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section grid grid-cols-1 gap-3 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200 sm:grid-cols-2"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際出生日："), " ", babyInfo.birthDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "預產期："), " ", babyInfo.dueDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生週數："), " ", babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生體重："), " ", babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際月齡："), " ", ageData.chronoText), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際出生日："), " ", babyInfo.birthDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "預產期："), " ", babyInfo.dueDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生週數："), " ", babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生體重："), " ", babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際月齡："), " ", ageData.chronoText.replace(/^實際\s*/, '')), /*#__PURE__*/React.createElement("div", {
     className: "sm:col-span-2"
   }, /*#__PURE__*/React.createElement("b", null, "當前體重/身長/頭圍："), " ", babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—', " / ", babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—', " / ", babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—')), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"

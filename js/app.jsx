@@ -2763,7 +2763,7 @@
                                   ],
                                   style: 'fact'
                                 },
-                                { text: [{ text: '實際月齡：', bold: true }, ageData.chronoText], style: 'fact' }
+                                { text: [{ text: '實際月齡：', bold: true }, ageData.chronoText.replace(/^實際\s*/, '')], style: 'fact' }
                               ]
                             },
                             {
@@ -4335,7 +4335,7 @@
               <div><b>預產期：</b> {babyInfo.dueDate || '未填寫'}</div>
               <div><b>出生週數：</b> {babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
               <div><b>出生體重：</b> {babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'}</div>
-              <div><b>實際月齡：</b> {ageData.chronoText}</div>
+              <div><b>實際月齡：</b> {ageData.chronoText.replace(/^實際\s*/, '')}</div>
               <div className="sm:col-span-2"><b>當前體重/身長/頭圍：</b> {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / {babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'} / {babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}</div>
             </div>
 
