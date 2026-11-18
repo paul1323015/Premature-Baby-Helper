@@ -2078,14 +2078,14 @@ function App() {
     type: "button",
     onClick: handleToggleNoteMicTest,
     disabled: noteMicTestStatus === 'requesting' || noteMicTestStatus === 'processing',
-    "aria-label": noteMicTestStatus === 'recording' ? '停止麥克風測試錄音' : noteMicTestStatus === 'ready' || noteMicTestStatus === 'played' ? '重新測試麥克風' : '測試麥克風',
+    "aria-label": noteMicTestStatus === 'recording' ? '停止麥克風測試錄音' : '測試麥克風',
     "aria-pressed": noteMicTestStatus === 'recording',
     title: noteMicTestStatus === 'recording' ? '停止錄音並播放測試' : '錄一小段聲音，播放確認麥克風收音',
     className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteMicTestStatus === 'recording' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-sky-200 text-sky-700 hover:bg-sky-50'}`
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "waveform",
     className: "w-4 h-4"
-  }), noteMicTestStatus === 'requesting' ? '等待權限…' : noteMicTestStatus === 'recording' ? '停止測試' : noteMicTestStatus === 'processing' ? '處理中…' : noteMicTestStatus === 'ready' || noteMicTestStatus === 'played' ? '重新測試' : '測試麥克風');
+  }), noteMicTestStatus === 'requesting' ? '等待權限…' : noteMicTestStatus === 'recording' ? '停止測試' : noteMicTestStatus === 'processing' ? '處理中…' : '測試麥克風');
   const noteVoiceControls = /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col items-stretch gap-1"
   }, noteVoiceButton, noteMicTestButton);
@@ -5111,7 +5111,7 @@ function App() {
     role: "status",
     "aria-live": "polite",
     className: "mt-1 text-[10px] font-bold text-sky-800"
-  }, "播放完成；若沒聽清楚，可按「重新測試」再試一次。"), noteMicTestError && /*#__PURE__*/React.createElement("p", {
+  }, "播放完成；若沒聽清楚，可再按「測試麥克風」試一次。"), noteMicTestError && /*#__PURE__*/React.createElement("p", {
     role: "alert",
     className: "mt-1 text-[10px] font-bold text-red-600"
   }, noteMicTestError)), /*#__PURE__*/React.createElement("div", {
