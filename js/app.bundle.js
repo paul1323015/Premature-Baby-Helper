@@ -5031,9 +5031,7 @@ function App() {
     value: "未分類"
   }, "【未分類】"), /*#__PURE__*/React.createElement("option", {
     value: ""
-  }, "＋ 自訂分類…")), !isCustomNoteCategory && noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && /*#__PURE__*/React.createElement("div", {
-    className: "mt-2"
-  }, noteVoiceControls), isCustomNoteCategory && /*#__PURE__*/React.createElement("div", {
+  }, "＋ 自訂分類…")), isCustomNoteCategory && /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 mt-2"
   }, /*#__PURE__*/React.createElement("input", {
     ref: noteCategoryInputRef,
@@ -5044,7 +5042,7 @@ function App() {
     placeholder: "請輸入分類名稱",
     "aria-label": "自訂標籤分類",
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && noteVoiceControls)), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "w-full sm:w-2/3"
   }, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
@@ -5074,7 +5072,7 @@ function App() {
     onFocus: () => setNoteVoiceTarget('content'),
     onChange: e => setNoteContent(e.target.value),
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), (noteVoiceTargetField === 'title' || noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceControls), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
+  }), noteVoiceControls), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
     className: "mt-1 text-[10px] font-bold text-red-600"
@@ -5179,7 +5177,7 @@ function App() {
     placeholder: "輸入新分類名稱",
     "aria-label": "新增分類名稱",
     className: "flex-1 min-w-0 p-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), noteVoiceTargetField === 'newCategory' && noteVoiceField !== 'title' && noteVoiceField !== 'content' && noteVoiceField !== 'category' && noteVoiceControls, /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: handleAddNoteCategory,
     className: "px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold"

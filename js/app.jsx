@@ -4930,9 +4930,6 @@
                           <option value="未分類">【未分類】</option>
                           <option value="">＋ 自訂分類…</option>
                         </select>
-                        {!isCustomNoteCategory && noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && (
-                          <div className="mt-2">{noteVoiceControls}</div>
-                        )}
                         {isCustomNoteCategory && (
                           <div className="flex items-center gap-2 mt-2">
                             <input
@@ -4945,7 +4942,6 @@
                               aria-label="自訂標籤分類"
                               className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                             />
-                            {noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && noteVoiceControls}
                           </div>
                         )}
                       </div>
@@ -4985,7 +4981,7 @@
                           onChange={(e) => setNoteContent(e.target.value)}
                           className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
-                        {(noteVoiceTargetField === 'title' || noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceControls}
+                        {noteVoiceControls}
                       </div>
                       {noteVoiceField !== null && (
                         <p role="status" aria-live="polite" className="mt-1 text-[10px] font-bold text-red-600">正在聆聽，辨識結果將輸入至{noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容'}；再次點擊可停止。</p>
@@ -5116,7 +5112,6 @@
                             aria-label="新增分類名稱"
                             className="flex-1 min-w-0 p-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
                           />
-                          {noteVoiceTargetField === 'newCategory' && noteVoiceField !== 'title' && noteVoiceField !== 'content' && noteVoiceField !== 'category' && noteVoiceControls}
                           <button
                             type="button"
                             onClick={handleAddNoteCategory}
