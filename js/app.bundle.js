@@ -19,6 +19,9 @@ const Icon = ({
     }), /*#__PURE__*/React.createElement("path", {
       d: "M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"
     })),
+    waveform: /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
+      d: "M3 10v4m4-8v12m4-15v18m4-14v10m4-7v4"
+    })),
     heart: /*#__PURE__*/React.createElement("path", {
       d: "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"
     }),
@@ -1232,6 +1235,9 @@ function App() {
   const [noteContent, setNoteContent] = React.useState('');
   const [noteVoiceField, setNoteVoiceField] = React.useState(null);
   const [noteVoiceTargetField, setNoteVoiceTargetField] = React.useState('content');
+  const [noteMicTestStatus, setNoteMicTestStatus] = React.useState('idle');
+  const [noteMicTestAudioUrl, setNoteMicTestAudioUrl] = React.useState('');
+  const [noteMicTestError, setNoteMicTestError] = React.useState('');
   const newNoteCategoryInputRef = React.useRef(null);
   const noteCategoryInputRef = React.useRef(null);
   const noteTitleInputRef = React.useRef(null);
@@ -1241,6 +1247,12 @@ function App() {
   const noteVoiceFieldRef = React.useRef(null);
   const noteVoiceTargetFieldRef = React.useRef('content');
   const noteVoiceSelectionRef = React.useRef(null);
+  const noteMicTestStreamRef = React.useRef(null);
+  const noteMicTestRecorderRef = React.useRef(null);
+  const noteMicTestTimeoutRef = React.useRef(null);
+  const noteMicTestChunksRef = React.useRef([]);
+  const noteMicTestAudioUrlRef = React.useRef('');
+  const noteMicTestRequestIdRef = React.useRef(0);
   const [filterNoteCategory, setFilterNoteCategory] = React.useState('全部');
   const [noteSearchQuery, setNoteSearchQuery] = React.useState('');
   const [editingNoteId, setEditingNoteId] = React.useState(null);
@@ -1790,6 +1802,142 @@ function App() {
     noteVoiceTargetFieldRef.current = field;
     setNoteVoiceTargetField(field);
   };
+  const releaseNoteMicTestStream = () => {
+    const stream = noteMicTestStreamRef.current;
+    noteMicTestStreamRef.current = null;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+  };
+  const clearNoteMicTestAudio = () => {
+    const audioUrl = noteMicTestAudioUrlRef.current;
+    noteMicTestAudioUrlRef.current = '';
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    setNoteMicTestAudioUrl('');
+  };
+  const cancelNoteMicTest = () => {
+    noteMicTestRequestIdRef.current += 1;
+    if (noteMicTestTimeoutRef.current) {
+      window.clearTimeout(noteMicTestTimeoutRef.current);
+      noteMicTestTimeoutRef.current = null;
+    }
+    const recorder = noteMicTestRecorderRef.current;
+    noteMicTestRecorderRef.current = null;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.ondataavailable = null;
+      recorder.onerror = null;
+      recorder.onstop = null;
+      try {
+        recorder.stop();
+      } catch (error) {
+        console.error('Unable to stop notebook microphone test recording:', error);
+      }
+    }
+    releaseNoteMicTestStream();
+    noteMicTestChunksRef.current = [];
+    clearNoteMicTestAudio();
+    setNoteMicTestStatus('idle');
+    setNoteMicTestError('');
+  };
+  const handleToggleNoteMicTest = async () => {
+    const activeRecorder = noteMicTestRecorderRef.current;
+    if (activeRecorder && activeRecorder.state === 'recording') {
+      if (noteMicTestTimeoutRef.current) {
+        window.clearTimeout(noteMicTestTimeoutRef.current);
+        noteMicTestTimeoutRef.current = null;
+      }
+      setNoteMicTestStatus('processing');
+      activeRecorder.stop();
+      return;
+    }
+    if (noteMicTestStatus === 'requesting' || noteMicTestStatus === 'processing') return;
+    if (noteVoiceRecognitionRef.current) {
+      setNoteMicTestError('請先停止語音輸入，再測試麥克風。');
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder !== 'function') {
+      setNoteMicTestError('目前瀏覽器不支援麥克風測試，請確認使用安全連線，或改用裝置的麥克風測試功能。');
+      return;
+    }
+    setNoteMicTestError('');
+    clearNoteMicTestAudio();
+    setNoteMicTestStatus('requesting');
+    const requestId = noteMicTestRequestIdRef.current + 1;
+    noteMicTestRequestIdRef.current = requestId;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true
+      });
+      if (requestId !== noteMicTestRequestIdRef.current) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+      noteMicTestStreamRef.current = stream;
+      const recorder = new window.MediaRecorder(stream);
+      noteMicTestRecorderRef.current = recorder;
+      noteMicTestChunksRef.current = [];
+      recorder.ondataavailable = event => {
+        if (event.data && event.data.size > 0) noteMicTestChunksRef.current.push(event.data);
+      };
+      recorder.onerror = event => {
+        if (requestId !== noteMicTestRequestIdRef.current) return;
+        console.error('Notebook microphone test recording failed:', event.error);
+        noteMicTestRequestIdRef.current += 1;
+        noteMicTestRecorderRef.current = null;
+        if (noteMicTestTimeoutRef.current) {
+          window.clearTimeout(noteMicTestTimeoutRef.current);
+          noteMicTestTimeoutRef.current = null;
+        }
+        releaseNoteMicTestStream();
+        noteMicTestChunksRef.current = [];
+        setNoteMicTestStatus('idle');
+        setNoteMicTestError('錄音時發生問題，請確認麥克風權限後再試。');
+      };
+      recorder.onstop = () => {
+        if (requestId !== noteMicTestRequestIdRef.current) return;
+        noteMicTestRecorderRef.current = null;
+        if (noteMicTestTimeoutRef.current) {
+          window.clearTimeout(noteMicTestTimeoutRef.current);
+          noteMicTestTimeoutRef.current = null;
+        }
+        releaseNoteMicTestStream();
+        const chunks = noteMicTestChunksRef.current;
+        noteMicTestChunksRef.current = [];
+        const audioBlob = new Blob(chunks, {
+          type: recorder.mimeType || chunks[0]?.type || 'audio/webm'
+        });
+        if (audioBlob.size === 0) {
+          setNoteMicTestStatus('idle');
+          setNoteMicTestError('沒有收到錄音內容，請確認麥克風可用後再試。');
+          return;
+        }
+        const audioUrl = URL.createObjectURL(audioBlob);
+        noteMicTestAudioUrlRef.current = audioUrl;
+        setNoteMicTestAudioUrl(audioUrl);
+        setNoteMicTestStatus('ready');
+      };
+      recorder.start();
+      setNoteMicTestStatus('recording');
+      noteMicTestTimeoutRef.current = window.setTimeout(() => {
+        if (requestId !== noteMicTestRequestIdRef.current || recorder.state !== 'recording') return;
+        setNoteMicTestStatus('processing');
+        recorder.stop();
+      }, 5000);
+    } catch (error) {
+      if (requestId !== noteMicTestRequestIdRef.current) return;
+      releaseNoteMicTestStream();
+      noteMicTestRecorderRef.current = null;
+      setNoteMicTestStatus('idle');
+      if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
+        setNoteMicTestError('麥克風未獲允許，請在瀏覽器設定中允許麥克風後再試。');
+      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        setNoteMicTestError('找不到可用的麥克風，請確認裝置已連接麥克風。');
+      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+        setNoteMicTestError('麥克風目前無法使用，請確認沒有被其他應用程式占用後再試。');
+      } else {
+        console.error('Unable to start notebook microphone test:', error);
+        setNoteMicTestError('無法啟動麥克風測試，請稍後再試。');
+      }
+    }
+  };
   const handleToggleNoteVoiceInput = () => {
     const currentRecognition = noteVoiceRecognitionRef.current;
     if (currentRecognition) {
@@ -1895,18 +2043,52 @@ function App() {
     const recognition = noteVoiceRecognitionRef.current;
     noteVoiceRecognitionRef.current = null;
     if (recognition) recognition.abort();
+    noteMicTestRequestIdRef.current += 1;
+    if (noteMicTestTimeoutRef.current) window.clearTimeout(noteMicTestTimeoutRef.current);
+    const recorder = noteMicTestRecorderRef.current;
+    noteMicTestRecorderRef.current = null;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.ondataavailable = null;
+      recorder.onerror = null;
+      recorder.onstop = null;
+      try {
+        recorder.stop();
+      } catch (error) {
+        console.error('Unable to stop notebook microphone test recording:', error);
+      }
+    }
+    const stream = noteMicTestStreamRef.current;
+    noteMicTestStreamRef.current = null;
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    if (noteMicTestAudioUrlRef.current) URL.revokeObjectURL(noteMicTestAudioUrlRef.current);
   }, []);
   const noteVoiceButton = /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: handleToggleNoteVoiceInput,
+    disabled: noteMicTestStatus === 'requesting' || noteMicTestStatus === 'recording' || noteMicTestStatus === 'processing',
     "aria-label": noteVoiceField ? `停止${noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容'}語音輸入` : '開始語音輸入至目前選取欄位',
     "aria-pressed": noteVoiceField !== null,
-    title: noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位',
+    title: noteMicTestStatus === 'recording' ? '請先停止麥克風測試' : noteVoiceField ? '停止聽寫' : '將語音輸入至目前選取欄位',
     className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteVoiceField !== null ? 'bg-red-100 border-red-300 text-red-700' : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-100'}`
   }, /*#__PURE__*/React.createElement(Icon, {
     name: noteVoiceField !== null ? 'x' : 'mic',
     className: "w-4 h-4"
   }), noteVoiceField !== null ? '停止' : '語音輸入');
+  const noteMicTestButton = /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleToggleNoteMicTest,
+    disabled: noteMicTestStatus === 'requesting' || noteMicTestStatus === 'processing',
+    "aria-label": noteMicTestStatus === 'recording' ? '停止麥克風測試錄音' : noteMicTestStatus === 'ready' || noteMicTestStatus === 'played' ? '重新測試麥克風' : '測試麥克風',
+    "aria-pressed": noteMicTestStatus === 'recording',
+    title: noteMicTestStatus === 'recording' ? '停止錄音並播放測試' : '錄一小段聲音，播放確認麥克風收音',
+    className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteMicTestStatus === 'recording' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-sky-200 text-sky-700 hover:bg-sky-50'}`
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "waveform",
+    className: "w-4 h-4"
+  }), noteMicTestStatus === 'requesting' ? '等待權限…' : noteMicTestStatus === 'recording' ? '停止測試' : noteMicTestStatus === 'processing' ? '處理中…' : noteMicTestStatus === 'ready' || noteMicTestStatus === 'played' ? '重新測試' : '測試麥克風');
+  const noteVoiceControls = /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-col items-stretch gap-1"
+  }, noteVoiceButton, noteMicTestButton);
   const handleSaveNote = e => {
     stopNoteVoiceInput(true);
     e.preventDefault();
@@ -1980,6 +2162,7 @@ function App() {
   const handleCloseNotesModal = () => {
     if (editingNoteId !== null && !handleCancelEditNote()) return;
     stopNoteVoiceInput(true);
+    cancelNoteMicTest();
     setShowNotesModal(false);
   };
   const handleAddNoteCategory = () => {
@@ -4850,7 +5033,7 @@ function App() {
     value: ""
   }, "＋ 自訂分類…")), !isCustomNoteCategory && noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && /*#__PURE__*/React.createElement("div", {
     className: "mt-2"
-  }, noteVoiceButton), isCustomNoteCategory && /*#__PURE__*/React.createElement("div", {
+  }, noteVoiceControls), isCustomNoteCategory && /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 mt-2"
   }, /*#__PURE__*/React.createElement("input", {
     ref: noteCategoryInputRef,
@@ -4861,7 +5044,7 @@ function App() {
     placeholder: "請輸入分類名稱",
     "aria-label": "自訂標籤分類",
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && noteVoiceButton)), /*#__PURE__*/React.createElement("div", {
+  }), noteVoiceTargetField === 'category' && noteVoiceField !== 'newCategory' && noteVoiceControls)), /*#__PURE__*/React.createElement("div", {
     className: "w-full sm:w-2/3"
   }, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
@@ -4891,13 +5074,47 @@ function App() {
     onFocus: () => setNoteVoiceTarget('content'),
     onChange: e => setNoteContent(e.target.value),
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), (noteVoiceTargetField === 'title' || noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceButton), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
+  }), (noteVoiceTargetField === 'title' || noteVoiceTargetField === 'content' || noteVoiceTargetField === 'search') && noteVoiceField !== 'newCategory' && noteVoiceControls), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
     className: "mt-1 text-[10px] font-bold text-red-600"
   }, "正在聆聽，辨識結果將輸入至", noteVoiceField === 'title' ? '標題' : noteVoiceField === 'category' ? '標籤分類' : noteVoiceField === 'newCategory' ? '新增分類名稱' : noteVoiceField === 'search' ? '搜尋欄' : '筆記內容', "；再次點擊可停止。"), /*#__PURE__*/React.createElement("p", {
     className: "mt-1 text-[10px] text-slate-400"
-  }, "語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。")), /*#__PURE__*/React.createElement("div", {
+  }, "語音辨識需允許麥克風，處理方式依瀏覽器與裝置而異。"), /*#__PURE__*/React.createElement("p", {
+    className: "mt-1 text-[10px] text-slate-400"
+  }, "麥克風測試錄音最長 5 秒，只暫存在此裝置供播放確認，不會上傳。"), noteMicTestStatus === 'requesting' && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    "aria-live": "polite",
+    className: "mt-1 text-[10px] font-bold text-sky-700"
+  }, "正在等待麥克風權限，請依瀏覽器提示選擇允許。"), noteMicTestStatus === 'recording' && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    "aria-live": "polite",
+    className: "mt-1 text-[10px] font-bold text-red-600"
+  }, "正在錄音，請說幾句話；最長 5 秒，也可以按「停止測試」提早結束。"), noteMicTestStatus === 'processing' && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    "aria-live": "polite",
+    className: "mt-1 text-[10px] font-bold text-sky-700"
+  }, "正在準備播放測試錄音…"), noteMicTestStatus === 'ready' && noteMicTestAudioUrl && /*#__PURE__*/React.createElement("div", {
+    className: "mt-2 p-2 rounded-xl border border-sky-100 bg-sky-50"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "mb-1 text-[10px] font-bold text-sky-800"
+  }, "錄音完成，請播放確認是否聽見自己的聲音。"), /*#__PURE__*/React.createElement("audio", {
+    controls: true,
+    src: noteMicTestAudioUrl,
+    "aria-label": "播放麥克風測試錄音",
+    onEnded: () => {
+      clearNoteMicTestAudio();
+      setNoteMicTestStatus('played');
+    },
+    className: "w-full"
+  })), noteMicTestStatus === 'played' && /*#__PURE__*/React.createElement("p", {
+    role: "status",
+    "aria-live": "polite",
+    className: "mt-1 text-[10px] font-bold text-sky-800"
+  }, "播放完成；若沒聽清楚，可按「重新測試」再試一次。"), noteMicTestError && /*#__PURE__*/React.createElement("p", {
+    role: "alert",
+    className: "mt-1 text-[10px] font-bold text-red-600"
+  }, noteMicTestError)), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     type: "submit",
@@ -4962,7 +5179,7 @@ function App() {
     placeholder: "輸入新分類名稱",
     "aria-label": "新增分類名稱",
     className: "flex-1 min-w-0 p-2 text-xs border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }), noteVoiceTargetField === 'newCategory' && noteVoiceField !== 'title' && noteVoiceField !== 'content' && noteVoiceField !== 'category' && noteVoiceButton, /*#__PURE__*/React.createElement("button", {
+  }), noteVoiceTargetField === 'newCategory' && noteVoiceField !== 'title' && noteVoiceField !== 'content' && noteVoiceField !== 'category' && noteVoiceControls, /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: handleAddNoteCategory,
     className: "px-3 py-2 bg-amber-500 text-white rounded-lg text-xs font-bold"
