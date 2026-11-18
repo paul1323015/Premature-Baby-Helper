@@ -4020,8 +4020,9 @@
                     <div className="flex items-center gap-1">
                       <button
                         onClick={handleRestoreDefaultMilestones}
-                        className="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold"
+                        className="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold flex items-center gap-1"
                       >
+                        <Icon name="refresh" className="w-3 h-3" />
                         還原預設項目
                       </button>
                       <button

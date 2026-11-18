@@ -4044,8 +4044,11 @@ function App() {
     className: "flex items-center gap-1"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: handleRestoreDefaultMilestones,
-    className: "px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold"
-  }, "還原預設項目"), /*#__PURE__*/React.createElement("button", {
+    className: "px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-[11px] font-bold flex items-center gap-1"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "refresh",
+    className: "w-3 h-3"
+  }), "還原預設項目"), /*#__PURE__*/React.createElement("button", {
     onClick: () => openMilestoneEditor(),
     className: "px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold flex items-center gap-1"
   }, /*#__PURE__*/React.createElement(Icon, {
