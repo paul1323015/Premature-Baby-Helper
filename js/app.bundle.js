@@ -5576,7 +5576,7 @@ function App() {
     className: "font-bold text-purple-900 text-sm flex items-center gap-1.5"
   }, "📝 隨手筆記本"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "快速記錄門診提問、成長大事記與照護備忘，支援分類篩選與編輯，讓照護資訊不遺漏。")), /*#__PURE__*/React.createElement("div", {
+  }, "快速記錄門診提問、成長大事記與照護備忘，支援語音輸入、分類篩選與編輯，讓照護資訊更好整理。")), /*#__PURE__*/React.createElement("div", {
     className: "p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1"
   }, /*#__PURE__*/React.createElement("div", {
     className: "font-bold text-indigo-900 text-sm flex items-center gap-1.5"
@@ -5626,11 +5626,11 @@ function App() {
     className: "font-bold text-slate-800 text-sm flex items-center gap-1.5"
   }, "🔒 隱私權與資料安全保護聲明"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "巴掌小太陽承諾：我們無比重視您與寶寶的隱私。本應用程式（網頁）採用瀏覽器本地快取技術（Local Storage）。您所輸入的寶寶姓名、生日、預產期，以及每一筆體重、身高、頭圍等日常照護紀錄，全部都只會儲存在您自己的手機或電腦瀏覽器中。"), /*#__PURE__*/React.createElement("p", {
+  }, "巴掌小太陽重視您與寶寶的隱私。本網頁使用瀏覽器本機儲存（Local Storage），保存您輸入的寶寶姓名、生日、預產期，以及體重、身高、頭圍等日常照護紀錄；本工具不會主動將這些紀錄上傳至伺服器。"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "我們的網頁伺服器絕對不會收集、傳輸、或留存任何您填寫的隱私資料。整個操作過程完全在您的終端設備獨立執行，網路上沒有任何人能窺探您寶寶的成長數據。"), /*#__PURE__*/React.createElement("p", {
+  }, "語音辨識的處理方式依您使用的瀏覽器與裝置服務而異。"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "『巴掌小太陽』純粹為公益與照護輔助而生。沒有會員登入、沒有廣告追蹤，更沒有資料外洩的風險。您可以百分之百放心地將這裡當作專屬您與寶寶的安心育兒避風港。尊重隱私，請安心使用。"))), /*#__PURE__*/React.createElement("div", {
+  }, "『巴掌小太陽』純粹為公益與照護輔助而生，沒有會員登入或廣告追蹤。請妥善保管您的裝置，並定期備份重要紀錄。希望這份小工具能成為您與寶寶安心育兒路上的陪伴。尊重隱私，也請安心使用。"))), /*#__PURE__*/React.createElement("div", {
     className: "pt-3 border-t mt-3 flex justify-end"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setShowHelpModal(false),
