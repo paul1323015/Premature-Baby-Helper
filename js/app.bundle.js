@@ -5608,7 +5608,7 @@ function App() {
     className: "text-slate-700 leading-relaxed"
   }, "這款工具不帶任何商業盈利目的或複雜條款，只希望能像它的名字一樣，靜靜地陪伴、溫暖每一個需要的家庭。"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-700 leading-relaxed"
-  }, "如果你身邊剛好有早產兒新手爸媽，或是你自己正經歷這段守護的旅程，歡迎直接點擊連結取用。願每一位像小太陽一樣勇敢的孩子，都能在大家的守護下，平安健康地長大！ ❤️")), /*#__PURE__*/React.createElement("div", {
+  }, "如果您身邊有早產兒新手爸媽，歡迎將「巴掌小太陽」分享給他們；如果您正走在這段旅程中，也希望這份小工具能陪伴您。願每一位像小太陽般勇敢的孩子，都能在大家的守護下，平安健康地長大！ ❤️")), /*#__PURE__*/React.createElement("div", {
     className: "p-4 bg-amber-50 border border-amber-300 rounded-xl space-y-2.5 text-amber-950 shadow-sm"
   }, /*#__PURE__*/React.createElement("div", {
     className: "font-bold text-amber-900 text-sm flex items-center gap-1.5 border-b border-amber-200 pb-2"
