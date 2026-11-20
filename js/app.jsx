@@ -1063,6 +1063,10 @@
         }
         return [];
       });
+      const [doctorNoteFilterStartDate, setDoctorNoteFilterStartDate] = React.useState('');
+      const [doctorNoteFilterEndDate, setDoctorNoteFilterEndDate] = React.useState('');
+      const [doctorNoteFilterCategory, setDoctorNoteFilterCategory] = React.useState('all');
+      const [doctorNoteSearchQuery, setDoctorNoteSearchQuery] = React.useState('');
       const [doctorVisitSummary, setDoctorVisitSummary] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_doctor_visit_summary_v1');
         return typeof saved === 'string' ? saved : '';
@@ -3532,6 +3536,21 @@
         && (!careLogEndDate || (log.date && log.date <= careLogEndDate))
         && (careLogCategory === 'all' || log.type === careLogCategory)
       ));
+      const doctorNoteCategories = [...new Set([
+        '門診提問',
+        '看診備忘',
+        ...doctorNotes.map(note => note.category || note.tag || '門診提問')
+      ])].filter(Boolean);
+      const isDoctorNoteDateRangeInvalid = doctorNoteFilterStartDate && doctorNoteFilterEndDate && doctorNoteFilterStartDate > doctorNoteFilterEndDate;
+      const filteredDoctorNotes = isDoctorNoteDateRangeInvalid ? [] : doctorNotes.filter(note => (
+        (!doctorNoteFilterStartDate || (note.date && note.date >= doctorNoteFilterStartDate))
+        && (!doctorNoteFilterEndDate || (note.date && note.date <= doctorNoteFilterEndDate))
+        && (doctorNoteFilterCategory === 'all' || (note.category || note.tag || '門診提問') === doctorNoteFilterCategory)
+        && (
+          !doctorNoteSearchQuery.trim()
+          || `${note.question || ''} ${note.answer || ''}`.toLowerCase().includes(doctorNoteSearchQuery.trim().toLowerCase())
+        )
+      ));
 
       const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
       const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
@@ -4350,12 +4369,99 @@
                   </div>
                 </form>
                 <div className="space-y-2">
+                  <div className={`p-3 rounded-xl border space-y-2 ${cardBg}`}>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          <label className="text-[11px] font-bold text-slate-600">
+                            開始日期
+                            <input
+                              type="date"
+                              value={doctorNoteFilterStartDate}
+                              onChange={(e) => setDoctorNoteFilterStartDate(e.target.value)}
+                              className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+                            />
+                          </label>
+                          <label className="text-[11px] font-bold text-slate-600">
+                            結束日期
+                            <input
+                              type="date"
+                              value={doctorNoteFilterEndDate}
+                              onChange={(e) => setDoctorNoteFilterEndDate(e.target.value)}
+                              className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+                            />
+                          </label>
+                          <label className="text-[11px] font-bold text-slate-600">
+                            類別
+                            <select
+                              value={doctorNoteFilterCategory}
+                              onChange={(e) => setDoctorNoteFilterCategory(e.target.value)}
+                              className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+                            >
+                              <option value="all">全部類別</option>
+                              {doctorNoteCategories.map(category => (
+                                <option key={category} value={category}>{category}</option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                        <input
+                          type="search"
+                          value={doctorNoteSearchQuery}
+                          onChange={(e) => setDoctorNoteSearchQuery(e.target.value)}
+                          placeholder="搜尋提問或醫師答覆..."
+                          className="w-full p-2 border rounded-lg text-xs bg-white"
+                        />
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const today = getLocalDateInputValue();
+                              setDoctorNoteFilterStartDate(today);
+                              setDoctorNoteFilterEndDate(today);
+                            }}
+                            className="px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+                          >
+                            今天
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const endDate = new Date();
+                              const startDate = new Date(endDate);
+                              startDate.setDate(startDate.getDate() - 6);
+                              const formatDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                              setDoctorNoteFilterStartDate(formatDate(startDate));
+                              setDoctorNoteFilterEndDate(formatDate(endDate));
+                            }}
+                            className="px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+                          >
+                            最近 7 天
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDoctorNoteFilterStartDate('');
+                              setDoctorNoteFilterEndDate('');
+                              setDoctorNoteFilterCategory('all');
+                              setDoctorNoteSearchQuery('');
+                            }}
+                            className="px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+                          >
+                            顯示全部
+                          </button>
+                          <span className="text-[11px] text-slate-500 sm:ml-auto" role="status" aria-live="polite">
+                            {isDoctorNoteDateRangeInvalid ? '開始日期不能晚於結束日期' : `顯示 ${filteredDoctorNotes.length} / ${doctorNotes.length} 筆`}
+                          </span>
+                        </div>
+                      </div>
                   {doctorNotes.length === 0 ? (
                     <div className="p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
                       尚無看診問題備忘
                     </div>
-                  ) : (
-                    doctorNotes.map((note) => (
+                  ) : filteredDoctorNotes.length === 0 ? (
+                        <div className="p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50">
+                          沒有符合篩選條件的看診備忘。
+                        </div>
+                      ) : filteredDoctorNotes.map((note) => (
                       <div key={note.id} className={`p-3 border rounded-xl text-xs space-y-1 ${note.answered ? 'bg-green-50 border-green-200' : 'bg-white'}`}>
                         <div className="flex justify-between items-center">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${note.answered ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
@@ -4398,8 +4504,7 @@
                           <p className="whitespace-pre-wrap text-slate-700">{note.answer || '尚未記錄醫師答覆'}</p>
                         </div>}
                       </div>
-                    ))
-                  )}
+                  ))}
                 </div>
               </div>
             )}

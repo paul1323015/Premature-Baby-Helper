@@ -1199,6 +1199,10 @@ function App() {
     }
     return [];
   });
+  const [doctorNoteFilterStartDate, setDoctorNoteFilterStartDate] = React.useState('');
+  const [doctorNoteFilterEndDate, setDoctorNoteFilterEndDate] = React.useState('');
+  const [doctorNoteFilterCategory, setDoctorNoteFilterCategory] = React.useState('all');
+  const [doctorNoteSearchQuery, setDoctorNoteSearchQuery] = React.useState('');
   const [doctorVisitSummary, setDoctorVisitSummary] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_doctor_visit_summary_v1');
     return typeof saved === 'string' ? saved : '';
@@ -3593,6 +3597,9 @@ function App() {
   const availableNoteCategories = [...new Set(['未分類', ...noteCategories, ...notes.map(note => note.category || note.tag || '未分類')])].filter(category => category && category !== '全部');
   const isCareLogDateRangeInvalid = careLogStartDate && careLogEndDate && careLogStartDate > careLogEndDate;
   const filteredCareLogs = isCareLogDateRangeInvalid ? [] : logs.filter(log => (!careLogStartDate || log.date && log.date >= careLogStartDate) && (!careLogEndDate || log.date && log.date <= careLogEndDate) && (careLogCategory === 'all' || log.type === careLogCategory));
+  const doctorNoteCategories = [...new Set(['門診提問', '看診備忘', ...doctorNotes.map(note => note.category || note.tag || '門診提問')])].filter(Boolean);
+  const isDoctorNoteDateRangeInvalid = doctorNoteFilterStartDate && doctorNoteFilterEndDate && doctorNoteFilterStartDate > doctorNoteFilterEndDate;
+  const filteredDoctorNotes = isDoctorNoteDateRangeInvalid ? [] : doctorNotes.filter(note => (!doctorNoteFilterStartDate || note.date && note.date >= doctorNoteFilterStartDate) && (!doctorNoteFilterEndDate || note.date && note.date <= doctorNoteFilterEndDate) && (doctorNoteFilterCategory === 'all' || (note.category || note.tag || '門診提問') === doctorNoteFilterCategory) && (!doctorNoteSearchQuery.trim() || `${note.question || ''} ${note.answer || ''}`.toLowerCase().includes(doctorNoteSearchQuery.trim().toLowerCase())));
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
   const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
   return /*#__PURE__*/React.createElement("div", {
@@ -4314,9 +4321,80 @@ function App() {
     className: "w-full p-2 border rounded-lg text-xs resize-y"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2"
-  }, doctorNotes.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: `p-3 rounded-xl border space-y-2 ${cardBg}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-3 gap-2"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-[11px] font-bold text-slate-600"
+  }, "開始日期", /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: doctorNoteFilterStartDate,
+    onChange: e => setDoctorNoteFilterStartDate(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "text-[11px] font-bold text-slate-600"
+  }, "結束日期", /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: doctorNoteFilterEndDate,
+    onChange: e => setDoctorNoteFilterEndDate(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "text-[11px] font-bold text-slate-600"
+  }, "類別", /*#__PURE__*/React.createElement("select", {
+    value: doctorNoteFilterCategory,
+    onChange: e => setDoctorNoteFilterCategory(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "all"
+  }, "全部類別"), doctorNoteCategories.map(category => /*#__PURE__*/React.createElement("option", {
+    key: category,
+    value: category
+  }, category))))), /*#__PURE__*/React.createElement("input", {
+    type: "search",
+    value: doctorNoteSearchQuery,
+    onChange: e => setDoctorNoteSearchQuery(e.target.value),
+    placeholder: "搜尋提問或醫師答覆...",
+    className: "w-full p-2 border rounded-lg text-xs bg-white"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      const today = getLocalDateInputValue();
+      setDoctorNoteFilterStartDate(today);
+      setDoctorNoteFilterEndDate(today);
+    },
+    className: "px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+  }, "今天"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 6);
+      const formatDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      setDoctorNoteFilterStartDate(formatDate(startDate));
+      setDoctorNoteFilterEndDate(formatDate(endDate));
+    },
+    className: "px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+  }, "最近 7 天"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setDoctorNoteFilterStartDate('');
+      setDoctorNoteFilterEndDate('');
+      setDoctorNoteFilterCategory('all');
+      setDoctorNoteSearchQuery('');
+    },
+    className: "px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+  }, "顯示全部"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[11px] text-slate-500 sm:ml-auto",
+    role: "status",
+    "aria-live": "polite"
+  }, isDoctorNoteDateRangeInvalid ? '開始日期不能晚於結束日期' : `顯示 ${filteredDoctorNotes.length} / ${doctorNotes.length} 筆`))), doctorNotes.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50"
-  }, "尚無看診問題備忘") : doctorNotes.map(note => /*#__PURE__*/React.createElement("div", {
+  }, "尚無看診問題備忘") : filteredDoctorNotes.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "p-4 text-center text-xs text-slate-400 border rounded-xl bg-slate-50"
+  }, "沒有符合篩選條件的看診備忘。") : filteredDoctorNotes.map(note => /*#__PURE__*/React.createElement("div", {
     key: note.id,
     className: `p-3 border rounded-xl text-xs space-y-1 ${note.answered ? 'bg-green-50 border-green-200' : 'bg-white'}`
   }, /*#__PURE__*/React.createElement("div", {
