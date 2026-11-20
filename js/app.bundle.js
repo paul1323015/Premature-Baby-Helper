@@ -1121,6 +1121,9 @@ function App() {
     }
     return [];
   });
+  const [careLogStartDate, setCareLogStartDate] = React.useState('');
+  const [careLogEndDate, setCareLogEndDate] = React.useState('');
+  const [careLogCategory, setCareLogCategory] = React.useState('all');
   const careLogTypeLabels = {
     feeding: '餵奶',
     diaper: '尿布',
@@ -3588,6 +3591,8 @@ function App() {
   };
   const filteredNotes = notes.filter(n => (filterNoteCategory === '全部' || (n.category || n.tag || '未分類') === filterNoteCategory) && (!noteSearchQuery.trim() || `${n.title || ''} ${n.content || ''}`.toLowerCase().includes(noteSearchQuery.trim().toLowerCase())));
   const availableNoteCategories = [...new Set(['未分類', ...noteCategories, ...notes.map(note => note.category || note.tag || '未分類')])].filter(category => category && category !== '全部');
+  const isCareLogDateRangeInvalid = careLogStartDate && careLogEndDate && careLogStartDate > careLogEndDate;
+  const filteredCareLogs = isCareLogDateRangeInvalid ? [] : logs.filter(log => (!careLogStartDate || log.date && log.date >= careLogStartDate) && (!careLogEndDate || log.date && log.date <= careLogEndDate) && (careLogCategory === 'all' || log.type === careLogCategory));
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
   const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
   return /*#__PURE__*/React.createElement("div", {
@@ -4104,9 +4109,73 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "plus",
     className: "w-3.5 h-3.5"
-  }), "新增紀錄")), logs.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }), "新增紀錄")), /*#__PURE__*/React.createElement("div", {
+    className: `p-3 rounded-xl border space-y-2 ${cardBg}`
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-3 gap-2"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "text-[11px] font-bold text-slate-600"
+  }, "開始日期", /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: careLogStartDate,
+    onChange: e => setCareLogStartDate(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "text-[11px] font-bold text-slate-600"
+  }, "結束日期", /*#__PURE__*/React.createElement("input", {
+    type: "date",
+    value: careLogEndDate,
+    onChange: e => setCareLogEndDate(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "text-[11px] font-bold text-slate-600"
+  }, "類別", /*#__PURE__*/React.createElement("select", {
+    value: careLogCategory,
+    onChange: e => setCareLogCategory(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "all"
+  }, "全部類別"), Object.entries(careLogTypeLabels).map(([type, label]) => /*#__PURE__*/React.createElement("option", {
+    key: type,
+    value: type
+  }, label))))), /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      const today = getLocalDateInputValue();
+      setCareLogStartDate(today);
+      setCareLogEndDate(today);
+    },
+    className: "px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+  }, "今天"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      const endDate = new Date();
+      const startDate = new Date(endDate);
+      startDate.setDate(startDate.getDate() - 6);
+      const formatDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      setCareLogStartDate(formatDate(startDate));
+      setCareLogEndDate(formatDate(endDate));
+    },
+    className: "px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+  }, "最近 7 天"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setCareLogStartDate('');
+      setCareLogEndDate('');
+      setCareLogCategory('all');
+    },
+    className: "px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+  }, "顯示全部"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[11px] text-slate-500 sm:ml-auto",
+    role: "status",
+    "aria-live": "polite"
+  }, isCareLogDateRangeInvalid ? '開始日期不能晚於結束日期' : `顯示 ${filteredCareLogs.length} / ${logs.length} 筆`))), logs.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50"
-  }, "尚無紀錄，點擊「+ 新增紀錄」開始記錄餵奶與尿布吧！") : logs.map(log => /*#__PURE__*/React.createElement("div", {
+  }, "尚無紀錄，點擊「+ 新增紀錄」開始記錄餵奶與尿布吧！") : filteredCareLogs.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50"
+  }, "沒有符合篩選條件的照護紀錄。") : filteredCareLogs.map(log => /*#__PURE__*/React.createElement("div", {
     key: log.id,
     className: `p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {

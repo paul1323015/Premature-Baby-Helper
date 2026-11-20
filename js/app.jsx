@@ -971,6 +971,9 @@
         }
         return [];
       });
+      const [careLogStartDate, setCareLogStartDate] = React.useState('');
+      const [careLogEndDate, setCareLogEndDate] = React.useState('');
+      const [careLogCategory, setCareLogCategory] = React.useState('all');
       const careLogTypeLabels = { feeding: '餵奶', diaper: '尿布', solidFood: '副食品', vaccination: '疫苗' };
       const formatCareLogDetail = log => (
         log.type === 'solidFood' || log.type === 'vaccination'
@@ -3523,6 +3526,12 @@
         ...noteCategories,
         ...notes.map(note => note.category || note.tag || '未分類')
       ])].filter(category => category && category !== '全部');
+      const isCareLogDateRangeInvalid = careLogStartDate && careLogEndDate && careLogStartDate > careLogEndDate;
+      const filteredCareLogs = isCareLogDateRangeInvalid ? [] : logs.filter(log => (
+        (!careLogStartDate || (log.date && log.date >= careLogStartDate))
+        && (!careLogEndDate || (log.date && log.date <= careLogEndDate))
+        && (careLogCategory === 'all' || log.type === careLogCategory)
+      ));
 
       const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
       const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
@@ -4085,12 +4094,92 @@
                     新增紀錄
                   </button>
                 </div>
+                <div className={`p-3 rounded-xl border space-y-2 ${cardBg}`}>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <label className="text-[11px] font-bold text-slate-600">
+                      開始日期
+                      <input
+                        type="date"
+                        value={careLogStartDate}
+                        onChange={(e) => setCareLogStartDate(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+                      />
+                    </label>
+                    <label className="text-[11px] font-bold text-slate-600">
+                      結束日期
+                      <input
+                        type="date"
+                        value={careLogEndDate}
+                        onChange={(e) => setCareLogEndDate(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+                      />
+                    </label>
+                    <label className="text-[11px] font-bold text-slate-600">
+                      類別
+                      <select
+                        value={careLogCategory}
+                        onChange={(e) => setCareLogCategory(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
+                      >
+                        <option value="all">全部類別</option>
+                        {Object.entries(careLogTypeLabels).map(([type, label]) => (
+                          <option key={type} value={type}>{label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const today = getLocalDateInputValue();
+                        setCareLogStartDate(today);
+                        setCareLogEndDate(today);
+                      }}
+                      className="px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+                    >
+                      今天
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const endDate = new Date();
+                        const startDate = new Date(endDate);
+                        startDate.setDate(startDate.getDate() - 6);
+                        const formatDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                        setCareLogStartDate(formatDate(startDate));
+                        setCareLogEndDate(formatDate(endDate));
+                      }}
+                      className="px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+                    >
+                      最近 7 天
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCareLogStartDate('');
+                        setCareLogEndDate('');
+                        setCareLogCategory('all');
+                      }}
+                      className="px-2.5 py-1 rounded-lg border text-[11px] font-bold text-slate-600 hover:bg-slate-50"
+                    >
+                      顯示全部
+                    </button>
+                    <span className="text-[11px] text-slate-500 sm:ml-auto" role="status" aria-live="polite">
+                      {isCareLogDateRangeInvalid ? '開始日期不能晚於結束日期' : `顯示 ${filteredCareLogs.length} / ${logs.length} 筆`}
+                    </span>
+                  </div>
+                </div>
                 {logs.length === 0 ? (
                   <div className="p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50">
                     尚無紀錄，點擊「+ 新增紀錄」開始記錄餵奶與尿布吧！
                   </div>
+                ) : filteredCareLogs.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50">
+                    沒有符合篩選條件的照護紀錄。
+                  </div>
                 ) : (
-                  logs.map((log) => (
+                  filteredCareLogs.map((log) => (
                     <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`}>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-amber-600">{log.date || '未設定日期'} {log.time}</span>
