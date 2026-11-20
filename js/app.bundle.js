@@ -404,11 +404,6 @@ const getChronoAgeAtDate = (measurementDateStr, birthDateStr) => {
   const ages = getAgesForDate(measurementDateStr, birthDateStr, null);
   return ages.chronoMonths;
 };
-const formatBytes = bytes => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-};
 const PretermGrowthChart = ({
   metric,
   gender,
@@ -1298,9 +1293,8 @@ function App() {
     ...babyInfo
   });
   const [pastedJson, setPastedJson] = React.useState('');
-  const AUTO_BACKUP_STORAGE_KEY = 'sun_baby_recent_auto_backups_v1';
-  const ADVANCED_RESTORE_SETTING_KEY = 'sun_baby_advanced_restore_enabled_v1';
-  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_doctor_visit_summary_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_emergency_snapshot_v1', 'sun_baby_night_mode_v1', AUTO_BACKUP_STORAGE_KEY, ADVANCED_RESTORE_SETTING_KEY];
+  const LEGACY_BACKUP_STORAGE_KEYS = ['sun_baby_recent_auto_backups_v1', 'sun_baby_advanced_restore_enabled_v1', 'sun_baby_emergency_snapshot_v1'];
+  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_doctor_visit_summary_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_night_mode_v1', ...LEGACY_BACKUP_STORAGE_KEYS];
   const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
   const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
   const calculateStorageUsage = () => {
@@ -1331,20 +1325,6 @@ function App() {
     showToast(`✅ 已重新計算，本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
     return usage;
   };
-  const handleCalculateCleanableStorage = () => {
-    const key = 'sun_baby_emergency_snapshot_v1';
-    const value = localStorage.getItem(key);
-    const bytes = value === null ? 0 : key.length + value.length;
-    const message = bytes === 0 ? '目前沒有可清理的暫存資料。正式資料與最近的自動備份會保留。' : `可清理的暫存資料約 ${formatBytes(bytes)}。正式資料與最近的自動備份會保留。`;
-    showToast(message, 'info');
-  };
-  const cleanupStorageTemporaryData = () => {
-    const confirmed = window.confirm('將清理可移除的暫存資料，不會刪除正式資料或最近自動備份。確定要繼續嗎？');
-    if (!confirmed) return;
-    localStorage.removeItem('sun_baby_emergency_snapshot_v1');
-    const usage = refreshStorageUsage();
-    showToast(`🧹 已清理可移除的暫存資料；正式資料與最近自動備份未變更。本機儲存空間目前使用約 ${formatStorageUsage(usage.bytes)}。`);
-  };
   const ensureStorageCapacityForNewData = () => {
     const usage = refreshStorageUsage();
     if (usage.bytes < STORAGE_LIMIT_BYTES) return true;
@@ -1352,22 +1332,6 @@ function App() {
     showToast('⚠️ 儲存空間已滿，新增資料已暫停');
     return false;
   };
-  const readRecentAutoBackups = () => {
-    try {
-      const saved = localStorage.getItem(AUTO_BACKUP_STORAGE_KEY);
-      if (!saved) return [];
-      const parsed = JSON.parse(saved);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      console.error('Failed to read recent auto backups:', error);
-      return [];
-    }
-  };
-  const [recentAutoBackups, setRecentAutoBackups] = React.useState(() => readRecentAutoBackups());
-  const [advancedRestoreEnabled, setAdvancedRestoreEnabled] = React.useState(() => {
-    const saved = localStorage.getItem(ADVANCED_RESTORE_SETTING_KEY);
-    return saved === null ? true : saved === 'true';
-  });
   const [showStorageRecoveryModal, setShowStorageRecoveryModal] = React.useState(false);
   const [storageRecoveryMeta, setStorageRecoveryMeta] = React.useState({
     title: '儲存空間不足',
@@ -1375,54 +1339,22 @@ function App() {
     backupData: null
   });
   React.useEffect(() => {
+    LEGACY_BACKUP_STORAGE_KEYS.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.error('Failed to remove legacy storage key:', key, error);
+      }
+    });
+  }, []);
+  React.useEffect(() => {
     const usage = refreshStorageUsage();
     const nextLevel = usage.bytes >= STORAGE_LIMIT_BYTES ? 2 : usage.bytes >= STORAGE_WARNING_BYTES ? 1 : 0;
     if (nextLevel > storageWarningLevelRef.current && nextLevel > 0) {
       setShowStorageManagerModal(true);
     }
     storageWarningLevelRef.current = nextLevel;
-  }, [babyInfo, growthHistory, logs, doctorNotes, doctorVisitSummary, notes, noteCategories, milestones, recentAutoBackups]);
-  const persistRecentAutoBackups = entries => {
-    const trimmed = Array.isArray(entries) ? entries.slice(0, 3) : [];
-    setRecentAutoBackups(trimmed);
-    try {
-      if (trimmed.length > 0) {
-        localStorage.setItem(AUTO_BACKUP_STORAGE_KEY, JSON.stringify(trimmed));
-      } else {
-        localStorage.removeItem(AUTO_BACKUP_STORAGE_KEY);
-      }
-    } catch (error) {
-      console.error('Failed to persist recent auto backups:', error);
-      setStorageRecoveryMeta({
-        title: '儲存空間不足',
-        message: '進階還原紀錄無法寫入本機儲存空間，已暫停保存。請先清理或下載備份檔案後再繼續。',
-        backupData: createBackupPayload()
-      });
-      setShowStorageRecoveryModal(true);
-    }
-  };
-  const clearRecentAutoBackups = () => {
-    const confirmed = window.confirm('⚠️ 此操作將清除所有進階還原紀錄。清除後將無法再從最近 3 筆自動備份中還原。確定要繼續嗎？');
-    if (!confirmed) return;
-    persistRecentAutoBackups([]);
-    showToast('🗑️ 已清除所有自動備份紀錄');
-  };
-  const handleToggleAdvancedRestore = () => {
-    if (advancedRestoreEnabled) {
-      const confirmed = window.confirm('⚠️ 關閉進階還原後，將不再於還原前預先下載自動備份，並會刪除目前最近 3 筆進階還原紀錄。確定要關閉嗎？');
-      if (!confirmed) return;
-      setAdvancedRestoreEnabled(false);
-      localStorage.setItem(ADVANCED_RESTORE_SETTING_KEY, 'false');
-      persistRecentAutoBackups([]);
-      showToast('🔕 已關閉進階還原並清除備份紀錄');
-      return;
-    }
-    const confirmed = window.confirm('開啟進階還原後，還原前會先下載自動備份，並保留最近 3 筆備份紀錄。確定要開啟嗎？');
-    if (!confirmed) return;
-    setAdvancedRestoreEnabled(true);
-    localStorage.setItem(ADVANCED_RESTORE_SETTING_KEY, 'true');
-    showToast('🔔 已開啟進階還原');
-  };
+  }, [babyInfo, growthHistory, logs, doctorNotes, doctorVisitSummary, notes, noteCategories, milestones]);
   const clearAppStorageData = () => {
     APP_STORAGE_KEYS.forEach(key => {
       try {
@@ -1575,6 +1507,7 @@ function App() {
     return `巴掌小太陽_${label}_${safeName}_${formatLocalDateTimeForFileName()}.json`;
   };
   const createBackupPayload = () => ({
+    appId: 'sun-baby-helper',
     version: '1.3',
     exportTimestamp: new Date().toISOString(),
     babyInfo,
@@ -1593,6 +1526,135 @@ function App() {
     notebookNotes: notes,
     doctorQuestions: doctorNotes
   });
+  const isBackupRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const isBackupRecordArray = value => Array.isArray(value) && value.every(isBackupRecord);
+  const isSupportedBackup = backupData => {
+    if (!isBackupRecord(backupData)) return false;
+    const hasOwn = key => Object.prototype.hasOwnProperty.call(backupData, key);
+    const hasCurrentIdentity = backupData.appId === 'sun-baby-helper' && backupData.version === '1.3';
+    const legacySignatureFields = ['careReminders', 'vaccinationLogs', 'solidFoodLogs', 'doctorNotes', 'doctorQuestions', 'doctorVisitSummary', 'milestones', 'noteCategories', 'notebookNotes'];
+    const hasLegacyIdentity = !hasOwn('appId') && typeof backupData.version === 'string' && typeof backupData.exportTimestamp === 'string' && isBackupRecord(backupData.babyInfo) && isBackupRecordArray(backupData.growthHistory) && isBackupRecordArray(backupData.logs) && legacySignatureFields.some(hasOwn);
+    if (!hasCurrentIdentity && !hasLegacyIdentity) return false;
+    if (!isBackupRecord(backupData.babyInfo) || !isBackupRecordArray(backupData.growthHistory) || !isBackupRecordArray(backupData.logs)) return false;
+    const recordArrayFields = ['careReminders', 'vaccinationLogs', 'solidFoodLogs', 'doctorNotes', 'doctorQuestions', 'milestones', 'notes', 'notebook', 'notebookNotes'];
+    if (recordArrayFields.some(key => hasOwn(key) && !isBackupRecordArray(backupData[key]))) return false;
+    if (hasOwn('noteCategories') && (!Array.isArray(backupData.noteCategories) || !backupData.noteCategories.every(category => typeof category === 'string'))) return false;
+    if (hasOwn('nightMode') && typeof backupData.nightMode !== 'boolean') return false;
+    if (hasOwn('doctorVisitSummary') && typeof backupData.doctorVisitSummary !== 'string') return false;
+    return true;
+  };
+  const createBackupStorageEntries = backupData => {
+    const entries = [];
+    const addEntry = (key, value) => entries.push([key, typeof value === 'string' ? value : JSON.stringify(value)]);
+    const hasOwn = key => Object.prototype.hasOwnProperty.call(backupData, key);
+    const cleanedProfile = {
+      ...backupData.babyInfo
+    };
+    if (cleanedProfile.birthDate) cleanedProfile.birthDate = sanitizeDateStr(cleanedProfile.birthDate);
+    if (cleanedProfile.dueDate) cleanedProfile.dueDate = sanitizeDateStr(cleanedProfile.dueDate);
+    addEntry('sun_baby_profile_v5', cleanedProfile);
+    addEntry('sun_baby_growth_history_v1', backupData.growthHistory.map(item => ({
+      ...item,
+      date: sanitizeDateStr(item.date)
+    })));
+    addEntry('sun_baby_logs_v1', backupData.logs);
+    addEntry('sun_baby_care_reminders_v1', Array.isArray(backupData.careReminders) ? backupData.careReminders.filter(isValidCareReminder) : []);
+    addEntry('sun_baby_doctor_visit_summary_v1', typeof backupData.doctorVisitSummary === 'string' ? backupData.doctorVisitSummary : '');
+    if (typeof backupData.nightMode === 'boolean') {
+      addEntry('sun_baby_night_mode_v1', String(backupData.nightMode));
+    }
+    if (Array.isArray(backupData.vaccinationLogs)) {
+      addEntry('sun_baby_vaccination_logs_v1', backupData.vaccinationLogs);
+    }
+    if (Array.isArray(backupData.solidFoodLogs)) {
+      addEntry('sun_baby_solid_food_logs_v1', backupData.solidFoodLogs);
+    }
+    if (Array.isArray(backupData.doctorNotes) || Array.isArray(backupData.doctorQuestions) || hasOwn('doctorNotes') || hasOwn('doctorQuestions')) {
+      addEntry('sun_baby_doctor_notes_v1', Array.isArray(backupData.doctorNotes) ? backupData.doctorNotes : backupData.doctorQuestions || []);
+    }
+    if (Array.isArray(backupData.milestones)) {
+      addEntry('sun_baby_milestones_v1', backupData.milestones);
+    }
+    const importedNotebookNotes = Array.isArray(backupData.notes) ? backupData.notes : Array.isArray(backupData.notebook) ? backupData.notebook : Array.isArray(backupData.notebookNotes) ? backupData.notebookNotes : [];
+    const hasNotebookData = Array.isArray(backupData.notes) || Array.isArray(backupData.notebook) || Array.isArray(backupData.notebookNotes) || hasOwn('notes') || hasOwn('notebook') || hasOwn('notebookNotes');
+    if (hasNotebookData) {
+      addEntry('sun_baby_notes_v1', importedNotebookNotes);
+    }
+    if (Array.isArray(backupData.noteCategories)) {
+      addEntry('sun_baby_note_categories_v1', backupData.noteCategories.filter(category => category.trim() && category !== '全部' && category !== '未分類'));
+    } else if (hasNotebookData) {
+      addEntry('sun_baby_note_categories_v1', [...new Set([...defaultNoteCategories, ...importedNotebookNotes.map(note => note.category || note.tag).filter(category => typeof category === 'string' && category.trim() && category !== '全部' && category !== '未分類')])]);
+    }
+    return entries;
+  };
+  const ensureStorageCapacityForBackupImport = entries => {
+    const currentBytes = calculateStorageUsage().bytes;
+    let replacedBytes = 0;
+    let importedBytes = 0;
+    entries.forEach(([key, value]) => {
+      const currentValue = localStorage.getItem(key);
+      if (currentValue !== null) replacedBytes += key.length + currentValue.length;
+      importedBytes += key.length + value.length;
+    });
+    const projectedBytes = currentBytes - replacedBytes + importedBytes;
+    if (projectedBytes >= STORAGE_LIMIT_BYTES) return false;
+    const additionalBytes = projectedBytes - currentBytes;
+    if (additionalBytes <= 0) return true;
+    let probeKey = '\u0000';
+    while (localStorage.getItem(probeKey) !== null) probeKey += '\u0000';
+    try {
+      localStorage.setItem(probeKey, 'x'.repeat(Math.max(0, additionalBytes - probeKey.length)));
+      return true;
+    } catch (error) {
+      console.error('Storage quota exceeded while checking backup import capacity:', error);
+      return false;
+    } finally {
+      try {
+        localStorage.removeItem(probeKey);
+      } catch (error) {
+        console.error('Failed to remove backup import capacity check:', error);
+      }
+    }
+  };
+  const persistBackupStorageEntries = entries => {
+    const updates = entries.map(([key, value]) => ({
+      key,
+      value,
+      previousValue: localStorage.getItem(key)
+    }));
+    updates.sort((first, second) => {
+      const firstGrowth = first.value.length - (first.previousValue === null ? 0 : first.previousValue.length);
+      const secondGrowth = second.value.length - (second.previousValue === null ? 0 : second.previousValue.length);
+      return firstGrowth - secondGrowth;
+    });
+    const writtenUpdates = [];
+    try {
+      updates.forEach(update => {
+        localStorage.setItem(update.key, update.value);
+        writtenUpdates.push(update);
+      });
+      return true;
+    } catch (error) {
+      console.error('Failed to persist backup import:', error);
+      let rollbackFailed = false;
+      writtenUpdates.reverse().forEach(update => {
+        try {
+          if (update.previousValue === null) {
+            localStorage.removeItem(update.key);
+          } else {
+            localStorage.setItem(update.key, update.previousValue);
+          }
+        } catch (rollbackError) {
+          rollbackFailed = true;
+          console.error('Failed to roll back backup import storage:', update.key, rollbackError);
+        }
+      });
+      if (rollbackFailed) {
+        console.error('Backup import storage rollback was incomplete.');
+      }
+      return false;
+    }
+  };
   const downloadBackupPayload = (label = '備份', customFileName = null) => {
     const backupData = createBackupPayload();
     const jsonString = JSON.stringify(backupData, null, 2);
@@ -1609,53 +1671,9 @@ function App() {
     URL.revokeObjectURL(url);
     return backupData;
   };
-  const recordBackupHistoryEntry = (label, fileName, payload) => {
-    if (!advancedRestoreEnabled) return null;
-    if (!payload || typeof payload !== 'object') return null;
-    const entry = {
-      id: `${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      label,
-      fileName: fileName || `${label}_${formatLocalDateTimeForFileName()}.json`,
-      timestamp: payload.exportTimestamp || new Date().toISOString(),
-      payload
-    };
-    const nextEntries = [entry, ...readRecentAutoBackups()].slice(0, 3);
-    persistRecentAutoBackups(nextEntries);
-    return entry;
-  };
-  const autoBackupCurrentDataBeforeRestore = () => {
-    try {
-      const safeName = (babyInfo.name || '寶寶').replace(/[\\/:*?"<>|]/g, '').trim() || '寶寶';
-      const fileName = `巴掌小太陽_還原前自動備份_${safeName}_${formatLocalDateTimeForFileName()}.json`;
-      const backupData = downloadBackupPayload('還原前自動備份', fileName);
-      recordBackupHistoryEntry('還原前自動備份', fileName, backupData);
-      showToast('📦 已先自動備份目前資料，將在還原前下載。');
-      return true;
-    } catch (error) {
-      console.error('Auto backup before restore failed:', error);
-      showToast('⚠️ 自動備份目前資料失敗，但仍可繼續還原。');
-      return false;
-    }
-  };
   const handleExportBackupJSON = () => {
-    const backupData = downloadBackupPayload('備份');
-    const fileName = buildBackupFileName('備份');
-    recordBackupHistoryEntry('手動備份', fileName, backupData);
+    downloadBackupPayload('備份');
     showToast('✅ 備份檔案已成功下載！');
-  };
-  const handleRestoreRecentAutoBackup = entry => {
-    if (!entry || !entry.payload) {
-      showToast('⚠️ 此備份資料遺失，無法還原。');
-      return;
-    }
-    const restoredAt = entry.timestamp ? new Date(entry.timestamp) : new Date();
-    const timeText = !isNaN(restoredAt.getTime()) ? formatLocalDateTime(restoredAt) : '未知時間';
-    const confirmed = window.confirm(`即將載入最近自動備份（建立時間：${timeText}）。\n\n此動作將覆蓋目前所有資料，請確認是否繼續？`);
-    if (!confirmed) {
-      showToast('⚠️ 已取消還原最近自動備份。');
-      return;
-    }
-    handleImportBackupObj(entry.payload);
   };
   const handleCopyBackupToClipboard = () => {
     const backupData = createBackupPayload();
@@ -1669,10 +1687,11 @@ function App() {
     showToast('📋 備份文字已複製至剪貼簿！');
   };
   const handleImportBackupObj = backupData => {
-    if (!backupData || typeof backupData !== 'object') {
-      showToast('❌ 備份資料格式不正確，請重新選擇備份檔案。');
+    if (!isSupportedBackup(backupData)) {
+      showToast('❌ 這不是巴掌小太陽的有效備份，或備份內容不完整。請確認備份檔案後再試一次。');
       return;
     }
+    const storageEntries = createBackupStorageEntries(backupData);
     const backupTimestamp = backupData.exportTimestamp ? new Date(backupData.exportTimestamp) : null;
     const isValidDate = backupTimestamp && !isNaN(backupTimestamp.getTime());
     const backupTimeText = isValidDate ? formatLocalDateTime(backupTimestamp) : '未知時間';
@@ -1683,16 +1702,15 @@ function App() {
       showToast('⚠️ 已取消還原，未覆蓋目前資料。');
       return;
     }
-    const emergencySnapshot = createBackupPayload();
-    const snapshotPersisted = safeSetStorageItem('sun_baby_emergency_snapshot_v1', JSON.stringify(emergencySnapshot));
-    if (!snapshotPersisted) {
+    if (!ensureStorageCapacityForBackupImport(storageEntries) || !persistBackupStorageEntries(storageEntries)) {
       setPastedJson('');
-      showToast('⚠️ 本機儲存空間不足，還原已暫停。');
+      refreshStorageUsage();
+      setShowStorageManagerModal(true);
+      showToast('⚠️ 本機儲存空間不足或寫入失敗，還原已暫停。');
       return;
     }
     if (typeof backupData.nightMode === 'boolean') {
       setIsNightMode(backupData.nightMode);
-      safeSetStorageItem('sun_baby_night_mode_v1', String(backupData.nightMode));
     }
     if (backupData.babyInfo) {
       const cleanedProfile = {
@@ -1718,11 +1736,9 @@ function App() {
     setCareReminders(restoredCareReminders);
     if (Array.isArray(backupData.vaccinationLogs)) {
       setVaccinationLogs(backupData.vaccinationLogs);
-      safeSetStorageItem('sun_baby_vaccination_logs_v1', JSON.stringify(backupData.vaccinationLogs));
     }
     if (Array.isArray(backupData.solidFoodLogs)) {
       setSolidFoodLogs(backupData.solidFoodLogs);
-      safeSetStorageItem('sun_baby_solid_food_logs_v1', JSON.stringify(backupData.solidFoodLogs));
     }
     if (Array.isArray(backupData.doctorNotes) || Array.isArray(backupData.doctorQuestions)) {
       setDoctorNotes(Array.isArray(backupData.doctorNotes) ? backupData.doctorNotes : backupData.doctorQuestions);
@@ -5465,24 +5481,20 @@ function App() {
     className: "text-[10px] leading-relaxed mt-1"
   }, "上限為常見估計值，實際限制可能依瀏覽器與瀏覽模式有所不同。")), storageUsage.percent >= 80 && /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] leading-relaxed text-red-700"
-  }, storageUsage.percent >= 100 ? '儲存量已達估計上限，請先下載完整備份，再清理暫存資料。' : '儲存量已達 80% 警戒值，建議先下載備份並清理暫存資料。'), /*#__PURE__*/React.createElement("div", {
+  }, storageUsage.percent >= 100 ? '儲存量已達估計上限，請先下載完整備份，再整理不需要保留的本機資料。' : '儲存量已達 80% 警戒值，建議先下載備份並檢查本機資料。'), /*#__PURE__*/React.createElement("p", {
+    className: "text-[10px] leading-relaxed text-slate-500"
+  }, "匯入前會先檢查預估儲存空間；本機不會額外保留匯入前快照。"), /*#__PURE__*/React.createElement("div", {
     className: "grid gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: handleRefreshStorageUsage,
     className: "w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold"
   }, "重新計算目前使用量"), /*#__PURE__*/React.createElement("button", {
-    onClick: handleCalculateCleanableStorage,
-    className: "w-full py-2.5 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold"
-  }, "計算可清理空間"), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setShowStorageManagerModal(false);
       setShowBackupModal(true);
     },
     className: "w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold"
-  }, "先下載完整備份"), /*#__PURE__*/React.createElement("button", {
-    onClick: cleanupStorageTemporaryData,
-    className: "w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
-  }, "清理本機儲存空間")))), showStorageRecoveryModal && /*#__PURE__*/React.createElement("div", {
+  }, "先下載完整備份")))), showStorageRecoveryModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]"
   }, /*#__PURE__*/React.createElement("div", {
     className: "w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4"
