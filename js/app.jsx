@@ -2924,7 +2924,7 @@
                             margin: [0, 8, 0, 3]
                           },
                           { svg: chart.svg, fit: [510, 250], margin: [0, 0, 0, 2] },
-                          ...(chart.pointsCount === 0 ? [{ text: `目前沒有可繪製的矯正月齡測量點${babyInfo.dueDate ? '' : '；請先設定預產期'}；百分位參考曲線${showPercentiles ? '仍有顯示' : '已依目前圖表設定隱藏'}。`, style: 'muted', margin: [0, 0, 0, 6] }] : [])
+                          ...(chart.pointsCount === 0 ? [{ text: `目前沒有可繪製的矯正月齡測量點${babyInfo.dueDate ? '' : '；請先設定預產期'}；百分位參考曲線${showPercentiles ? '仍有顯示' : '已依目前圖表設定隱藏'}；0 個月基準線${showZeroBaseline ? '仍有顯示' : '已依目前圖表設定隱藏'}。`, style: 'muted', margin: [0, 0, 0, 6] }] : [])
                         ]
                       }))
                 ],
