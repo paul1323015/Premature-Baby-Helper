@@ -605,7 +605,7 @@ const PretermGrowthChart = ({
     className: "flex-1 min-w-0"
   }, /*#__PURE__*/React.createElement("span", {
     className: "font-bold block text-amber-800"
-  }, "⚡️ 生長曲線軸線設定："), /*#__PURE__*/React.createElement("span", {
+  }, "⚡️ 生長曲線設定："), /*#__PURE__*/React.createElement("span", {
     className: "block"
   }, "預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。"), useChronoAxis && /*#__PURE__*/React.createElement("span", {
     className: "block text-amber-700 font-bold"
@@ -742,12 +742,7 @@ const PretermGrowthChart = ({
     y: padding.top - 6,
     textAnchor: "middle",
     className: "fill-amber-700 font-bold text-[10px]"
-  }, "基準 0 個月"), /*#__PURE__*/React.createElement("text", {
-    x: zeroX,
-    y: height - padding.bottom + 33,
-    textAnchor: "middle",
-    className: "fill-amber-700 font-bold text-[9px]"
-  }, useChronoAxis ? '（出生日）' : '（預產期）')), /*#__PURE__*/React.createElement("line", {
+  }, "基準 0 個月")), /*#__PURE__*/React.createElement("line", {
     x1: padding.left,
     y1: height - padding.bottom,
     x2: width - padding.right,

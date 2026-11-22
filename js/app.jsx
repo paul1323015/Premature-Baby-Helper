@@ -527,7 +527,7 @@
             <div className="flex items-start gap-2 flex-1 min-w-0">
               <Icon name="sparkles" className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <span className="font-bold block text-amber-800">⚡️ 生長曲線軸線設定：</span>
+                <span className="font-bold block text-amber-800">⚡️ 生長曲線設定：</span>
                 <span className="block">預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。</span>
                 {useChronoAxis && (
                   <span className="block text-amber-700 font-bold">⚠️ 實際月齡模式僅供月齡趨勢查看，不作 WHO 百分位判讀。</span>
@@ -652,9 +652,6 @@
                   <line x1={zeroX} y1={padding.top} x2={zeroX} y2={height - padding.bottom} stroke="#d97706" strokeWidth="3" strokeDasharray="6,3" opacity="0.95" />
                   <circle cx={zeroX} cy={height - padding.bottom} r="5" className="fill-amber-600 stroke-white stroke-1" />
                   <text x={zeroX} y={padding.top - 6} textAnchor="middle" className="fill-amber-700 font-bold text-[10px]">基準 0 個月</text>
-                  <text x={zeroX} y={height - padding.bottom + 33} textAnchor="middle" className="fill-amber-700 font-bold text-[9px]">
-                    {useChronoAxis ? '（出生日）' : '（預產期）'}
-                  </text>
                 </g>
               )}
 
