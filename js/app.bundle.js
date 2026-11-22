@@ -413,13 +413,15 @@ const PretermGrowthChart = ({
   onUpdateGrowthRecord,
   onDeleteGrowthRecord,
   onToggleGrowthRecordPlot,
+  showPercentiles,
+  setShowPercentiles,
+  showZeroBaseline,
+  setShowZeroBaseline,
   showToast
 }) => {
   const [showRecordModal, setShowRecordModal] = React.useState(false);
   const [editingRecordId, setEditingRecordId] = React.useState(null);
   const [useChronoAxis, setUseChronoAxis] = React.useState(false);
-  const [showPercentiles, setShowPercentiles] = React.useState(true);
-  const [showZeroBaseline, setShowZeroBaseline] = React.useState(true);
   const [recDate, setRecDate] = React.useState(getLocalDateString());
   const [recTime, setRecTime] = React.useState('');
   const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
@@ -1060,6 +1062,8 @@ function App() {
   }, []);
   const [selectedMetric, setSelectedMetric] = React.useState('weight');
   const [selectedGender, setSelectedGender] = React.useState('boy');
+  const [showPercentiles, setShowPercentiles] = React.useState(true);
+  const [showZeroBaseline, setShowZeroBaseline] = React.useState(true);
   const [babyInfo, setBabyInfo] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_profile_v5');
     if (saved) {
@@ -2647,16 +2651,18 @@ function App() {
           svg.push(`<line x1="${x}" y1="${chartPadding.top}" x2="${x}" y2="${plotBottom}" stroke="#f1f5f9" stroke-width="1"/>`);
           svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
         }
-        if (minX <= 0 && maxX >= 0) {
+        if (showZeroBaseline && minX <= 0 && maxX >= 0) {
           const zeroX = xScale(0);
           svg.push(`<line x1="${zeroX}" y1="${chartPadding.top}" x2="${zeroX}" y2="${plotBottom}" stroke="#d97706" stroke-width="2" stroke-dasharray="6 3"/>`);
         }
-        [1, 2, 3, 4, 5].forEach((percentileIndex, index) => {
-          const path = referenceData.map((row, rowIndex) => `${rowIndex === 0 ? 'M' : 'L'} ${xScale(row[0]).toFixed(2)} ${yScale(row[percentileIndex]).toFixed(2)}`).join(' ');
-          svg.push(`<path d="${path}" fill="none" stroke="${growthChartColors[index]}" stroke-width="${percentileIndex === 3 ? 2 : 1.5}"${percentileIndex === 3 ? '' : ' stroke-dasharray="4 3"'}/>`);
-          const last = referenceData[referenceData.length - 1];
-          svg.push(`<text x="${(xScale(last[0]) + 4).toFixed(2)}" y="${(yScale(last[percentileIndex]) + 3).toFixed(2)}" font-family="sans-serif" font-size="9" fill="#64748b">${growthChartPercentiles[index]}</text>`);
-        });
+        if (showPercentiles) {
+          [1, 2, 3, 4, 5].forEach((percentileIndex, index) => {
+            const path = referenceData.map((row, rowIndex) => `${rowIndex === 0 ? 'M' : 'L'} ${xScale(row[0]).toFixed(2)} ${yScale(row[percentileIndex]).toFixed(2)}`).join(' ');
+            svg.push(`<path d="${path}" fill="none" stroke="${growthChartColors[index]}" stroke-width="${percentileIndex === 3 ? 2 : 1.5}"${percentileIndex === 3 ? '' : ' stroke-dasharray="4 3"'}/>`);
+            const last = referenceData[referenceData.length - 1];
+            svg.push(`<text x="${(xScale(last[0]) + 4).toFixed(2)}" y="${(yScale(last[percentileIndex]) + 3).toFixed(2)}" font-family="sans-serif" font-size="9" fill="#64748b">${growthChartPercentiles[index]}</text>`);
+          });
+        }
         if (points.length > 1) {
           const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${xScale(point.age).toFixed(2)} ${yScale(point.value).toFixed(2)}`).join(' ');
           svg.push(`<path d="${path}" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`);
@@ -2919,7 +2925,7 @@ function App() {
             text: '生長曲線',
             style: 'sectionTitle'
           }, {
-            text: 'X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點，曲線標示 3%、15%、50%、85%、97% 百分位。資料沿用應用程式的 WHO 參考曲線，僅供趨勢參考，請由醫療專業人員判讀。',
+            text: `X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點；${showPercentiles ? '曲線標示 3%、15%、50%、85%、97% 百分位' : '百分位參考曲線依目前圖表設定隱藏'}；${showZeroBaseline ? '橘色虛線為 0 個月基準線' : '0 個月基準線依目前圖表設定隱藏'}。資料沿用應用程式的 WHO 參考曲線，僅供趨勢參考，請由醫療專業人員判讀。`,
             style: 'muted',
             margin: [0, 0, 0, 8]
           }, ...growthCharts.map(chart => ({
@@ -2945,7 +2951,7 @@ function App() {
               fit: [510, 250],
               margin: [0, 0, 0, 2]
             }, ...(chart.pointsCount === 0 ? [{
-              text: `目前沒有可繪製的矯正月齡測量點${babyInfo.dueDate ? '' : '；請先設定預產期'}，圖中僅顯示百分位參考曲線。`,
+              text: `目前沒有可繪製的矯正月齡測量點${babyInfo.dueDate ? '' : '；請先設定預產期'}；百分位參考曲線${showPercentiles ? '仍有顯示' : '已依目前圖表設定隱藏'}。`,
               style: 'muted',
               margin: [0, 0, 0, 6]
             }] : [])]
@@ -4075,6 +4081,10 @@ function App() {
     onUpdateGrowthRecord: handleUpdateGrowthRecord,
     onDeleteGrowthRecord: handleDeleteGrowthRecord,
     onToggleGrowthRecordPlot: handleToggleGrowthRecordPlot,
+    showPercentiles: showPercentiles,
+    setShowPercentiles: setShowPercentiles,
+    showZeroBaseline: showZeroBaseline,
+    setShowZeroBaseline: setShowZeroBaseline,
     showToast: showToast
   }), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 pt-2 border-t"
