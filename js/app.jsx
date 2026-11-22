@@ -357,6 +357,7 @@
       const [editingRecordId, setEditingRecordId] = React.useState(null);
       const [useChronoAxis, setUseChronoAxis] = React.useState(false);
       const [showPercentiles, setShowPercentiles] = React.useState(true);
+      const [showZeroBaseline, setShowZeroBaseline] = React.useState(true);
       const [recDate, setRecDate] = React.useState(getLocalDateString());
       const [recTime, setRecTime] = React.useState('');
       const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
@@ -575,6 +576,22 @@
                   <span className={`w-2 h-2 rounded-full ${showPercentiles ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
                   <span className="whitespace-nowrap">百分位曲線：{showPercentiles ? '顯示' : '隱藏'}</span>
                 </button>
+                <button
+                  onClick={() => {
+                    const nextShowZeroBaseline = !showZeroBaseline;
+                    setShowZeroBaseline(nextShowZeroBaseline);
+                    showToast(`✅ 基準線已${nextShowZeroBaseline ? '顯示' : '隱藏'}`);
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${
+                    showZeroBaseline
+                      ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200'
+                      : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'
+                  }`}
+                  title="切換顯示/隱藏 0 個月基準線與標示"
+                >
+                  <span className={`w-2 h-2 rounded-full ${showZeroBaseline ? 'bg-amber-500' : 'bg-slate-400'}`}></span>
+                  <span className="whitespace-nowrap">基準線：{showZeroBaseline ? '顯示' : '隱藏'}</span>
+                </button>
                 {debugEnabled && (
                   <button
                     onClick={() => {
@@ -619,11 +636,12 @@
               {monthTicks.map((mVal) => {
                 const xPos = xScale(mVal);
                 const isZero = mVal === 0;
+                const emphasizeZero = isZero && showZeroBaseline;
                 return (
                   <g key={`x-${mVal}`}>
-                    <line x1={xPos} y1={padding.top} x2={xPos} y2={height - padding.bottom} stroke={isZero ? "#f59e0b" : "#f1f5f9"} strokeWidth={isZero ? "2" : "1"} strokeDasharray={isZero ? "3,3" : "none"} />
-                    <line x1={xPos} y1={height - padding.bottom} x2={xPos} y2={height - padding.bottom + 5} stroke={isZero ? "#d97706" : "#cbd5e1"} strokeWidth={isZero ? "2" : "1"} />
-                    <text x={xPos} y={height - padding.bottom + 17} textAnchor="middle" className={`font-mono text-[9px] ${isZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`}>
+                    <line x1={xPos} y1={padding.top} x2={xPos} y2={height - padding.bottom} stroke={emphasizeZero ? "#f59e0b" : "#f1f5f9"} strokeWidth={emphasizeZero ? "2" : "1"} strokeDasharray={emphasizeZero ? "3,3" : "none"} />
+                    <line x1={xPos} y1={height - padding.bottom} x2={xPos} y2={height - padding.bottom + 5} stroke={emphasizeZero ? "#d97706" : "#cbd5e1"} strokeWidth={emphasizeZero ? "2" : "1"} />
+                    <text x={xPos} y={height - padding.bottom + 17} textAnchor="middle" className={`font-mono text-[9px] ${emphasizeZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`}>
                       {isZero ? '0個月' : `${mVal}個`}
                     </text>
                   </g>
@@ -631,7 +649,7 @@
               })}
 
               {/* Emphasize the 0-month baseline (出生/預產期) with a prominent reference line and labels */}
-              {zeroInRange && (
+              {zeroInRange && showZeroBaseline && (
                 <g key="zero-ref">
                   <line x1={zeroX} y1={padding.top} x2={zeroX} y2={height - padding.bottom} stroke="#d97706" strokeWidth="3" strokeDasharray="6,3" opacity="0.95" />
                   <circle cx={zeroX} cy={height - padding.bottom} r="5" className="fill-amber-600 stroke-white stroke-1" />
