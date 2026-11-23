@@ -30,4 +30,16 @@ describe('PDF export settings persistence', () => {
       /localStorage\.setItem\('sun_baby_pdf_export_options_v1', JSON\.stringify\(DEFAULT_PDF_EXPORT_OPTIONS\)\)/
     );
   });
+
+  test('PDF export settings are included in backups and restored', () => {
+    expect(appSource).toMatch(/doctorQuestions: doctorNotes,\s+pdfExportOptions/);
+    expect(appSource).toMatch(/addEntry\('sun_baby_pdf_export_options_v1', \{/);
+    expect(appSource).toMatch(/setPdfExportOptions\(restoredPdfExportOptions\)/);
+    expect(appSource).toMatch(/setPdfExportDraft\(\{ \.\.\.restoredPdfExportOptions \}\)/);
+  });
+
+  test('PDF export settings in backups are validated', () => {
+    expect(appSource).toMatch(/if \(hasOwn\('pdfExportOptions'\)\) \{/);
+    expect(appSource).toMatch(/!\['all', '7', '30', '90', 'custom'\]\.includes\(options\.range\)/);
+  });
 });

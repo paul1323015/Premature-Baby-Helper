@@ -1613,7 +1613,8 @@ function App() {
     noteCategories,
     notebook: notes,
     notebookNotes: notes,
-    doctorQuestions: doctorNotes
+    doctorQuestions: doctorNotes,
+    pdfExportOptions
   });
   const isBackupRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const isBackupRecordArray = value => Array.isArray(value) && value.every(isBackupRecord);
@@ -1630,6 +1631,13 @@ function App() {
     if (hasOwn('noteCategories') && (!Array.isArray(backupData.noteCategories) || !backupData.noteCategories.every(category => typeof category === 'string'))) return false;
     if (hasOwn('nightMode') && typeof backupData.nightMode !== 'boolean') return false;
     if (hasOwn('doctorVisitSummary') && typeof backupData.doctorVisitSummary !== 'string') return false;
+    if (hasOwn('pdfExportOptions')) {
+      const options = backupData.pdfExportOptions;
+      if (!isBackupRecord(options)) return false;
+      if (['profile', 'growth', 'careLogs', 'doctor', 'notes', 'showExportTime'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
+      if (Object.prototype.hasOwnProperty.call(options, 'range') && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
+      if (['startDate', 'endDate'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'string')) return false;
+    }
     return true;
   };
   const createBackupStorageEntries = backupData => {
@@ -1649,6 +1657,12 @@ function App() {
     addEntry('sun_baby_logs_v1', backupData.logs);
     addEntry('sun_baby_care_reminders_v1', Array.isArray(backupData.careReminders) ? backupData.careReminders.filter(isValidCareReminder) : []);
     addEntry('sun_baby_doctor_visit_summary_v1', typeof backupData.doctorVisitSummary === 'string' ? backupData.doctorVisitSummary : '');
+    if (isBackupRecord(backupData.pdfExportOptions)) {
+      addEntry('sun_baby_pdf_export_options_v1', {
+        ...DEFAULT_PDF_EXPORT_OPTIONS,
+        ...Object.fromEntries(Object.entries(backupData.pdfExportOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+      });
+    }
     if (typeof backupData.nightMode === 'boolean') {
       addEntry('sun_baby_night_mode_v1', String(backupData.nightMode));
     }
@@ -1800,6 +1814,16 @@ function App() {
     }
     if (typeof backupData.nightMode === 'boolean') {
       setIsNightMode(backupData.nightMode);
+    }
+    if (isBackupRecord(backupData.pdfExportOptions)) {
+      const restoredPdfExportOptions = {
+        ...DEFAULT_PDF_EXPORT_OPTIONS,
+        ...Object.fromEntries(Object.entries(backupData.pdfExportOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+      };
+      setPdfExportOptions(restoredPdfExportOptions);
+      setPdfExportDraft({
+        ...restoredPdfExportOptions
+      });
     }
     if (backupData.babyInfo) {
       const cleanedProfile = {
