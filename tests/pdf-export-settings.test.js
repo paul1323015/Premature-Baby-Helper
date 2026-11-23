@@ -33,18 +33,33 @@ describe('PDF export settings persistence', () => {
 
   test('PDF export settings are included in backups and restored', () => {
     expect(appSource).toMatch(/doctorQuestions: doctorNotes,\s+pdfExportOptions/);
-    expect(appSource).toMatch(/addEntry\('sun_baby_pdf_export_options_v1', \{/);
+    expect(appSource).toMatch(/addEntry\('sun_baby_pdf_export_options_v1', normalizePdfExportOptions\(backupData\.pdfExportOptions\)\)/);
     expect(appSource).toMatch(/setPdfExportOptions\(restoredPdfExportOptions\)/);
     expect(appSource).toMatch(/setPdfExportDraft\(\{ \.\.\.restoredPdfExportOptions \}\)/);
   });
 
   test('PDF export settings in backups are validated', () => {
     expect(appSource).toMatch(/if \(hasOwn\('pdfExportOptions'\)\) \{/);
+    expect(appSource).toMatch(/'profile', 'growth', 'growthRecords', 'growthChart', 'careLogs'/);
     expect(appSource).toMatch(/!\['all', '7', '30', '90', 'custom'\]\.includes\(options\.range\)/);
   });
 
-  test('hidden growth chart lines are noted in PDF settings when growth is selected', () => {
-    expect(appSource).toMatch(/pdfExportDraft\.growth && \(!showPercentiles \|\| !showZeroBaseline\)/);
+  test('growth records and chart have separate PDF export settings', () => {
+    expect(appSource).toMatch(/growthRecords: true,\s+growthChart: true/);
+    expect(appSource).toMatch(/\['growthRecords', '生長測量紀錄表'\]/);
+    expect(appSource).toMatch(/\['growthChart', '生長曲線圖'\]/);
+    expect(appSource).toMatch(/pdfExportOptions\.growthRecords/);
+    expect(appSource).toMatch(/pdfExportOptions\.growthChart/);
+  });
+
+  test('legacy growth export setting maps to both separate options', () => {
+    expect(appSource).toMatch(/if \(typeof options\.growth === 'boolean'\)/);
+    expect(appSource).toMatch(/normalized\.growthRecords = options\.growth/);
+    expect(appSource).toMatch(/normalized\.growthChart = options\.growth/);
+  });
+
+  test('hidden growth chart lines are noted when the chart is selected', () => {
+    expect(appSource).toMatch(/pdfExportDraft\.growthChart && \(!showPercentiles \|\| !showZeroBaseline\)/);
     expect(appSource).toMatch(/目前圖表的\{!showPercentiles && !showZeroBaseline \?/);
     expect(appSource).toMatch(/匯出 PDF 時也不會顯示/);
   });

@@ -894,7 +894,8 @@
       const [showPdfSettingsModal, setShowPdfSettingsModal] = React.useState(false);
       const DEFAULT_PDF_EXPORT_OPTIONS = {
         profile: true,
-        growth: true,
+        growthRecords: true,
+        growthChart: true,
         careLogs: true,
         doctor: true,
         notes: true,
@@ -903,16 +904,25 @@
         startDate: '',
         endDate: ''
       };
+      const normalizePdfExportOptions = options => {
+        const normalized = {
+          ...DEFAULT_PDF_EXPORT_OPTIONS,
+          ...Object.fromEntries(Object.entries(options)
+            .filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+        };
+        if (typeof options.growth === 'boolean') {
+          if (!Object.prototype.hasOwnProperty.call(options, 'growthRecords')) normalized.growthRecords = options.growth;
+          if (!Object.prototype.hasOwnProperty.call(options, 'growthChart')) normalized.growthChart = options.growth;
+        }
+        return normalized;
+      };
       const [pdfExportOptions, setPdfExportOptions] = React.useState(() => {
         try {
           const saved = localStorage.getItem('sun_baby_pdf_export_options_v1');
           if (!saved) return DEFAULT_PDF_EXPORT_OPTIONS;
           const parsed = JSON.parse(saved);
           if (!parsed || typeof parsed !== 'object') return DEFAULT_PDF_EXPORT_OPTIONS;
-          return {
-            ...DEFAULT_PDF_EXPORT_OPTIONS,
-            ...Object.fromEntries(Object.entries(parsed).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-          };
+          return normalizePdfExportOptions(parsed);
         } catch (error) {
           console.error('Failed to load PDF export settings:', error);
           return DEFAULT_PDF_EXPORT_OPTIONS;
@@ -927,10 +937,7 @@
           if (!saved) return { ...DEFAULT_PDF_EXPORT_OPTIONS };
           const parsed = JSON.parse(saved);
           if (!parsed || typeof parsed !== 'object') return { ...DEFAULT_PDF_EXPORT_OPTIONS };
-          return {
-            ...DEFAULT_PDF_EXPORT_OPTIONS,
-            ...Object.fromEntries(Object.entries(parsed).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-          };
+          return normalizePdfExportOptions(parsed);
         } catch (error) {
           console.error('Failed to reload PDF export settings:', error);
           return { ...DEFAULT_PDF_EXPORT_OPTIONS };
@@ -1602,7 +1609,7 @@
         if (hasOwn('pdfExportOptions')) {
           const options = backupData.pdfExportOptions;
           if (!isBackupRecord(options)) return false;
-          if (['profile', 'growth', 'careLogs', 'doctor', 'notes', 'showExportTime']
+          if (['profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'showExportTime']
             .some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
           if (Object.prototype.hasOwnProperty.call(options, 'range')
             && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
@@ -1637,11 +1644,7 @@
           : []);
         addEntry('sun_baby_doctor_visit_summary_v1', typeof backupData.doctorVisitSummary === 'string' ? backupData.doctorVisitSummary : '');
         if (isBackupRecord(backupData.pdfExportOptions)) {
-          addEntry('sun_baby_pdf_export_options_v1', {
-            ...DEFAULT_PDF_EXPORT_OPTIONS,
-            ...Object.fromEntries(Object.entries(backupData.pdfExportOptions)
-              .filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-          });
+          addEntry('sun_baby_pdf_export_options_v1', normalizePdfExportOptions(backupData.pdfExportOptions));
         }
         if (isBackupRecord(backupData.growthChartOptions)) {
           addEntry('sun_baby_growth_chart_options_v1', {
@@ -1834,11 +1837,7 @@
           setIsNightMode(backupData.nightMode);
         }
         if (isBackupRecord(backupData.pdfExportOptions)) {
-          const restoredPdfExportOptions = {
-            ...DEFAULT_PDF_EXPORT_OPTIONS,
-            ...Object.fromEntries(Object.entries(backupData.pdfExportOptions)
-              .filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-          };
+          const restoredPdfExportOptions = normalizePdfExportOptions(backupData.pdfExportOptions);
           setPdfExportOptions(restoredPdfExportOptions);
           setPdfExportDraft({ ...restoredPdfExportOptions });
         }
@@ -2987,7 +2986,7 @@
             svg.push('</svg>');
             return { svg: svg.join(''), pointsCount: points.length };
           };
-          const growthCharts = pdfExportOptions.growth ? growthChartMetrics.map(metricConfig => ({
+          const growthCharts = pdfExportOptions.growthChart ? growthChartMetrics.map(metricConfig => ({
             ...metricConfig,
             ...createGrowthChartSvg(metricConfig)
           })) : [];
@@ -3114,7 +3113,7 @@
                 layout: { hLineWidth: () => 0, vLineWidth: () => 0 },
                 margin: [0, 0, 0, 16]
               }] : []),
-              ...(pdfExportOptions.growth ? [{
+              ...(pdfExportOptions.growthRecords ? [{
                 stack: [
                   { text: '歷史測量紀錄表', style: 'sectionTitle' },
                   pdfGrowthHistory.length === 0
@@ -3149,7 +3148,7 @@
                       }
                 ]
               }] : []),
-              ...(pdfExportOptions.growth ? [{
+              ...(pdfExportOptions.growthChart ? [{
                 stack: [
                       { text: '生長曲線', style: 'sectionTitle' },
                       { text: `X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點；${showPercentiles ? '曲線標示 3%、15%、50%、85%、97% 百分位' : '百分位參考曲線依目前圖表設定隱藏'}；${showZeroBaseline ? '橘色虛線為 0 個月基準線' : '0 個月基準線依目前圖表設定隱藏'}。資料沿用應用程式的 WHO 參考曲線，僅供趨勢參考，請由醫療專業人員判讀。`, style: 'muted', margin: [0, 0, 0, 8] },
@@ -6034,7 +6033,8 @@
                   <p className="font-bold text-slate-700">匯出資料</p>
                   {[
                     ['profile', '寶寶基本資料與最新數值'],
-                    ['growth', '生長測量紀錄與曲線'],
+                    ['growthRecords', '生長測量紀錄表'],
+                    ['growthChart', '生長曲線圖'],
                     ['careLogs', '照護日誌'],
                     ['doctor', '看診摘要與門診提問'],
                     ['notes', '筆記本重點摘要']
@@ -6049,7 +6049,7 @@
                         />
                         <span className="font-bold text-slate-700">{label}</span>
                       </label>
-                      {key === 'growth' && pdfExportDraft.growth && (!showPercentiles || !showZeroBaseline) && (
+                      {key === 'growthChart' && pdfExportDraft.growthChart && (!showPercentiles || !showZeroBaseline) && (
                         <p className="ml-1 rounded-lg bg-amber-50 px-3 py-2 text-amber-800">
                           目前圖表的{!showPercentiles && !showZeroBaseline ? '百分位曲線與基準線' : !showPercentiles ? '百分位曲線' : '基準線'}為隱藏，匯出 PDF 時也不會顯示。
                         </p>

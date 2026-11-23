@@ -1047,7 +1047,8 @@ function App() {
   const [showPdfSettingsModal, setShowPdfSettingsModal] = React.useState(false);
   const DEFAULT_PDF_EXPORT_OPTIONS = {
     profile: true,
-    growth: true,
+    growthRecords: true,
+    growthChart: true,
     careLogs: true,
     doctor: true,
     notes: true,
@@ -1056,16 +1057,24 @@ function App() {
     startDate: '',
     endDate: ''
   };
+  const normalizePdfExportOptions = options => {
+    const normalized = {
+      ...DEFAULT_PDF_EXPORT_OPTIONS,
+      ...Object.fromEntries(Object.entries(options).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+    };
+    if (typeof options.growth === 'boolean') {
+      if (!Object.prototype.hasOwnProperty.call(options, 'growthRecords')) normalized.growthRecords = options.growth;
+      if (!Object.prototype.hasOwnProperty.call(options, 'growthChart')) normalized.growthChart = options.growth;
+    }
+    return normalized;
+  };
   const [pdfExportOptions, setPdfExportOptions] = React.useState(() => {
     try {
       const saved = localStorage.getItem('sun_baby_pdf_export_options_v1');
       if (!saved) return DEFAULT_PDF_EXPORT_OPTIONS;
       const parsed = JSON.parse(saved);
       if (!parsed || typeof parsed !== 'object') return DEFAULT_PDF_EXPORT_OPTIONS;
-      return {
-        ...DEFAULT_PDF_EXPORT_OPTIONS,
-        ...Object.fromEntries(Object.entries(parsed).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-      };
+      return normalizePdfExportOptions(parsed);
     } catch (error) {
       console.error('Failed to load PDF export settings:', error);
       return DEFAULT_PDF_EXPORT_OPTIONS;
@@ -1084,10 +1093,7 @@ function App() {
       if (!parsed || typeof parsed !== 'object') return {
         ...DEFAULT_PDF_EXPORT_OPTIONS
       };
-      return {
-        ...DEFAULT_PDF_EXPORT_OPTIONS,
-        ...Object.fromEntries(Object.entries(parsed).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-      };
+      return normalizePdfExportOptions(parsed);
     } catch (error) {
       console.error('Failed to reload PDF export settings:', error);
       return {
@@ -1694,7 +1700,7 @@ function App() {
     if (hasOwn('pdfExportOptions')) {
       const options = backupData.pdfExportOptions;
       if (!isBackupRecord(options)) return false;
-      if (['profile', 'growth', 'careLogs', 'doctor', 'notes', 'showExportTime'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
+      if (['profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'showExportTime'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
       if (Object.prototype.hasOwnProperty.call(options, 'range') && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
       if (['startDate', 'endDate'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'string')) return false;
     }
@@ -1723,10 +1729,7 @@ function App() {
     addEntry('sun_baby_care_reminders_v1', Array.isArray(backupData.careReminders) ? backupData.careReminders.filter(isValidCareReminder) : []);
     addEntry('sun_baby_doctor_visit_summary_v1', typeof backupData.doctorVisitSummary === 'string' ? backupData.doctorVisitSummary : '');
     if (isBackupRecord(backupData.pdfExportOptions)) {
-      addEntry('sun_baby_pdf_export_options_v1', {
-        ...DEFAULT_PDF_EXPORT_OPTIONS,
-        ...Object.fromEntries(Object.entries(backupData.pdfExportOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-      });
+      addEntry('sun_baby_pdf_export_options_v1', normalizePdfExportOptions(backupData.pdfExportOptions));
     }
     if (isBackupRecord(backupData.growthChartOptions)) {
       addEntry('sun_baby_growth_chart_options_v1', {
@@ -1887,10 +1890,7 @@ function App() {
       setIsNightMode(backupData.nightMode);
     }
     if (isBackupRecord(backupData.pdfExportOptions)) {
-      const restoredPdfExportOptions = {
-        ...DEFAULT_PDF_EXPORT_OPTIONS,
-        ...Object.fromEntries(Object.entries(backupData.pdfExportOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
-      };
+      const restoredPdfExportOptions = normalizePdfExportOptions(backupData.pdfExportOptions);
       setPdfExportOptions(restoredPdfExportOptions);
       setPdfExportDraft({
         ...restoredPdfExportOptions
@@ -2933,7 +2933,7 @@ function App() {
           pointsCount: points.length
         };
       };
-      const growthCharts = pdfExportOptions.growth ? growthChartMetrics.map(metricConfig => ({
+      const growthCharts = pdfExportOptions.growthChart ? growthChartMetrics.map(metricConfig => ({
         ...metricConfig,
         ...createGrowthChartSvg(metricConfig)
       })) : [];
@@ -3133,7 +3133,7 @@ function App() {
             vLineWidth: () => 0
           },
           margin: [0, 0, 0, 16]
-        }] : []), ...(pdfExportOptions.growth ? [{
+        }] : []), ...(pdfExportOptions.growthRecords ? [{
           stack: [{
             text: '歷史測量紀錄表',
             style: 'sectionTitle'
@@ -3180,7 +3180,7 @@ function App() {
             },
             margin: [0, 0, 0, 14]
           }]
-        }] : []), ...(pdfExportOptions.growth ? [{
+        }] : []), ...(pdfExportOptions.growthChart ? [{
           stack: [{
             text: '生長曲線',
             style: 'sectionTitle'
@@ -5992,7 +5992,7 @@ function App() {
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-slate-700"
-  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growth', '生長測量紀錄與曲線'], ['careLogs', '照護日誌'], ['doctor', '看診摘要與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
+  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['careLogs', '照護日誌'], ['doctor', '看診摘要與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
     key: key,
     className: "space-y-1"
   }, /*#__PURE__*/React.createElement("label", {
@@ -6007,7 +6007,7 @@ function App() {
     className: "accent-amber-600"
   }), /*#__PURE__*/React.createElement("span", {
     className: "font-bold text-slate-700"
-  }, label)), key === 'growth' && pdfExportDraft.growth && (!showPercentiles || !showZeroBaseline) && /*#__PURE__*/React.createElement("p", {
+  }, label)), key === 'growthChart' && pdfExportDraft.growthChart && (!showPercentiles || !showZeroBaseline) && /*#__PURE__*/React.createElement("p", {
     className: "ml-1 rounded-lg bg-amber-50 px-3 py-2 text-amber-800"
   }, "目前圖表的", !showPercentiles && !showZeroBaseline ? '百分位曲線與基準線' : !showPercentiles ? '百分位曲線' : '基準線', "為隱藏，匯出 PDF 時也不會顯示。")))), /*#__PURE__*/React.createElement("label", {
     className: "flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60"
