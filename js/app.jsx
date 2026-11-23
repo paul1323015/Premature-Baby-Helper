@@ -887,7 +887,7 @@
       const [showNotesModal, setShowNotesModal] = React.useState(false);
       const [isExporting, setIsExporting] = React.useState(false);
       const [showPdfSettingsModal, setShowPdfSettingsModal] = React.useState(false);
-      const [pdfExportOptions, setPdfExportOptions] = React.useState({
+      const DEFAULT_PDF_EXPORT_OPTIONS = {
         profile: true,
         growth: true,
         careLogs: true,
@@ -897,7 +897,54 @@
         range: 'all',
         startDate: '',
         endDate: ''
+      };
+      const [pdfExportOptions, setPdfExportOptions] = React.useState(() => {
+        try {
+          const saved = localStorage.getItem('sun_baby_pdf_export_options_v1');
+          if (!saved) return DEFAULT_PDF_EXPORT_OPTIONS;
+          const parsed = JSON.parse(saved);
+          if (!parsed || typeof parsed !== 'object') return DEFAULT_PDF_EXPORT_OPTIONS;
+          return {
+            ...DEFAULT_PDF_EXPORT_OPTIONS,
+            ...Object.fromEntries(Object.entries(parsed).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+          };
+        } catch (error) {
+          console.error('Failed to load PDF export settings:', error);
+          return DEFAULT_PDF_EXPORT_OPTIONS;
+        }
       });
+
+      const [pdfExportDraft, setPdfExportDraft] = React.useState({ ...pdfExportOptions });
+
+      const loadSavedPdfExportOptions = () => {
+        try {
+          const saved = localStorage.getItem('sun_baby_pdf_export_options_v1');
+          if (!saved) return { ...DEFAULT_PDF_EXPORT_OPTIONS };
+          const parsed = JSON.parse(saved);
+          if (!parsed || typeof parsed !== 'object') return { ...DEFAULT_PDF_EXPORT_OPTIONS };
+          return {
+            ...DEFAULT_PDF_EXPORT_OPTIONS,
+            ...Object.fromEntries(Object.entries(parsed).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+          };
+        } catch (error) {
+          console.error('Failed to reload PDF export settings:', error);
+          return { ...DEFAULT_PDF_EXPORT_OPTIONS };
+        }
+      };
+
+      const openPdfSettingsModal = () => {
+        const savedOptions = loadSavedPdfExportOptions();
+        setPdfExportOptions(savedOptions);
+        setPdfExportDraft({ ...savedOptions });
+        setShowPdfSettingsModal(true);
+      };
+
+      const closePdfSettingsModal = () => {
+        const savedOptions = loadSavedPdfExportOptions();
+        setPdfExportOptions(savedOptions);
+        setPdfExportDraft({ ...savedOptions });
+        setShowPdfSettingsModal(false);
+      };
 
       const [toastMsg, setToastMsg] = React.useState('');
       const [isInfoToast, setIsInfoToast] = React.useState(false);
@@ -1196,6 +1243,7 @@
         'sun_baby_note_categories_v1',
         'sun_baby_milestones_v1',
         'sun_baby_night_mode_v1',
+        'sun_baby_pdf_export_options_v1',
         ...LEGACY_BACKUP_STORAGE_KEYS
       ];
       const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
@@ -1265,6 +1313,8 @@
           try { localStorage.removeItem(key); } catch (error) { console.error('Failed to remove key:', key, error); }
         });
         setIsNightMode(false);
+        setPdfExportOptions(DEFAULT_PDF_EXPORT_OPTIONS);
+        setPdfExportDraft(DEFAULT_PDF_EXPORT_OPTIONS);
       };
 
       const safeSetStorageItem = (key, value) => {
@@ -2545,9 +2595,9 @@
         setEditingNoteCategory(null);
         setEditedNoteCategory('');
         setMilestones([]);
-        setRecentAutoBackups([]);
-        setAdvancedRestoreEnabled(true);
         setShowEditProfileModal(false);
+        setShowDataMgmtModal(false);
+        setShowStorageManagerModal(false);
         showToast('🧹 已清除應用程式所有資料');
       };
 
@@ -2667,14 +2717,30 @@
         }
       };
 
+      const handleResetPdfExportSettings = () => {
+        const confirmed = window.confirm(
+          '⚠️ 此操作將重設匯出 PDF 的資料選項、時間範圍與顯示設定。確定要繼續嗎？'
+        );
+        if (!confirmed) return;
+        setPdfExportOptions(DEFAULT_PDF_EXPORT_OPTIONS);
+        setPdfExportDraft(DEFAULT_PDF_EXPORT_OPTIONS);
+        try {
+          localStorage.setItem('sun_baby_pdf_export_options_v1', JSON.stringify(DEFAULT_PDF_EXPORT_OPTIONS));
+          showToast('📄 已重設匯出 PDF 設定。');
+        } catch (error) {
+          console.error('Failed to reset PDF export settings:', error);
+          showToast('⚠️ 無法重設匯出 PDF 設定，請稍後再試。');
+        }
+      };
+
       const handleDownloadPDF = () => {
         if (pdfExportOptions.range === 'custom' && (!pdfExportOptions.startDate || !pdfExportOptions.endDate)) {
-          setShowPdfSettingsModal(true);
+          openPdfSettingsModal();
           showToast('⚠️ 請先選擇自訂匯出的開始與結束日期。', 'info');
           return;
         }
         if (pdfExportOptions.range === 'custom' && pdfExportOptions.startDate > pdfExportOptions.endDate) {
-          setShowPdfSettingsModal(true);
+          openPdfSettingsModal();
           showToast('⚠️ 開始日期不可晚於結束日期。', 'info');
           return;
         }
@@ -3785,7 +3851,7 @@
                     <span className="hidden md:inline">{isExporting ? '匯出中...' : 'PDF'}</span>
                   </button>
                   <button
-                    onClick={() => setShowPdfSettingsModal(true)}
+                    onClick={openPdfSettingsModal}
                     disabled={isExporting}
                     className="p-1.5 border-l border-amber-400/60 hover:bg-amber-700 rounded-r-xl transition-colors disabled:opacity-50"
                     title="匯出 PDF 設定"
@@ -5797,6 +5863,13 @@
                       <Icon name="moon" className="w-4 h-4" />
                       重設夜間模式設定
                     </button>
+                    <button
+                      onClick={handleResetPdfExportSettings}
+                      className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Icon name="settings" className="w-4 h-4" />
+                      重設匯出 PDF 設定
+                    </button>
                   </div>
 
                   <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-2.5 text-amber-900">
@@ -5828,7 +5901,7 @@
                     <Icon name="settings" className="w-5 h-5" />
                     匯出 PDF 設定
                   </h3>
-                  <button onClick={() => setShowPdfSettingsModal(false)} className="p-1.5 rounded-lg hover:bg-slate-100" title="關閉">
+                  <button onClick={closePdfSettingsModal} className="p-1.5 rounded-lg hover:bg-slate-100" title="關閉">
                     <Icon name="x" className="w-4 h-4" />
                   </button>
                 </div>
@@ -5845,8 +5918,8 @@
                     <label key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60">
                       <input
                         type="checkbox"
-                        checked={pdfExportOptions[key]}
-                        onChange={(event) => setPdfExportOptions((current) => ({ ...current, [key]: event.target.checked }))}
+                        checked={pdfExportDraft[key]}
+                        onChange={(event) => setPdfExportDraft((current) => ({ ...current, [key]: event.target.checked }))}
                         className="accent-amber-600"
                       />
                       <span className="font-bold text-slate-700">{label}</span>
@@ -5857,8 +5930,8 @@
                 <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60">
                   <input
                     type="checkbox"
-                    checked={pdfExportOptions.showExportTime}
-                    onChange={(event) => setPdfExportOptions((current) => ({ ...current, showExportTime: event.target.checked }))}
+                    checked={pdfExportDraft.showExportTime}
+                    onChange={(event) => setPdfExportDraft((current) => ({ ...current, showExportTime: event.target.checked }))}
                     className="accent-amber-600"
                   />
                   <span className="font-bold text-slate-700">顯示匯出時間</span>
@@ -5867,8 +5940,8 @@
                 <div className="space-y-2">
                   <label className="font-bold text-slate-700 block">時間範圍</label>
                   <select
-                    value={pdfExportOptions.range}
-                    onChange={(event) => setPdfExportOptions((current) => ({ ...current, range: event.target.value }))}
+                    value={pdfExportDraft.range}
+                    onChange={(event) => setPdfExportDraft((current) => ({ ...current, range: event.target.value }))}
                     className="w-full border border-slate-300 rounded-xl px-3 py-2.5 bg-white"
                   >
                     <option value="all">全部日期</option>
@@ -5877,14 +5950,14 @@
                     <option value="90">最近 3 個月</option>
                     <option value="custom">自訂日期範圍</option>
                   </select>
-                  {pdfExportOptions.range === 'custom' && (
+                  {pdfExportDraft.range === 'custom' && (
                     <div className="grid grid-cols-2 gap-2">
                       <label className="space-y-1">
                         <span className="font-bold text-slate-600">開始日期</span>
                         <input
                           type="date"
-                          value={pdfExportOptions.startDate}
-                          onChange={(event) => setPdfExportOptions((current) => ({ ...current, startDate: event.target.value }))}
+                          value={pdfExportDraft.startDate}
+                          onChange={(event) => setPdfExportDraft((current) => ({ ...current, startDate: event.target.value }))}
                           className="w-full border border-slate-300 rounded-xl px-2 py-2"
                         />
                       </label>
@@ -5892,8 +5965,8 @@
                         <span className="font-bold text-slate-600">結束日期</span>
                         <input
                           type="date"
-                          value={pdfExportOptions.endDate}
-                          onChange={(event) => setPdfExportOptions((current) => ({ ...current, endDate: event.target.value }))}
+                          value={pdfExportDraft.endDate}
+                          onChange={(event) => setPdfExportDraft((current) => ({ ...current, endDate: event.target.value }))}
                           className="w-full border border-slate-300 rounded-xl px-2 py-2"
                         />
                       </label>
@@ -5907,19 +5980,26 @@
 
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button
-                    onClick={() => setShowPdfSettingsModal(false)}
+                    onClick={closePdfSettingsModal}
                     className="py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-50"
                   >
                     取消
                   </button>
                   <button
                     onClick={() => {
-                      setShowPdfSettingsModal(false);
-                      handleDownloadPDF();
+                      try {
+                        localStorage.setItem('sun_baby_pdf_export_options_v1', JSON.stringify(pdfExportDraft));
+                        setPdfExportOptions({ ...pdfExportDraft });
+                        setShowPdfSettingsModal(false);
+                        showToast('✅ PDF 匯出設定已儲存');
+                      } catch (error) {
+                        console.error('Failed to save PDF export settings:', error);
+                        showToast('⚠️ 無法儲存 PDF 匯出設定，請稍後再試。');
+                      }
                     }}
                     className="py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold"
                   >
-                    匯出 PDF
+                    儲存設定
                   </button>
                 </div>
               </div>
