@@ -6163,7 +6163,7 @@ function App() {
     className: "font-bold text-purple-900 text-sm flex items-center gap-1.5"
   }, "📝 筆記本"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
-  }, "快速記錄門診提問、成長大事記與照護備忘，支援語音輸入、分類篩選與編輯，讓照護資訊更好整理。")), /*#__PURE__*/React.createElement("div", {
+  }, "快速記錄門診提問、成長大事記與照護備忘，支援語音輸入、自訂分類篩選與編輯，讓照護資訊更好整理。")), /*#__PURE__*/React.createElement("div", {
     className: "p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1"
   }, /*#__PURE__*/React.createElement("div", {
     className: "font-bold text-indigo-900 text-sm flex items-center gap-1.5"
