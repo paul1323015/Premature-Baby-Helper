@@ -5794,7 +5794,7 @@
                   </p>
                 )}
                 <p className="text-[10px] leading-relaxed text-slate-500">
-                  匯入前會檢查本機儲存空間；系統不會自動備份目前資料，建議先下載備份。
+                  匯入備份前會檢查本機儲存空間。系統不會自動備份目前資料，建議先下載備份。
                 </p>
                 <div className="grid gap-2">
                   <button

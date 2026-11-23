@@ -5779,7 +5779,7 @@ function App() {
     className: "text-[11px] leading-relaxed text-red-700"
   }, storageUsage.percent >= 100 ? '儲存量已達估計上限，請先下載完整備份，再整理不需要保留的本機資料。' : '儲存量已達 80% 警戒值，建議先下載備份並檢查本機資料。'), /*#__PURE__*/React.createElement("p", {
     className: "text-[10px] leading-relaxed text-slate-500"
-  }, "匯入前會檢查本機儲存空間；系統不會自動備份目前資料，建議先下載備份。"), /*#__PURE__*/React.createElement("div", {
+  }, "匯入備份前會檢查本機儲存空間。系統不會自動備份目前資料，建議先下載備份。"), /*#__PURE__*/React.createElement("div", {
     className: "grid gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: handleRefreshStorageUsage,
