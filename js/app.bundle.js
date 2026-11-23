@@ -3305,7 +3305,7 @@ function App() {
           }]
         }] : []), ...(pdfExportOptions.notes ? [{
           stack: [{
-            text: '筆記本重點摘要',
+            text: '筆記本',
             style: 'sectionTitle'
           }, pdfNotes.length === 0 ? {
             text: '無筆記紀錄',
@@ -4855,7 +4855,7 @@ function App() {
     className: "pdf-section space-y-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-slate-800 border-b pb-1"
-  }, "📝 筆記本重點摘要"), notes.length === 0 ? /*#__PURE__*/React.createElement("p", {
+  }, "📝 筆記本"), notes.length === 0 ? /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-slate-400"
   }, "無筆記紀錄") : /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 text-xs"
@@ -5992,7 +5992,7 @@ function App() {
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-slate-700"
-  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['careLogs', '照護日誌'], ['doctor', '看診備忘與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
+  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['careLogs', '照護日誌'], ['doctor', '看診備忘與門診提問'], ['notes', '筆記本']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
     key: key,
     className: "space-y-1"
   }, /*#__PURE__*/React.createElement("label", {
@@ -6161,7 +6161,7 @@ function App() {
     className: "p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1"
   }, /*#__PURE__*/React.createElement("div", {
     className: "font-bold text-purple-900 text-sm flex items-center gap-1.5"
-  }, "📝 隨手筆記本"), /*#__PURE__*/React.createElement("p", {
+  }, "📝 筆記本"), /*#__PURE__*/React.createElement("p", {
     className: "text-slate-600 leading-relaxed"
   }, "快速記錄門診提問、成長大事記與照護備忘，支援語音輸入、分類篩選與編輯，讓照護資訊更好整理。")), /*#__PURE__*/React.createElement("div", {
     className: "p-3 bg-indigo-50/70 border border-indigo-200 rounded-xl space-y-1"

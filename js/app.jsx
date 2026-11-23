@@ -3243,7 +3243,7 @@
               }] : []),
               ...(pdfExportOptions.notes ? [{
                 stack: [
-                  { text: '筆記本重點摘要', style: 'sectionTitle' },
+                  { text: '筆記本', style: 'sectionTitle' },
                   pdfNotes.length === 0
                     ? { text: '無筆記紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
                     : {
@@ -4942,7 +4942,7 @@
             </div>
 
             <div className="pdf-section space-y-2">
-              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📝 筆記本重點摘要</h3>
+              <h3 className="font-bold text-sm text-slate-800 border-b pb-1">📝 筆記本</h3>
               {notes.length === 0 ? (
                 <p className="text-xs text-slate-400">無筆記紀錄</p>
               ) : (
@@ -6037,7 +6037,7 @@
                     ['growthChart', '生長曲線圖'],
                     ['careLogs', '照護日誌'],
                     ['doctor', '看診備忘與門診提問'],
-                    ['notes', '筆記本重點摘要']
+                    ['notes', '筆記本']
                   ].map(([key, label]) => (
                     <div key={key} className="space-y-1">
                       <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60">
@@ -6224,7 +6224,7 @@
                     {/* Card 4 */}
                     <div className="p-3 bg-purple-50/70 border border-purple-200 rounded-xl space-y-1">
                       <div className="font-bold text-purple-900 text-sm flex items-center gap-1.5">
-                        📝 隨手筆記本
+                        📝 筆記本
                       </div>
                       <p className="text-slate-600 leading-relaxed">
                         快速記錄門診提問、成長大事記與照護備忘，支援語音輸入、分類篩選與編輯，讓照護資訊更好整理。
