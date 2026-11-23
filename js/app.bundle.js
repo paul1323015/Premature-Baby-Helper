@@ -424,11 +424,12 @@ const PretermGrowthChart = ({
   setShowPercentiles,
   showZeroBaseline,
   setShowZeroBaseline,
+  useChronoAxis,
+  setUseChronoAxis,
   showToast
 }) => {
   const [showRecordModal, setShowRecordModal] = React.useState(false);
   const [editingRecordId, setEditingRecordId] = React.useState(null);
-  const [useChronoAxis, setUseChronoAxis] = React.useState(false);
   const [recDate, setRecDate] = React.useState(getLocalDateString());
   const [recTime, setRecTime] = React.useState('');
   const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
@@ -621,8 +622,8 @@ const PretermGrowthChart = ({
   }, "⚠️ 矯正月齡模式較適合早產兒生長趨勢參考；百分位結果僅供參考，實際判讀請諮詢兒科或新生兒科醫師。"))), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       const nextUseChronoAxis = !useChronoAxis;
-      setUseChronoAxis(nextUseChronoAxis);
-      showToast(nextUseChronoAxis ? '✅ 生長曲線已改以實際月齡顯示；此模式僅供趨勢查看，不作 WHO 百分位判讀。' : '✅ 生長曲線已改以矯正月齡顯示；百分位結果僅供參考，請諮詢醫師判讀。');
+      const saved = setUseChronoAxis(nextUseChronoAxis);
+      showToast(saved ? nextUseChronoAxis ? '✅ 生長曲線已改以實際月齡顯示；此模式僅供趨勢查看，不作 WHO 百分位判讀。' : '✅ 生長曲線已改以矯正月齡顯示；百分位結果僅供參考，請諮詢醫師判讀。' : '⚠️ 月齡模式已切換，但設定無法儲存。');
     },
     className: "w-full px-2.5 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg text-[11px] sm:text-xs font-bold transition-colors border border-amber-300 shadow-sm sm:w-auto",
     title: useChronoAxis ? '目前顯示：實際月齡。點擊切換為 矯正月齡。' : '目前顯示：矯正月齡。點擊切換為 實際月齡。'
@@ -637,8 +638,8 @@ const PretermGrowthChart = ({
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       const nextShowPercentiles = !showPercentiles;
-      setShowPercentiles(nextShowPercentiles);
-      showToast(`✅ 百分位曲線已${nextShowPercentiles ? '顯示' : '隱藏'}`);
+      const saved = setShowPercentiles(nextShowPercentiles);
+      showToast(saved ? `✅ 百分位曲線已${nextShowPercentiles ? '顯示' : '隱藏'}` : '⚠️ 百分位曲線已切換，但設定無法儲存。');
     },
     className: `px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${showPercentiles ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200' : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'}`,
     title: "切換顯示/隱藏背景 WHO 百分位參考虛線"
@@ -649,8 +650,8 @@ const PretermGrowthChart = ({
   }, "百分位曲線：", showPercentiles ? '顯示' : '隱藏')), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       const nextShowZeroBaseline = !showZeroBaseline;
-      setShowZeroBaseline(nextShowZeroBaseline);
-      showToast(`✅ 基準線已${nextShowZeroBaseline ? '顯示' : '隱藏'}`);
+      const saved = setShowZeroBaseline(nextShowZeroBaseline);
+      showToast(saved ? `✅ 基準線已${nextShowZeroBaseline ? '顯示' : '隱藏'}` : '⚠️ 基準線已切換，但設定無法儲存。');
     },
     className: `px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${showZeroBaseline ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200' : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'}`,
     title: "切換顯示/隱藏 0 個月基準線與標示"
@@ -1131,8 +1132,65 @@ function App() {
   }, []);
   const [selectedMetric, setSelectedMetric] = React.useState('weight');
   const [selectedGender, setSelectedGender] = React.useState('boy');
-  const [showPercentiles, setShowPercentiles] = React.useState(true);
-  const [showZeroBaseline, setShowZeroBaseline] = React.useState(true);
+  const DEFAULT_GROWTH_CHART_OPTIONS = {
+    showPercentiles: true,
+    showZeroBaseline: true,
+    useChronoAxis: false
+  };
+  const [growthChartOptions, setGrowthChartOptions] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('sun_baby_growth_chart_options_v1');
+      if (!saved) return DEFAULT_GROWTH_CHART_OPTIONS;
+      const parsed = JSON.parse(saved);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return DEFAULT_GROWTH_CHART_OPTIONS;
+      return {
+        showPercentiles: typeof parsed.showPercentiles === 'boolean' ? parsed.showPercentiles : true,
+        showZeroBaseline: typeof parsed.showZeroBaseline === 'boolean' ? parsed.showZeroBaseline : true,
+        useChronoAxis: typeof parsed.useChronoAxis === 'boolean' ? parsed.useChronoAxis : false
+      };
+    } catch (error) {
+      console.error('Failed to load growth chart settings:', error);
+      return DEFAULT_GROWTH_CHART_OPTIONS;
+    }
+  });
+  const {
+    showPercentiles,
+    showZeroBaseline,
+    useChronoAxis
+  } = growthChartOptions;
+  const saveGrowthChartOptions = options => {
+    try {
+      localStorage.setItem('sun_baby_growth_chart_options_v1', JSON.stringify(options));
+      return true;
+    } catch (error) {
+      console.error('Failed to save growth chart settings:', error);
+      return false;
+    }
+  };
+  const setShowPercentiles = value => {
+    const nextOptions = {
+      ...growthChartOptions,
+      showPercentiles: value
+    };
+    setGrowthChartOptions(nextOptions);
+    return saveGrowthChartOptions(nextOptions);
+  };
+  const setShowZeroBaseline = value => {
+    const nextOptions = {
+      ...growthChartOptions,
+      showZeroBaseline: value
+    };
+    setGrowthChartOptions(nextOptions);
+    return saveGrowthChartOptions(nextOptions);
+  };
+  const setUseChronoAxis = value => {
+    const nextOptions = {
+      ...growthChartOptions,
+      useChronoAxis: value
+    };
+    setGrowthChartOptions(nextOptions);
+    return saveGrowthChartOptions(nextOptions);
+  };
   const [babyInfo, setBabyInfo] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_profile_v5');
     if (saved) {
@@ -1381,7 +1439,7 @@ function App() {
   });
   const [pastedJson, setPastedJson] = React.useState('');
   const LEGACY_BACKUP_STORAGE_KEYS = ['sun_baby_recent_auto_backups_v1', 'sun_baby_advanced_restore_enabled_v1', 'sun_baby_emergency_snapshot_v1'];
-  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_doctor_visit_summary_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_night_mode_v1', 'sun_baby_pdf_export_options_v1', ...LEGACY_BACKUP_STORAGE_KEYS];
+  const APP_STORAGE_KEYS = ['sun_baby_profile_v5', 'sun_baby_growth_history_v1', 'sun_baby_logs_v1', 'sun_baby_care_reminders_v1', 'sun_baby_vaccination_logs_v1', 'sun_baby_solid_food_logs_v1', 'sun_baby_doctor_notes_v1', 'sun_baby_doctor_visit_summary_v1', 'sun_baby_notes_v1', 'sun_baby_note_categories_v1', 'sun_baby_milestones_v1', 'sun_baby_night_mode_v1', 'sun_baby_pdf_export_options_v1', 'sun_baby_growth_chart_options_v1', ...LEGACY_BACKUP_STORAGE_KEYS];
   const STORAGE_LIMIT_BYTES = 5 * 1024 * 1024;
   const STORAGE_WARNING_BYTES = Math.round(STORAGE_LIMIT_BYTES * 0.8);
   const calculateStorageUsage = () => {
@@ -1453,6 +1511,7 @@ function App() {
     setIsNightMode(false);
     setPdfExportOptions(DEFAULT_PDF_EXPORT_OPTIONS);
     setPdfExportDraft(DEFAULT_PDF_EXPORT_OPTIONS);
+    setGrowthChartOptions(DEFAULT_GROWTH_CHART_OPTIONS);
   };
   const safeSetStorageItem = (key, value) => {
     try {
@@ -1614,7 +1673,8 @@ function App() {
     notebook: notes,
     notebookNotes: notes,
     doctorQuestions: doctorNotes,
-    pdfExportOptions
+    pdfExportOptions,
+    growthChartOptions
   });
   const isBackupRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
   const isBackupRecordArray = value => Array.isArray(value) && value.every(isBackupRecord);
@@ -1637,6 +1697,11 @@ function App() {
       if (['profile', 'growth', 'careLogs', 'doctor', 'notes', 'showExportTime'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
       if (Object.prototype.hasOwnProperty.call(options, 'range') && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
       if (['startDate', 'endDate'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'string')) return false;
+    }
+    if (hasOwn('growthChartOptions')) {
+      const options = backupData.growthChartOptions;
+      if (!isBackupRecord(options)) return false;
+      if (['showPercentiles', 'showZeroBaseline', 'useChronoAxis'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
     }
     return true;
   };
@@ -1661,6 +1726,12 @@ function App() {
       addEntry('sun_baby_pdf_export_options_v1', {
         ...DEFAULT_PDF_EXPORT_OPTIONS,
         ...Object.fromEntries(Object.entries(backupData.pdfExportOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_PDF_EXPORT_OPTIONS, key)))
+      });
+    }
+    if (isBackupRecord(backupData.growthChartOptions)) {
+      addEntry('sun_baby_growth_chart_options_v1', {
+        ...DEFAULT_GROWTH_CHART_OPTIONS,
+        ...Object.fromEntries(Object.entries(backupData.growthChartOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_GROWTH_CHART_OPTIONS, key)))
       });
     }
     if (typeof backupData.nightMode === 'boolean') {
@@ -1824,6 +1895,13 @@ function App() {
       setPdfExportDraft({
         ...restoredPdfExportOptions
       });
+    }
+    if (isBackupRecord(backupData.growthChartOptions)) {
+      const restoredGrowthChartOptions = {
+        ...DEFAULT_GROWTH_CHART_OPTIONS,
+        ...Object.fromEntries(Object.entries(backupData.growthChartOptions).filter(([key]) => Object.prototype.hasOwnProperty.call(DEFAULT_GROWTH_CHART_OPTIONS, key)))
+      };
+      setGrowthChartOptions(restoredGrowthChartOptions);
     }
     if (backupData.babyInfo) {
       const cleanedProfile = {
@@ -2676,6 +2754,18 @@ function App() {
     } catch (error) {
       console.error('Failed to reset PDF export settings:', error);
       showToast('⚠️ 無法重設匯出 PDF 設定，請稍後再試。');
+    }
+  };
+  const handleResetGrowthChartSettings = () => {
+    const confirmed = window.confirm('⚠️ 此操作將重設百分位曲線、基準線與月齡模式顯示設定。確定要繼續嗎？');
+    if (!confirmed) return;
+    setGrowthChartOptions(DEFAULT_GROWTH_CHART_OPTIONS);
+    try {
+      localStorage.setItem('sun_baby_growth_chart_options_v1', JSON.stringify(DEFAULT_GROWTH_CHART_OPTIONS));
+      showToast('📈 已重設生長曲線與月齡模式顯示設定。');
+    } catch (error) {
+      console.error('Failed to reset growth chart settings:', error);
+      showToast('⚠️ 無法儲存生長曲線與月齡模式預設設定，請稍後再試。');
     }
   };
   const handleDownloadPDF = () => {
@@ -4265,6 +4355,8 @@ function App() {
     setShowPercentiles: setShowPercentiles,
     showZeroBaseline: showZeroBaseline,
     setShowZeroBaseline: setShowZeroBaseline,
+    useChronoAxis: useChronoAxis,
+    setUseChronoAxis: setUseChronoAxis,
     showToast: showToast
   }), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2 pt-2 border-t"
@@ -5858,7 +5950,13 @@ function App() {
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "settings",
     className: "w-4 h-4"
-  }), "重設匯出 PDF 設定")), /*#__PURE__*/React.createElement("div", {
+  }), "重設匯出 PDF 設定"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleResetGrowthChartSettings,
+    className: "w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "settings",
+    className: "w-4 h-4"
+  }), "重設生長曲線/月齡模式顯示設定")), /*#__PURE__*/React.createElement("div", {
     className: "rounded-xl border border-amber-200 bg-amber-50/80 p-2.5 text-amber-900"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-[11px] mb-1"
@@ -5894,8 +5992,10 @@ function App() {
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-slate-700"
-  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growth', '生長測量紀錄與曲線'], ['careLogs', '照護日誌'], ['doctor', '看診摘要與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("label", {
+  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growth', '生長測量紀錄與曲線'], ['careLogs', '照護日誌'], ['doctor', '看診摘要與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
     key: key,
+    className: "space-y-1"
+  }, /*#__PURE__*/React.createElement("label", {
     className: "flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60"
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",
@@ -5907,7 +6007,9 @@ function App() {
     className: "accent-amber-600"
   }), /*#__PURE__*/React.createElement("span", {
     className: "font-bold text-slate-700"
-  }, label)))), /*#__PURE__*/React.createElement("label", {
+  }, label)), key === 'growth' && pdfExportDraft.growth && (!showPercentiles || !showZeroBaseline) && /*#__PURE__*/React.createElement("p", {
+    className: "ml-1 rounded-lg bg-amber-50 px-3 py-2 text-amber-800"
+  }, "目前圖表的", !showPercentiles && !showZeroBaseline ? '百分位曲線與基準線' : !showPercentiles ? '百分位曲線' : '基準線', "為隱藏，匯出 PDF 時也不會顯示。")))), /*#__PURE__*/React.createElement("label", {
     className: "flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60"
   }, /*#__PURE__*/React.createElement("input", {
     type: "checkbox",

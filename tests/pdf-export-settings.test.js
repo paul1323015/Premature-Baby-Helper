@@ -42,4 +42,10 @@ describe('PDF export settings persistence', () => {
     expect(appSource).toMatch(/if \(hasOwn\('pdfExportOptions'\)\) \{/);
     expect(appSource).toMatch(/!\['all', '7', '30', '90', 'custom'\]\.includes\(options\.range\)/);
   });
+
+  test('hidden growth chart lines are noted in PDF settings when growth is selected', () => {
+    expect(appSource).toMatch(/pdfExportDraft\.growth && \(!showPercentiles \|\| !showZeroBaseline\)/);
+    expect(appSource).toMatch(/目前圖表的\{!showPercentiles && !showZeroBaseline \?/);
+    expect(appSource).toMatch(/匯出 PDF 時也不會顯示/);
+  });
 });
