@@ -6036,7 +6036,7 @@
                     ['growthRecords', '生長測量紀錄表'],
                     ['growthChart', '生長曲線圖'],
                     ['careLogs', '照護日誌'],
-                    ['doctor', '看診摘要與門診提問'],
+                    ['doctor', '看診備忘與門診提問'],
                     ['notes', '筆記本重點摘要']
                   ].map(([key, label]) => (
                     <div key={key} className="space-y-1">

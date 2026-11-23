@@ -5992,7 +5992,7 @@ function App() {
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-slate-700"
-  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['careLogs', '照護日誌'], ['doctor', '看診摘要與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
+  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['careLogs', '照護日誌'], ['doctor', '看診備忘與門診提問'], ['notes', '筆記本重點摘要']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
     key: key,
     className: "space-y-1"
   }, /*#__PURE__*/React.createElement("label", {
