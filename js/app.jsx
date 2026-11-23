@@ -21,6 +21,7 @@
         user: <g><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></g>,
         info: <g><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></g>,
         download: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></g>,
+        settings: <g><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.42 1.42-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.04 1.56V20h-2v-.48A1.7 1.7 0 0 0 12.34 18a1.7 1.7 0 0 0-1.88.34l-.06.06-1.42-1.42.06-.06A1.7 1.7 0 0 0 9.38 15a1.7 1.7 0 0 0-1.56-1.04H7.34v-2h.48A1.7 1.7 0 0 0 9.38 10.9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 1.42-1.42.06.06a1.7 1.7 0 0 0 1.88.34A1.7 1.7 0 0 0 13.38 6.38V5.9h2v.48A1.7 1.7 0 0 0 16.42 7.94a1.7 1.7 0 0 0 1.88-.34l.06-.06 1.42 1.42-.06.06a1.7 1.7 0 0 0-.34 1.88A1.7 1.7 0 0 0 20.94 11.94h.48v2h-.48A1.7 1.7 0 0 0 19.4 15z" /></g>,
         upload: <g><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></g>,
         database: <g><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" /></g>,
         hardDrive: <g><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 14h18M7 17h.01M11 17h.01" /></g>,
@@ -885,6 +886,18 @@
       const storageWarningLevelRef = React.useRef(0);
       const [showNotesModal, setShowNotesModal] = React.useState(false);
       const [isExporting, setIsExporting] = React.useState(false);
+      const [showPdfSettingsModal, setShowPdfSettingsModal] = React.useState(false);
+      const [pdfExportOptions, setPdfExportOptions] = React.useState({
+        profile: true,
+        growth: true,
+        careLogs: true,
+        doctor: true,
+        notes: true,
+        showExportTime: true,
+        range: 'all',
+        startDate: '',
+        endDate: ''
+      });
 
       const [toastMsg, setToastMsg] = React.useState('');
       const [isInfoToast, setIsInfoToast] = React.useState(false);
@@ -2655,12 +2668,62 @@
       };
 
       const handleDownloadPDF = () => {
+        if (pdfExportOptions.range === 'custom' && (!pdfExportOptions.startDate || !pdfExportOptions.endDate)) {
+          setShowPdfSettingsModal(true);
+          showToast('⚠️ 請先選擇自訂匯出的開始與結束日期。', 'info');
+          return;
+        }
+        if (pdfExportOptions.range === 'custom' && pdfExportOptions.startDate > pdfExportOptions.endDate) {
+          setShowPdfSettingsModal(true);
+          showToast('⚠️ 開始日期不可晚於結束日期。', 'info');
+          return;
+        }
         setIsExporting(true);
         showToast('📄 正在生成 PDF 報告，請稍候...');
         try {
           if (!window.pdfMake || !window.pdfMake.vfs || !window.pdfMake.vfs['NotoSansTC-Variable.ttf']) {
             throw new Error('PDFMake 或繁體中文字型尚未載入。');
           }
+
+          const getPdfRecordDate = (record) => {
+            if (typeof record?.date === 'string') {
+              const match = record.date.match(/^\d{4}-\d{2}-\d{2}/);
+              if (match) return match[0];
+            }
+            if (typeof record?.createdAt === 'string') {
+              const match = record.createdAt.match(/\d{4}-\d{2}-\d{2}/);
+              if (match) return match[0];
+            }
+            return '';
+          };
+          const pdfExportRangeEnd = getLocalDateInputValue();
+          let pdfExportRangeStart = '';
+          if (pdfExportOptions.range === '7') {
+            const start = parseDateOnly(pdfExportRangeEnd);
+            if (start) { start.setDate(start.getDate() - 6); pdfExportRangeStart = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`; }
+          } else if (pdfExportOptions.range === '30') {
+            const start = parseDateOnly(pdfExportRangeEnd);
+            if (start) { start.setDate(start.getDate() - 29); pdfExportRangeStart = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`; }
+          } else if (pdfExportOptions.range === '90') {
+            const start = parseDateOnly(pdfExportRangeEnd);
+            if (start) { start.setDate(start.getDate() - 89); pdfExportRangeStart = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`; }
+          } else if (pdfExportOptions.range === 'custom') {
+            pdfExportRangeStart = pdfExportOptions.startDate;
+          }
+          const isPdfRecordInRange = (record) => {
+            if (pdfExportOptions.range === 'all') return true;
+            const recordDate = getPdfRecordDate(record);
+            if (!recordDate) return false;
+            const rangeStart = pdfExportOptions.range === 'custom' ? pdfExportOptions.startDate : pdfExportRangeStart;
+            const rangeEnd = pdfExportOptions.range === 'custom' ? (pdfExportOptions.endDate || pdfExportRangeEnd) : pdfExportRangeEnd;
+            if (rangeStart && recordDate < rangeStart) return false;
+            if (rangeEnd && recordDate > rangeEnd) return false;
+            return true;
+          };
+          const pdfGrowthHistory = growthHistory.filter(isPdfRecordInRange);
+          const pdfLogs = logs.filter(isPdfRecordInRange);
+          const pdfDoctorNotes = doctorNotes.filter(isPdfRecordInRange);
+          const pdfNotes = notes.filter(isPdfRecordInRange);
 
           const pdfMake = window.pdfMake;
           pdfMake.fonts = Object.assign({}, pdfMake.fonts || {}, {
@@ -2686,7 +2749,7 @@
             const chartPadding = { top: 20, right: 32, bottom: 48, left: 52 };
             const plotBottom = chartHeight - chartPadding.bottom;
             const referenceData = (WHO_GROWTH_DATA[babyInfo.gender] || WHO_GROWTH_DATA.boy)[metricConfig.key];
-            const points = growthHistory
+            const points = pdfGrowthHistory
               .filter(record => record.plotOnChart !== false)
               .map(record => {
                 const rawValue = parseFloat(record[metricConfig.key]);
@@ -2743,10 +2806,10 @@
             svg.push('</svg>');
             return { svg: svg.join(''), pointsCount: points.length };
           };
-          const growthCharts = growthChartMetrics.map(metricConfig => ({
+          const growthCharts = pdfExportOptions.growth ? growthChartMetrics.map(metricConfig => ({
             ...metricConfig,
             ...createGrowthChartSvg(metricConfig)
-          }));
+          })) : [];
 
           const docDefinition = {
             pageSize: 'A4',
@@ -2785,11 +2848,13 @@
               },
               {
                 columns: [
-                  {
-                    width: '*',
-                    text: `匯出時間：${formatLocalDateTime()}`,
-                    style: 'subtitle'
-                  },
+                  pdfExportOptions.showExportTime
+                    ? {
+                        width: '*',
+                        text: `匯出時間：${formatLocalDateTime()}`,
+                        style: 'subtitle'
+                      }
+                    : { width: '*', text: '', style: 'subtitle' },
                   {
                     width: 'auto',
                     alignment: 'right',
@@ -2811,7 +2876,7 @@
                 ],
                 margin: [0, 0, 0, 14]
               },
-              {
+              ...(pdfExportOptions.profile ? [{
                 table: {
                   widths: ['*'],
                   body: [[
@@ -2867,11 +2932,11 @@
                 },
                 layout: { hLineWidth: () => 0, vLineWidth: () => 0 },
                 margin: [0, 0, 0, 16]
-              },
-              {
+              }] : []),
+              ...(pdfExportOptions.growth ? [{
                 stack: [
                   { text: '歷史測量紀錄表', style: 'sectionTitle' },
-                  growthHistory.length === 0
+                  pdfGrowthHistory.length === 0
                     ? { text: '尚無測量紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
                     : {
                         table: {
@@ -2885,7 +2950,7 @@
                               { text: '身長 (cm)', style: 'tableHeader' },
                               { text: '頭圍 (cm)', style: 'tableHeader' }
                             ],
-                            ...growthHistory.map((rec) => [
+                            ...pdfGrowthHistory.map((rec) => [
                               { text: `${rec.date || '—'}${rec.time ? ` ${rec.time}` : ''}`, style: 'tableCell' },
                               { text: rec.weight || '—', style: 'tableCell' },
                               { text: rec.height || '—', style: 'tableCell' },
@@ -2902,8 +2967,8 @@
                         margin: [0, 0, 0, 14]
                       }
                 ]
-              },
-              {
+              }] : []),
+              ...(pdfExportOptions.growth ? [{
                 stack: [
                       { text: '生長曲線', style: 'sectionTitle' },
                       { text: `X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點；${showPercentiles ? '曲線標示 3%、15%、50%、85%、97% 百分位' : '百分位參考曲線依目前圖表設定隱藏'}；${showZeroBaseline ? '橘色虛線為 0 個月基準線' : '0 個月基準線依目前圖表設定隱藏'}。資料沿用應用程式的 WHO 參考曲線，僅供趨勢參考，請由醫療專業人員判讀。`, style: 'muted', margin: [0, 0, 0, 8] },
@@ -2926,11 +2991,11 @@
                       }))
                 ],
                 margin: [0, 0, 0, 14]
-              },
-              {
+              }] : []),
+              ...(pdfExportOptions.careLogs ? [{
                 stack: [
                       { text: '照護日誌', style: 'sectionTitle' },
-                  logs.length === 0
+                  pdfLogs.length === 0
                     ? { text: '尚無照護日誌', style: 'emptyState', margin: [0, 0, 0, 10] }
                     : {
                         table: {
@@ -2945,7 +3010,7 @@
                               { text: '內容', style: 'tableHeader' },
                               { text: '份量', style: 'tableHeader' }
                             ],
-                            ...logs.map((log) => [
+                            ...pdfLogs.map((log) => [
                               { text: log.date || '未設定日期', style: 'tableCell' },
                               { text: format24HourTime(log.time) || '—', style: 'tableCell' },
                               { text: careLogTypeLabels[log.type] || log.type || '其他', style: 'tableCell' },
@@ -2963,8 +3028,8 @@
                         margin: [0, 0, 0, 14]
                       }
                 ]
-              },
-              {
+              }] : []),
+              ...(pdfExportOptions.doctor ? [{
                 stack: [
                   { text: '看診摘要', style: 'sectionTitle' },
                   doctorVisitSummary.trim()
@@ -2975,10 +3040,10 @@
               {
                 stack: [
                   { text: '看診備忘與門診提問', style: 'sectionTitle' },
-                  doctorNotes.length === 0
+                  pdfDoctorNotes.length === 0
                     ? { text: '無門診提問紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
                     : {
-                        ul: doctorNotes.map((note) => ({
+                        ul: pdfDoctorNotes.map((note) => ({
                           text: [
                             {
                               text: `${note.date || '未設定日期'} ${format24HourTime(note.time)}｜${
@@ -2995,14 +3060,14 @@
                         margin: [0, 0, 0, 12]
                       }
                 ]
-              },
-              {
+              }] : []),
+              ...(pdfExportOptions.notes ? [{
                 stack: [
                   { text: '筆記本重點摘要', style: 'sectionTitle' },
-                  notes.length === 0
+                  pdfNotes.length === 0
                     ? { text: '無筆記紀錄', style: 'emptyState', margin: [0, 0, 0, 10] }
                     : {
-                        stack: notes.map((note) => ({
+                        stack: pdfNotes.map((note) => ({
                           table: {
                             widths: ['*'],
                             body: [[
@@ -3030,7 +3095,7 @@
                       }
                 ],
                 margin: [0, 0, 0, 6]
-              },
+              }] : []),
               {
                 text: '本報告由「巴掌小太陽 · 早產兒照護小幫手」自動生成，僅供看診時輔助醫療團隊參考。',
                 style: 'footer'
@@ -3709,15 +3774,25 @@
                   <Icon name="hardDrive" className="w-4 h-4" />
                   <span className="hidden md:inline">儲存空間</span>
                 </button>
-                <button
-                  onClick={handleDownloadPDF}
-                  disabled={isExporting}
-                  className="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 shadow-sm disabled:opacity-50 flex-shrink-0"
-                  title="下載完整記錄 PDF"
-                >
-                  <Icon name="download" className="w-4 h-4" />
-                  <span className="hidden md:inline">{isExporting ? '匯出中...' : 'PDF'}</span>
-                </button>
+                <div className="flex items-center rounded-xl bg-amber-600 text-white shadow-sm flex-shrink-0">
+                  <button
+                    onClick={handleDownloadPDF}
+                    disabled={isExporting}
+                    className="px-2.5 py-1.5 text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 disabled:opacity-50"
+                    title="依目前設定下載完整記錄 PDF"
+                  >
+                    <Icon name="download" className="w-4 h-4" />
+                    <span className="hidden md:inline">{isExporting ? '匯出中...' : 'PDF'}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowPdfSettingsModal(true)}
+                    disabled={isExporting}
+                    className="p-1.5 border-l border-amber-400/60 hover:bg-amber-700 rounded-r-xl transition-colors disabled:opacity-50"
+                    title="匯出 PDF 設定"
+                  >
+                    <Icon name="settings" className="w-4 h-4" />
+                  </button>
+                </div>
                 <button
                   onClick={() => setShowHelpModal(true)}
                   className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
@@ -5740,6 +5815,112 @@
                       清除應用程式所有資料
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showPdfSettingsModal && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start sm:items-center justify-center overflow-y-auto p-4 z-[60]">
+              <div className="w-full max-w-md my-2 sm:my-0 p-5 rounded-2xl border shadow-xl bg-white space-y-4 max-h-[calc(100vh-2rem)] overflow-y-auto text-xs">
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <h3 className="font-bold text-base text-amber-800 flex items-center gap-2">
+                    <Icon name="settings" className="w-5 h-5" />
+                    匯出 PDF 設定
+                  </h3>
+                  <button onClick={() => setShowPdfSettingsModal(false)} className="p-1.5 rounded-lg hover:bg-slate-100" title="關閉">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="font-bold text-slate-700">匯出資料</p>
+                  {[
+                    ['profile', '寶寶基本資料與最新數值'],
+                    ['growth', '生長測量紀錄與曲線'],
+                    ['careLogs', '照護日誌'],
+                    ['doctor', '看診摘要與門診提問'],
+                    ['notes', '筆記本重點摘要']
+                  ].map(([key, label]) => (
+                    <label key={key} className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60">
+                      <input
+                        type="checkbox"
+                        checked={pdfExportOptions[key]}
+                        onChange={(event) => setPdfExportOptions((current) => ({ ...current, [key]: event.target.checked }))}
+                        className="accent-amber-600"
+                      />
+                      <span className="font-bold text-slate-700">{label}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60">
+                  <input
+                    type="checkbox"
+                    checked={pdfExportOptions.showExportTime}
+                    onChange={(event) => setPdfExportOptions((current) => ({ ...current, showExportTime: event.target.checked }))}
+                    className="accent-amber-600"
+                  />
+                  <span className="font-bold text-slate-700">顯示匯出時間</span>
+                </label>
+
+                <div className="space-y-2">
+                  <label className="font-bold text-slate-700 block">時間範圍</label>
+                  <select
+                    value={pdfExportOptions.range}
+                    onChange={(event) => setPdfExportOptions((current) => ({ ...current, range: event.target.value }))}
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5 bg-white"
+                  >
+                    <option value="all">全部日期</option>
+                    <option value="7">最近 7 天</option>
+                    <option value="30">最近 30 天</option>
+                    <option value="90">最近 3 個月</option>
+                    <option value="custom">自訂日期範圍</option>
+                  </select>
+                  {pdfExportOptions.range === 'custom' && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="space-y-1">
+                        <span className="font-bold text-slate-600">開始日期</span>
+                        <input
+                          type="date"
+                          value={pdfExportOptions.startDate}
+                          onChange={(event) => setPdfExportOptions((current) => ({ ...current, startDate: event.target.value }))}
+                          className="w-full border border-slate-300 rounded-xl px-2 py-2"
+                        />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="font-bold text-slate-600">結束日期</span>
+                        <input
+                          type="date"
+                          value={pdfExportOptions.endDate}
+                          onChange={(event) => setPdfExportOptions((current) => ({ ...current, endDate: event.target.value }))}
+                          className="w-full border border-slate-300 rounded-xl px-2 py-2"
+                        />
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-amber-900 leading-relaxed">
+                  PDF 可能包含寶寶健康與個人資料；請確認只匯出需要的項目，並妥善保管或刪除不再需要的檔案。
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={() => setShowPdfSettingsModal(false)}
+                    className="py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowPdfSettingsModal(false);
+                      handleDownloadPDF();
+                    }}
+                    className="py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                  >
+                    匯出 PDF
+                  </button>
                 </div>
               </div>
             </div>
