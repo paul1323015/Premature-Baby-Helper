@@ -4668,74 +4668,86 @@
                     </p>
                   )}
                 </div>
-                <form onSubmit={handleAddDoctorNote} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <label className="font-bold text-xs">日期</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDoctorNoteDate(getLocalDateInputValue());
-                        setDoctorNoteTime(getLocalTimeInputValue());
-                      }}
-                      className="text-amber-600 hover:text-amber-800 font-bold text-xs"
-                      title="將日期與時間更新為目前時間，儲存後才會套用"
-                    >
-                      設為現在
-                    </button>
+                <form onSubmit={handleAddDoctorNote} className="p-3 rounded-xl border border-amber-200 bg-white space-y-3 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <label htmlFor="doctor-note-date" className="font-bold">日期</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDoctorNoteDate(getLocalDateInputValue());
+                            setDoctorNoteTime(getLocalTimeInputValue());
+                          }}
+                          className="text-amber-600 hover:text-amber-800 font-bold"
+                          title="將日期與時間更新為目前時間，儲存後才會套用"
+                        >
+                          設為現在
+                        </button>
+                      </div>
+                      <input
+                        id="doctor-note-date"
+                        type="date"
+                        required
+                        value={doctorNoteDate}
+                        onChange={(e) => setDoctorNoteDate(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-xl bg-white"
+                      />
+                    </div>
+                    <label className="font-bold">
+                      時間
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="例如：15:33"
+                        pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
+                        required
+                        value={doctorNoteTime}
+                        onChange={(e) => setDoctorNoteTime(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-xl bg-white"
+                      />
+                    </label>
+                    <label className="font-bold">
+                      類別
+                      <select
+                        value={doctorNoteCategory}
+                        onChange={(e) => setDoctorNoteCategory(e.target.value)}
+                        className="w-full mt-1 p-2 border rounded-xl bg-white"
+                      >
+                        <option value="門診提問">門診提問</option>
+                        <option value="看診備忘">看診備忘</option>
+                      </select>
+                    </label>
                   </div>
-                  <input
-                    type="date"
-                    required
-                    value={doctorNoteDate}
-                    onChange={(e) => setDoctorNoteDate(e.target.value)}
-                    className="p-2 border rounded-xl text-xs"
-                  />
-                  <div className="flex gap-2">
-                    <select
-                      value={doctorNoteCategory}
-                      onChange={(e) => setDoctorNoteCategory(e.target.value)}
-                      className="p-2 border rounded-xl text-xs"
-                    >
-                      <option value="門診提問">門診提問</option>
-                      <option value="看診備忘">看診備忘</option>
-                    </select>
+                  <div>
+                    <label className="font-bold block mb-1">問題／備忘</label>
                     <input
                       type="text"
-                      inputMode="numeric"
-                      placeholder="HH:mm"
-                      pattern="(?:[01][0-9]|2[0-3]):[0-5][0-9]"
-                      required
-                      value={doctorNoteTime}
-                      onChange={(e) => setDoctorNoteTime(e.target.value)}
-                      className="p-2 border rounded-xl text-xs"
+                      value={newDoctorQuestion}
+                      onChange={(e) => setNewDoctorQuestion(e.target.value)}
+                      placeholder="寫下想問新生兒加護病房或主治醫師的問題..."
+                      className="w-full p-2 border rounded-xl bg-white"
                     />
                   </div>
-                  <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newDoctorQuestion}
-                    onChange={(e) => setNewDoctorQuestion(e.target.value)}
-                    placeholder="寫下想問新生兒加護病房或主治醫師的問題..."
-                    className="flex-1 p-2.5 border rounded-xl text-xs"
-                  />
-                    <button type="submit" className="px-4 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm">
-                      {editingDoctorNoteId !== null ? '儲存修改' : '新增'}
-                    </button>
-                    {editingDoctorNoteId !== null && (
-                      <button type="button" onClick={handleCancelEditDoctorNote} className="px-4 py-2.5 border rounded-xl text-xs font-bold text-slate-600">
-                        取消
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-bold text-[11px] text-slate-500">醫師答覆</label>
+                  <div>
+                    <label className="font-bold block mb-1">醫師答覆</label>
                     <textarea
                       value={newDoctorAnswer}
                       onChange={(e) => setNewDoctorAnswer(e.target.value)}
                       placeholder="記錄醫師答覆..."
                       rows={2}
-                      className="w-full p-2 border rounded-lg text-xs resize-y"
+                      className="w-full p-2 border rounded-xl bg-white resize-y"
                     />
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button type="submit" className="flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md">
+                      {editingDoctorNoteId !== null ? '儲存修改' : '新增紀錄'}
+                    </button>
+                    {editingDoctorNoteId !== null && (
+                      <button type="button" onClick={handleCancelEditDoctorNote} className="flex-1 py-2 border rounded-xl text-slate-500 font-bold">
+                        取消
+                      </button>
+                    )}
                   </div>
                 </form>
                 <div className="space-y-2">

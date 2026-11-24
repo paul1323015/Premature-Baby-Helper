@@ -4615,70 +4615,76 @@ function App() {
     className: `text-xs whitespace-pre-wrap ${doctorVisitSummary.trim() ? 'text-slate-700' : 'text-slate-400'}`
   }, doctorVisitSummary.trim() || '尚未填寫')), /*#__PURE__*/React.createElement("form", {
     onSubmit: handleAddDoctorNote,
-    className: "space-y-2"
+    className: "p-3 rounded-xl border border-amber-200 bg-white space-y-3 text-xs"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 sm:grid-cols-3 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-between"
   }, /*#__PURE__*/React.createElement("label", {
-    className: "font-bold text-xs"
+    htmlFor: "doctor-note-date",
+    className: "font-bold"
   }, "日期"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: () => {
       setDoctorNoteDate(getLocalDateInputValue());
       setDoctorNoteTime(getLocalTimeInputValue());
     },
-    className: "text-amber-600 hover:text-amber-800 font-bold text-xs",
+    className: "text-amber-600 hover:text-amber-800 font-bold",
     title: "將日期與時間更新為目前時間，儲存後才會套用"
   }, "設為現在")), /*#__PURE__*/React.createElement("input", {
+    id: "doctor-note-date",
     type: "date",
     required: true,
     value: doctorNoteDate,
     onChange: e => setDoctorNoteDate(e.target.value),
-    className: "p-2 border rounded-xl text-xs"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-2"
-  }, /*#__PURE__*/React.createElement("select", {
-    value: doctorNoteCategory,
-    onChange: e => setDoctorNoteCategory(e.target.value),
-    className: "p-2 border rounded-xl text-xs"
-  }, /*#__PURE__*/React.createElement("option", {
-    value: "門診提問"
-  }, "門診提問"), /*#__PURE__*/React.createElement("option", {
-    value: "看診備忘"
-  }, "看診備忘")), /*#__PURE__*/React.createElement("input", {
+    className: "w-full mt-1 p-2 border rounded-xl bg-white"
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "font-bold"
+  }, "時間", /*#__PURE__*/React.createElement("input", {
     type: "text",
     inputMode: "numeric",
-    placeholder: "HH:mm",
+    placeholder: "例如：15:33",
     pattern: "(?:[01][0-9]|2[0-3]):[0-5][0-9]",
     required: true,
     value: doctorNoteTime,
     onChange: e => setDoctorNoteTime(e.target.value),
-    className: "p-2 border rounded-xl text-xs"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "flex gap-2"
-  }, /*#__PURE__*/React.createElement("input", {
+    className: "w-full mt-1 p-2 border rounded-xl bg-white"
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "font-bold"
+  }, "類別", /*#__PURE__*/React.createElement("select", {
+    value: doctorNoteCategory,
+    onChange: e => setDoctorNoteCategory(e.target.value),
+    className: "w-full mt-1 p-2 border rounded-xl bg-white"
+  }, /*#__PURE__*/React.createElement("option", {
+    value: "門診提問"
+  }, "門診提問"), /*#__PURE__*/React.createElement("option", {
+    value: "看診備忘"
+  }, "看診備忘")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "問題／備忘"), /*#__PURE__*/React.createElement("input", {
     type: "text",
     value: newDoctorQuestion,
     onChange: e => setNewDoctorQuestion(e.target.value),
     placeholder: "寫下想問新生兒加護病房或主治醫師的問題...",
-    className: "flex-1 p-2.5 border rounded-xl text-xs"
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "submit",
-    className: "px-4 py-2.5 bg-amber-500 text-white rounded-xl text-xs font-bold shadow-sm"
-  }, editingDoctorNoteId !== null ? '儲存修改' : '新增'), editingDoctorNoteId !== null && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: handleCancelEditDoctorNote,
-    className: "px-4 py-2.5 border rounded-xl text-xs font-bold text-slate-600"
-  }, "取消")), /*#__PURE__*/React.createElement("div", {
-    className: "space-y-1"
-  }, /*#__PURE__*/React.createElement("label", {
-    className: "font-bold text-[11px] text-slate-500"
+    className: "w-full p-2 border rounded-xl bg-white"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
   }, "醫師答覆"), /*#__PURE__*/React.createElement("textarea", {
     value: newDoctorAnswer,
     onChange: e => setNewDoctorAnswer(e.target.value),
     placeholder: "記錄醫師答覆...",
     rows: 2,
-    className: "w-full p-2 border rounded-lg text-xs resize-y"
-  }))), /*#__PURE__*/React.createElement("div", {
+    className: "w-full p-2 border rounded-xl bg-white resize-y"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "flex-1 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
+  }, editingDoctorNoteId !== null ? '儲存修改' : '新增紀錄'), editingDoctorNoteId !== null && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: handleCancelEditDoctorNote,
+    className: "flex-1 py-2 border rounded-xl text-slate-500 font-bold"
+  }, "取消"))), /*#__PURE__*/React.createElement("div", {
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("div", {
     className: `p-3 rounded-xl border space-y-2 ${cardBg}`
