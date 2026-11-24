@@ -3276,7 +3276,7 @@
                               { text: '時間', style: 'tableHeader' },
                               { text: '類型', style: 'tableHeader' },
                               { text: '內容', style: 'tableHeader' },
-                              { text: '份量', style: 'tableHeader' }
+                              { text: '數量', style: 'tableHeader' }
                             ],
                             ...pdfLogs.map((log) => [
                               { text: log.date || '未設定日期', style: 'tableCell' },
@@ -5054,7 +5054,7 @@
                       <th className="p-2 border-b">時間</th>
                       <th className="p-2 border-b">類型</th>
                       <th className="p-2 border-b">內容</th>
-                      <th className="p-2 border-b">份量</th>
+                      <th className="p-2 border-b">數量</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -3329,7 +3329,7 @@ function App() {
                 text: '內容',
                 style: 'tableHeader'
               }, {
-                text: '份量',
+                text: '數量',
                 style: 'tableHeader'
               }], ...pdfLogs.map(log => [{
                 text: log.date || '未設定日期',
@@ -4951,7 +4951,7 @@ function App() {
     className: "p-2 border-b"
   }, "內容"), /*#__PURE__*/React.createElement("th", {
     className: "p-2 border-b"
-  }, "份量"))), /*#__PURE__*/React.createElement("tbody", null, logs.map(log => /*#__PURE__*/React.createElement("tr", {
+  }, "數量"))), /*#__PURE__*/React.createElement("tbody", null, logs.map(log => /*#__PURE__*/React.createElement("tr", {
     key: log.id,
     className: "border-b"
   }, /*#__PURE__*/React.createElement("td", {
