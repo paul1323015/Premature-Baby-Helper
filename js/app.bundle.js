@@ -4657,12 +4657,12 @@ function App() {
     value: "看診備忘"
   }, "看診備忘")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "問題／備忘"), /*#__PURE__*/React.createElement("input", {
-    type: "text",
+  }, "問題／備忘"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
     value: newDoctorQuestion,
     onChange: e => setNewDoctorQuestion(e.target.value),
     placeholder: "寫下想問新生兒加護病房或主治醫師的問題...",
-    className: "w-full p-2 border rounded-xl bg-white"
+    className: "w-full p-2 border rounded-xl bg-white resize-y"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "醫師答覆"), /*#__PURE__*/React.createElement("textarea", {

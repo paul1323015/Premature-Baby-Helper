@@ -4723,12 +4723,12 @@
                   </div>
                   <div>
                     <label className="font-bold block mb-1">問題／備忘</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={3}
                       value={newDoctorQuestion}
                       onChange={(e) => setNewDoctorQuestion(e.target.value)}
                       placeholder="寫下想問新生兒加護病房或主治醫師的問題..."
-                      className="w-full p-2 border rounded-xl bg-white"
+                      className="w-full p-2 border rounded-xl bg-white resize-y"
                     />
                   </div>
                   <div>
