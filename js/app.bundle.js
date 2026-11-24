@@ -4562,10 +4562,10 @@ function App() {
     className: "w-full mt-1 p-2 border rounded-lg text-xs bg-white"
   }, /*#__PURE__*/React.createElement("option", {
     value: "all"
-  }, "全部類別"), Object.entries(careLogTypeLabels).map(([type, label]) => /*#__PURE__*/React.createElement("option", {
+  }, "📋 全部類別"), Object.entries(careLogTypeLabels).map(([type, label]) => /*#__PURE__*/React.createElement("option", {
     key: type,
     value: type
-  }, label))))), /*#__PURE__*/React.createElement("div", {
+  }, careLogTypeIcons[type], " ", label))))), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",

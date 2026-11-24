@@ -4572,9 +4572,9 @@
                         onChange={(e) => setCareLogCategory(e.target.value)}
                         className="w-full mt-1 p-2 border rounded-lg text-xs bg-white"
                       >
-                        <option value="all">全部類別</option>
+                        <option value="all">📋 全部類別</option>
                         {Object.entries(careLogTypeLabels).map(([type, label]) => (
-                          <option key={type} value={type}>{label}</option>
+                          <option key={type} value={type}>{careLogTypeIcons[type]} {label}</option>
                         ))}
                       </select>
                     </label>
