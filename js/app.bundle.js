@@ -2302,7 +2302,7 @@ function App() {
     "aria-label": noteMicTestStatus === 'recording' ? '停止麥克風測試錄音' : '測試麥克風',
     "aria-pressed": noteMicTestStatus === 'recording',
     title: noteMicTestStatus === 'recording' ? '停止錄音並播放測試' : '錄一小段聲音，播放確認麥克風收音',
-    className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteMicTestStatus === 'recording' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-sky-200 text-sky-700 hover:bg-sky-50'}`
+    className: `shrink-0 flex items-center gap-1 px-2 py-2 text-xs font-bold rounded-xl border transition-colors disabled:opacity-50 ${noteMicTestStatus === 'recording' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-white border-slate-300 text-slate-900 hover:bg-slate-50'}`
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "waveform",
     className: "w-4 h-4"
