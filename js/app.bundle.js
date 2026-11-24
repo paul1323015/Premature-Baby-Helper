@@ -4548,34 +4548,44 @@ function App() {
     className: "p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50"
   }, "尚無紀錄，點擊「+ 新增紀錄」開始記錄餵奶與尿布吧！") : filteredCareLogs.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50"
-  }, "沒有符合篩選條件的照護紀錄。") : filteredCareLogs.map(log => /*#__PURE__*/React.createElement("div", {
-    key: log.id,
-    className: `p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex min-w-0 flex-1 flex-col items-start gap-1"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex flex-wrap items-center gap-2"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "text-xs font-bold text-amber-600"
-  }, log.date || '未設定日期', " ", log.time), /*#__PURE__*/React.createElement("span", {
-    className: "text-xs font-medium"
-  }, log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail)), log.notes && /*#__PURE__*/React.createElement("p", {
-    className: "text-xs text-slate-500 whitespace-pre-wrap"
-  }, log.notes)), /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2 shrink-0"
-  }, log.amount && /*#__PURE__*/React.createElement("span", {
-    className: "text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded"
-  }, log.amount), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: () => handleStartEditLog(log),
-    className: "text-amber-600 hover:text-amber-800 font-bold text-xs",
-    title: "編輯這筆照護紀錄"
-  }, "編輯"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: () => handleDeleteLog(log.id),
-    className: "text-slate-400 hover:text-red-500 font-bold text-xs",
-    title: "刪除這筆照護紀錄"
-  }, "刪除"))))), activeTab === 'doctor' && /*#__PURE__*/React.createElement("div", {
+  }, "沒有符合篩選條件的照護紀錄。") : filteredCareLogs.map(log => {
+    const solidFoodRecord = log.type === 'solidFood' ? solidFoodLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.foodName)) : null;
+    const solidFoodNotes = log.notes || solidFoodRecord?.notes;
+    const solidFoodReactions = Array.isArray(solidFoodRecord?.reactions) ? solidFoodRecord.reactions.join('、') : solidFoodRecord?.reactions || '';
+    const solidFoodAmount = log.amount || (solidFoodRecord?.amount ? `${solidFoodRecord.amount}ml/湯匙` : null);
+    return /*#__PURE__*/React.createElement("div", {
+      key: log.id,
+      className: `p-3 rounded-xl border flex justify-between items-start gap-2 ${cardBg}`
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex min-w-0 flex-1 flex-col items-start gap-1"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "flex flex-wrap items-center gap-2"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "text-xs font-bold text-amber-600"
+    }, log.date || '未設定日期', " ", log.time), /*#__PURE__*/React.createElement("span", {
+      className: "text-xs font-medium"
+    }, log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail)), solidFoodRecord && /*#__PURE__*/React.createElement("div", {
+      className: "space-y-0.5 text-xs text-slate-500"
+    }, /*#__PURE__*/React.createElement("p", null, "過敏等級：", solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無'), /*#__PURE__*/React.createElement("p", null, "反應：", solidFoodReactions || '無'), solidFoodNotes && /*#__PURE__*/React.createElement("p", {
+      className: "whitespace-pre-wrap"
+    }, "備註：", solidFoodNotes)), log.type !== 'solidFood' && log.notes && /*#__PURE__*/React.createElement("p", {
+      className: "text-xs text-slate-500 whitespace-pre-wrap"
+    }, log.notes)), /*#__PURE__*/React.createElement("div", {
+      className: "flex items-center gap-2 shrink-0"
+    }, solidFoodAmount && /*#__PURE__*/React.createElement("span", {
+      className: "text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded"
+    }, solidFoodAmount), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => handleStartEditLog(log),
+      className: "text-amber-600 hover:text-amber-800 font-bold text-xs",
+      title: "編輯這筆照護紀錄"
+    }, "編輯"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      onClick: () => handleDeleteLog(log.id),
+      className: "text-slate-400 hover:text-red-500 font-bold text-xs",
+      title: "刪除這筆照護紀錄"
+    }, "刪除")));
+  })), activeTab === 'doctor' && /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-2xl border space-y-4 ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center"

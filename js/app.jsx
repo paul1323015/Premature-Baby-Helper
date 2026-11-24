@@ -4576,17 +4576,36 @@
                     沒有符合篩選條件的照護紀錄。
                   </div>
                 ) : (
-                  filteredCareLogs.map((log) => (
-                    <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`}>
+                  filteredCareLogs.map((log) => {
+                    const solidFoodRecord = log.type === 'solidFood' ? solidFoodLogs.find(record => (
+                      record.id === log.sourceId
+                      || (record.date === log.date && log.detail?.includes(record.foodName))
+                    )) : null;
+                    const solidFoodNotes = log.notes || solidFoodRecord?.notes;
+                    const solidFoodReactions = Array.isArray(solidFoodRecord?.reactions)
+                      ? solidFoodRecord.reactions.join('、')
+                      : solidFoodRecord?.reactions || '';
+                    const solidFoodAmount = log.amount || (solidFoodRecord?.amount
+                      ? `${solidFoodRecord.amount}ml/湯匙`
+                      : null);
+                    return (
+                    <div key={log.id} className={`p-3 rounded-xl border flex justify-between items-start gap-2 ${cardBg}`}>
                       <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-bold text-amber-600">{log.date || '未設定日期'} {log.time}</span>
                           <span className="text-xs font-medium">{log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail}</span>
                         </div>
-                        {log.notes && <p className="text-xs text-slate-500 whitespace-pre-wrap">{log.notes}</p>}
+                        {solidFoodRecord && (
+                          <div className="space-y-0.5 text-xs text-slate-500">
+                            <p>過敏等級：{solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無'}</p>
+                            <p>反應：{solidFoodReactions || '無'}</p>
+                            {solidFoodNotes && <p className="whitespace-pre-wrap">備註：{solidFoodNotes}</p>}
+                          </div>
+                        )}
+                        {log.type !== 'solidFood' && log.notes && <p className="text-xs text-slate-500 whitespace-pre-wrap">{log.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {log.amount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{log.amount}</span>}
+                        {solidFoodAmount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{solidFoodAmount}</span>}
                         <button
                           type="button"
                           onClick={() => handleStartEditLog(log)}
@@ -4605,7 +4624,8 @@
                         </button>
                       </div>
                     </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
