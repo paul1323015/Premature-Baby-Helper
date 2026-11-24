@@ -4223,54 +4223,6 @@ function App() {
   })), /*#__PURE__*/React.createElement("p", {
     className: "text-[11px] text-slate-400 mt-2 text-right"
   }, targetMilkNum > 0 ? `已達成每日目標的 ${milkPercent}%` : '未設定每日目標奶量 (可點擊「自訂/修改」設定)')), /*#__PURE__*/React.createElement("div", {
-    className: "grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setEditingLogId(null);
-      setNewLogType('feeding');
-      setNewLogDetail('');
-      setNewLogNotes('');
-      setNewLogMilkType('');
-      setNewLogFeedingMethod('');
-      setNewLogAmount('');
-      setShowAddLogModal(true);
-    },
-    className: "p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm md:p-5"
-  }, "🍼 記餵奶"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setEditingLogId(null);
-      setNewLogType('diaper');
-      setNewLogDetail('');
-      setNewLogNotes('');
-      setNewLogMilkType('');
-      setNewLogFeedingMethod('');
-      setNewLogAmount('');
-      setShowAddLogModal(true);
-    },
-    className: "p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm md:p-5"
-  }, "👶 記尿布"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setEditingLogId(null);
-      setNewLogType('solidFood');
-      setSolidFoodForm({
-        ...solidFoodForm,
-        date: getLocalDateInputValue()
-      });
-      setShowAddLogModal(true);
-    },
-    className: "p-4 rounded-2xl border bg-emerald-50 border-emerald-200 text-emerald-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors shadow-sm md:p-5"
-  }, "🥣 記副食品"), /*#__PURE__*/React.createElement("button", {
-    onClick: () => {
-      setEditingLogId(null);
-      setNewLogType('vaccination');
-      setVaccinationForm({
-        ...vaccinationForm,
-        date: getLocalDateInputValue()
-      });
-      setShowAddLogModal(true);
-    },
-    className: "p-4 rounded-2xl border bg-purple-50 border-purple-200 text-purple-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-purple-100 transition-colors shadow-sm md:p-5"
-  }, "💉 記疫苗")), /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-2xl border ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-center justify-between gap-3"
