@@ -5303,20 +5303,20 @@ function App() {
     className: `px-3 py-1.5 rounded-full border font-medium transition-colors ${newLogFeedingMethod === tag ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-600 border-slate-300'}`
   }, tag)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註/細節（選填）"), /*#__PURE__*/React.createElement("input", {
-    type: "text",
+  }, "備註/細節（選填）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
     placeholder: "輸入額外細節",
     value: newLogDetail,
     onChange: e => setNewLogDetail(e.target.value),
-    className: "w-full p-2 border rounded-xl"
+    className: "w-full p-2 border rounded-xl resize-y"
   }))), newLogType === 'diaper' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註/細節"), /*#__PURE__*/React.createElement("input", {
-    type: "text",
+  }, "備註/細節"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
     placeholder: "濕尿布 / 便便 / 量多",
     value: newLogDetail,
     onChange: e => setNewLogDetail(e.target.value),
-    className: "w-full p-2 border rounded-xl"
+    className: "w-full p-2 border rounded-xl resize-y"
   })), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 pt-2"
   }, /*#__PURE__*/React.createElement("button", {

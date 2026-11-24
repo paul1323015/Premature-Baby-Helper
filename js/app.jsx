@@ -5348,12 +5348,12 @@
                       </div>
                       <div>
                         <label className="font-bold block mb-1">備註/細節（選填）</label>
-                        <input
-                          type="text"
+                        <textarea
+                          rows={3}
                           placeholder="輸入額外細節"
                           value={newLogDetail}
                           onChange={(e) => setNewLogDetail(e.target.value)}
-                          className="w-full p-2 border rounded-xl"
+                          className="w-full p-2 border rounded-xl resize-y"
                         />
                       </div>
                     </div>
@@ -5361,12 +5361,12 @@
 
                   {newLogType === 'diaper' && <div>
                     <label className="font-bold block mb-1">備註/細節</label>
-                    <input
-                      type="text"
+                    <textarea
+                      rows={3}
                       placeholder="濕尿布 / 便便 / 量多"
                       value={newLogDetail}
                       onChange={(e) => setNewLogDetail(e.target.value)}
-                      className="w-full p-2 border rounded-xl"
+                      className="w-full p-2 border rounded-xl resize-y"
                     />
                   </div>}
 
