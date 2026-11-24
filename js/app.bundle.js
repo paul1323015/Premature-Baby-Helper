@@ -6051,7 +6051,7 @@ function App() {
       ...current,
       [key]: event.target.checked
     })),
-    className: "accent-amber-600"
+    className: "accent-blue-600"
   }), /*#__PURE__*/React.createElement("span", {
     className: "font-bold text-slate-700"
   }, label)), key === 'growthChart' && pdfExportDraft.growthChart && (!showPercentiles || !showZeroBaseline) && /*#__PURE__*/React.createElement("p", {
@@ -6065,7 +6065,7 @@ function App() {
       ...current,
       showExportTime: event.target.checked
     })),
-    className: "accent-amber-600"
+    className: "accent-blue-600"
   }), /*#__PURE__*/React.createElement("span", {
     className: "font-bold text-slate-700"
   }, "顯示匯出時間")), /*#__PURE__*/React.createElement("div", {
@@ -6079,7 +6079,7 @@ function App() {
       ...current,
       encryptPdf: event.target.checked
     })),
-    className: "accent-amber-600"
+    className: "accent-blue-600"
   }), /*#__PURE__*/React.createElement("span", {
     className: "font-bold text-slate-700"
   }, "匯出加密 PDF")), pdfExportDraft.encryptPdf && /*#__PURE__*/React.createElement("p", {

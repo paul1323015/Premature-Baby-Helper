@@ -6091,7 +6091,7 @@
                           type="checkbox"
                           checked={pdfExportDraft[key]}
                           onChange={(event) => setPdfExportDraft((current) => ({ ...current, [key]: event.target.checked }))}
-                          className="accent-amber-600"
+                          className="accent-blue-600"
                         />
                         <span className="font-bold text-slate-700">{label}</span>
                       </label>
@@ -6109,7 +6109,7 @@
                     type="checkbox"
                     checked={pdfExportDraft.showExportTime}
                     onChange={(event) => setPdfExportDraft((current) => ({ ...current, showExportTime: event.target.checked }))}
-                    className="accent-amber-600"
+                    className="accent-blue-600"
                   />
                   <span className="font-bold text-slate-700">顯示匯出時間</span>
                 </label>
@@ -6120,7 +6120,7 @@
                       type="checkbox"
                       checked={pdfExportDraft.encryptPdf}
                       onChange={(event) => setPdfExportDraft((current) => ({ ...current, encryptPdf: event.target.checked }))}
-                      className="accent-amber-600"
+                      className="accent-blue-600"
                     />
                     <span className="font-bold text-slate-700">匯出加密 PDF</span>
                   </label>
