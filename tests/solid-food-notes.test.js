@@ -31,4 +31,13 @@ describe('solid food notes', () => {
     expect(appSource).toContain('備註（選填）');
     expect(appSource).toContain('細節（選填）');
   });
+
+  test('vaccination entries show location, side effects, and notes', () => {
+    expect(appSource).toMatch(/getVaccinationRecordForLog = log => log\.type === 'vaccination'/);
+    expect(appSource).toContain('接種地點：{vaccinationRecord.location}');
+    expect(appSource).toContain('副作用：{vaccinationSideEffects}');
+    expect(appSource).toContain('備註：{vaccinationNotes}');
+    expect(appSource).toContain('details.push(`接種地點：${vaccinationRecord.location}`)');
+    expect(appSource).toContain('details.push(`副作用：${sideEffects}`)');
+  });
 });

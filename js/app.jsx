@@ -1192,12 +1192,13 @@
         record.id === log.sourceId
         || (record.date === log.date && log.detail?.includes(record.foodName))
       )) : null;
+      const getVaccinationRecordForLog = log => log.type === 'vaccination' ? vaccinationLogs.find(record => (
+        record.id === log.sourceId
+        || (record.date === log.date && log.detail?.includes(record.vaccineName))
+      )) : null;
       const formatCareLogSupplement = log => {
         const solidFoodRecord = getSolidFoodRecordForLog(log);
-        const vaccinationRecord = log.type === 'vaccination' ? vaccinationLogs.find(record => (
-          record.id === log.sourceId
-          || (record.date === log.date && log.detail?.includes(record.vaccineName))
-        )) : null;
+        const vaccinationRecord = getVaccinationRecordForLog(log);
         const details = [];
         if (solidFoodRecord) {
           const allergySeverity = solidFoodRecord.allergySeverity === 'mild'
@@ -1207,6 +1208,13 @@
             ? solidFoodRecord.reactions.join('、')
             : solidFoodRecord.reactions || '';
           details.push(`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`);
+        }
+        if (vaccinationRecord) {
+          if (vaccinationRecord.location) details.push(`接種地點：${vaccinationRecord.location}`);
+          const sideEffects = Array.isArray(vaccinationRecord.sideEffects)
+            ? vaccinationRecord.sideEffects.join('、')
+            : vaccinationRecord.sideEffects || '';
+          if (sideEffects) details.push(`副作用：${sideEffects}`);
         }
         const notes = log.notes || solidFoodRecord?.notes || vaccinationRecord?.notes;
         if (notes) details.push(`備註：${notes}`);
@@ -4619,10 +4627,15 @@
                       record.id === log.sourceId
                       || (record.date === log.date && log.detail?.includes(record.foodName))
                     )) : null;
+                    const vaccinationRecord = getVaccinationRecordForLog(log);
                     const solidFoodNotes = log.notes || solidFoodRecord?.notes;
                     const solidFoodReactions = Array.isArray(solidFoodRecord?.reactions)
                       ? solidFoodRecord.reactions.join('、')
                       : solidFoodRecord?.reactions || '';
+                    const vaccinationSideEffects = Array.isArray(vaccinationRecord?.sideEffects)
+                      ? vaccinationRecord.sideEffects.join('、')
+                      : vaccinationRecord?.sideEffects || '';
+                    const vaccinationNotes = log.notes || vaccinationRecord?.notes;
                     const solidFoodAmount = log.amount || (solidFoodRecord?.amount
                       ? `${solidFoodRecord.amount}ml/湯匙`
                       : null);
@@ -4643,7 +4656,14 @@
                             {solidFoodNotes && <p className="whitespace-pre-wrap">備註：{solidFoodNotes}</p>}
                           </div>
                         )}
-                        {log.type !== 'solidFood' && log.notes && <p className="text-xs text-slate-500 whitespace-pre-wrap">{log.notes}</p>}
+                        {(vaccinationRecord || (log.type === 'vaccination' && log.notes)) && (
+                          <div className="space-y-0.5 text-xs text-slate-500">
+                            {vaccinationRecord?.location && <p>接種地點：{vaccinationRecord.location}</p>}
+                            {vaccinationSideEffects && <p>副作用：{vaccinationSideEffects}</p>}
+                            {vaccinationNotes && <p className="whitespace-pre-wrap">備註：{vaccinationNotes}</p>}
+                          </div>
+                        )}
+                        {log.type !== 'solidFood' && log.type !== 'vaccination' && log.notes && <p className="text-xs text-slate-500 whitespace-pre-wrap">{log.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {solidFoodAmount && <span className="text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">{solidFoodAmount}</span>}

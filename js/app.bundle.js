@@ -1350,14 +1350,20 @@ function App() {
     return [];
   });
   const getSolidFoodRecordForLog = log => log.type === 'solidFood' ? solidFoodLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.foodName)) : null;
+  const getVaccinationRecordForLog = log => log.type === 'vaccination' ? vaccinationLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.vaccineName)) : null;
   const formatCareLogSupplement = log => {
     const solidFoodRecord = getSolidFoodRecordForLog(log);
-    const vaccinationRecord = log.type === 'vaccination' ? vaccinationLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.vaccineName)) : null;
+    const vaccinationRecord = getVaccinationRecordForLog(log);
     const details = [];
     if (solidFoodRecord) {
       const allergySeverity = solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無';
       const reactions = Array.isArray(solidFoodRecord.reactions) ? solidFoodRecord.reactions.join('、') : solidFoodRecord.reactions || '';
       details.push(`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`);
+    }
+    if (vaccinationRecord) {
+      if (vaccinationRecord.location) details.push(`接種地點：${vaccinationRecord.location}`);
+      const sideEffects = Array.isArray(vaccinationRecord.sideEffects) ? vaccinationRecord.sideEffects.join('、') : vaccinationRecord.sideEffects || '';
+      if (sideEffects) details.push(`副作用：${sideEffects}`);
     }
     const notes = log.notes || solidFoodRecord?.notes || vaccinationRecord?.notes;
     if (notes) details.push(`備註：${notes}`);
@@ -4586,8 +4592,11 @@ function App() {
     className: "p-6 text-center text-xs text-slate-400 border rounded-2xl bg-slate-50/50"
   }, "沒有符合篩選條件的照護紀錄。") : filteredCareLogs.map(log => {
     const solidFoodRecord = log.type === 'solidFood' ? solidFoodLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.foodName)) : null;
+    const vaccinationRecord = getVaccinationRecordForLog(log);
     const solidFoodNotes = log.notes || solidFoodRecord?.notes;
     const solidFoodReactions = Array.isArray(solidFoodRecord?.reactions) ? solidFoodRecord.reactions.join('、') : solidFoodRecord?.reactions || '';
+    const vaccinationSideEffects = Array.isArray(vaccinationRecord?.sideEffects) ? vaccinationRecord.sideEffects.join('、') : vaccinationRecord?.sideEffects || '';
+    const vaccinationNotes = log.notes || vaccinationRecord?.notes;
     const solidFoodAmount = log.amount || (solidFoodRecord?.amount ? `${solidFoodRecord.amount}ml/湯匙` : null);
     return /*#__PURE__*/React.createElement("div", {
       key: log.id,
@@ -4606,7 +4615,11 @@ function App() {
       className: "space-y-0.5 text-xs text-slate-500"
     }, /*#__PURE__*/React.createElement("p", null, "過敏等級：", solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無'), /*#__PURE__*/React.createElement("p", null, "反應：", solidFoodReactions || '無'), solidFoodNotes && /*#__PURE__*/React.createElement("p", {
       className: "whitespace-pre-wrap"
-    }, "備註：", solidFoodNotes)), log.type !== 'solidFood' && log.notes && /*#__PURE__*/React.createElement("p", {
+    }, "備註：", solidFoodNotes)), (vaccinationRecord || log.type === 'vaccination' && log.notes) && /*#__PURE__*/React.createElement("div", {
+      className: "space-y-0.5 text-xs text-slate-500"
+    }, vaccinationRecord?.location && /*#__PURE__*/React.createElement("p", null, "接種地點：", vaccinationRecord.location), vaccinationSideEffects && /*#__PURE__*/React.createElement("p", null, "副作用：", vaccinationSideEffects), vaccinationNotes && /*#__PURE__*/React.createElement("p", {
+      className: "whitespace-pre-wrap"
+    }, "備註：", vaccinationNotes)), log.type !== 'solidFood' && log.type !== 'vaccination' && log.notes && /*#__PURE__*/React.createElement("p", {
       className: "text-xs text-slate-500 whitespace-pre-wrap"
     }, log.notes)), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2 shrink-0"
