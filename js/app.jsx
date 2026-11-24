@@ -15,7 +15,7 @@
         x: <g><path d="M18 6 6 18" /><path d="M6 6l12 12" /></g>,
         send: <g><path d="m22 2-7 20-4-9-9-4Z" /><path d="M22 2 11 13" /></g>,
         trendingUp: <g><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></g>,
-        eye: <g><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7Z" /><circle cx="12" cy="12" r="3" /></g>,
+        eye: <g><path d="M2 12c2.5-4.5 5.8-7 10-7c4.2 0 7.5 2.5 10 7c-2.5 4.5-5.8 7-10 7c-4.2 0-7.5-2.5-10-7Z" /><circle cx="12" cy="12" r="3" /></g>,
         stethoscope: <g><path d="M4.8 2.3A.3.3 0 0 0 4.5 2.6V8A6 6 0 0 0 16.5 8V2.6a.3.3 0 0 0-.3-.3h-1.4a.3.3 0 0 0-.3.3V8a4 4 0 0 1-8 0V2.6a.3.3 0 0 0-.3-.3z" /><path d="M12 14v4a2 2 0 0 0 2 2h2a3 3 0 0 0 3-3V11" /></g>,
         sparkles: <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />,
         user: <g><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></g>,
@@ -895,6 +895,8 @@
       const [showPdfPasswordModal, setShowPdfPasswordModal] = React.useState(false);
       const [pdfPassword, setPdfPassword] = React.useState('');
       const [pdfPasswordConfirm, setPdfPasswordConfirm] = React.useState('');
+      const [showPdfPassword, setShowPdfPassword] = React.useState(false);
+      const [showPdfPasswordConfirm, setShowPdfPasswordConfirm] = React.useState(false);
       const [pdfPasswordError, setPdfPasswordError] = React.useState('');
       const DEFAULT_PDF_EXPORT_OPTIONS = {
         profile: true,
@@ -2856,6 +2858,8 @@
         setShowPdfPasswordModal(false);
         setPdfPassword('');
         setPdfPasswordConfirm('');
+        setShowPdfPassword(false);
+        setShowPdfPasswordConfirm(false);
         setPdfPasswordError('');
       };
 
@@ -2872,6 +2876,8 @@
         handleDownloadPDF(pdfPassword);
         setPdfPassword('');
         setPdfPasswordConfirm('');
+        setShowPdfPassword(false);
+        setShowPdfPasswordConfirm(false);
         setPdfPasswordError('');
       };
 
@@ -6214,33 +6220,55 @@
                 <p className="text-xs leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
                   密碼需為 4 至 8 個字元，開啟 PDF 時會需要此密碼。PDF 採 AES-256 加密，請使用支援此格式的閱讀器。密碼不會儲存；若忘記，巴掌小太陽無法取回。
                 </p>
-                <label className="block space-y-1">
-                  <span className="font-bold text-slate-700">密碼</span>
-                  <input
-                    type="password"
-                    value={pdfPassword}
-                    onChange={(event) => {
-                      setPdfPassword(event.target.value);
-                      setPdfPasswordError('');
-                    }}
-                    autoComplete="off"
-                    autoFocus
-                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5"
-                  />
-                </label>
-                <label className="block space-y-1">
-                  <span className="font-bold text-slate-700">再次輸入密碼</span>
-                  <input
-                    type="password"
-                    value={pdfPasswordConfirm}
-                    onChange={(event) => {
-                      setPdfPasswordConfirm(event.target.value);
-                      setPdfPasswordError('');
-                    }}
-                    autoComplete="off"
-                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5"
-                  />
-                </label>
+                <div className="space-y-1">
+                  <label htmlFor="pdf-export-password" className="block font-bold text-slate-700">密碼</label>
+                  <div className="relative">
+                    <input
+                      id="pdf-export-password"
+                      type={showPdfPassword ? 'text' : 'password'}
+                      value={pdfPassword}
+                      onChange={(event) => {
+                        setPdfPassword(event.target.value);
+                        setPdfPasswordError('');
+                      }}
+                      autoComplete="off"
+                      autoFocus
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPdfPassword((visible) => !visible)}
+                      aria-label={showPdfPassword ? '隱藏密碼' : '顯示密碼'}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+                    >
+                      <Icon name="eye" className="w-5 h-5" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label htmlFor="pdf-export-password-confirm" className="block font-bold text-slate-700">再次輸入密碼</label>
+                  <div className="relative">
+                    <input
+                      id="pdf-export-password-confirm"
+                      type={showPdfPasswordConfirm ? 'text' : 'password'}
+                      value={pdfPasswordConfirm}
+                      onChange={(event) => {
+                        setPdfPasswordConfirm(event.target.value);
+                        setPdfPasswordError('');
+                      }}
+                      autoComplete="off"
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPdfPasswordConfirm((visible) => !visible)}
+                      aria-label={showPdfPasswordConfirm ? '隱藏確認密碼' : '顯示確認密碼'}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+                    >
+                      <Icon name="eye" className="w-5 h-5" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                </div>
                 {pdfPasswordError && <p className="text-red-600" role="alert">{pdfPasswordError}</p>}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   <button

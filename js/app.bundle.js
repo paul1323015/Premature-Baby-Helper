@@ -63,7 +63,7 @@ const Icon = ({
       points: "17 6 23 6 23 12"
     })),
     eye: /*#__PURE__*/React.createElement("g", null, /*#__PURE__*/React.createElement("path", {
-      d: "M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7Z"
+      d: "M2 12c2.5-4.5 5.8-7 10-7c4.2 0 7.5 2.5 10 7c-2.5 4.5-5.8 7-10 7c-4.2 0-7.5-2.5-10-7Z"
     }), /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "12",
@@ -1048,6 +1048,8 @@ function App() {
   const [showPdfPasswordModal, setShowPdfPasswordModal] = React.useState(false);
   const [pdfPassword, setPdfPassword] = React.useState('');
   const [pdfPasswordConfirm, setPdfPasswordConfirm] = React.useState('');
+  const [showPdfPassword, setShowPdfPassword] = React.useState(false);
+  const [showPdfPasswordConfirm, setShowPdfPasswordConfirm] = React.useState(false);
   const [pdfPasswordError, setPdfPasswordError] = React.useState('');
   const DEFAULT_PDF_EXPORT_OPTIONS = {
     profile: true,
@@ -2777,6 +2779,8 @@ function App() {
     setShowPdfPasswordModal(false);
     setPdfPassword('');
     setPdfPasswordConfirm('');
+    setShowPdfPassword(false);
+    setShowPdfPasswordConfirm(false);
     setPdfPasswordError('');
   };
   const handleConfirmPdfPassword = () => {
@@ -2792,6 +2796,8 @@ function App() {
     handleDownloadPDF(pdfPassword);
     setPdfPassword('');
     setPdfPasswordConfirm('');
+    setShowPdfPassword(false);
+    setShowPdfPasswordConfirm(false);
     setPdfPasswordError('');
   };
   const handleDownloadPDF = password => {
@@ -6171,12 +6177,16 @@ function App() {
     className: "w-4 h-4"
   }))), /*#__PURE__*/React.createElement("p", {
     className: "text-xs leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3"
-  }, "密碼需為 4 至 8 個字元，開啟 PDF 時會需要此密碼。PDF 採 AES-256 加密，請使用支援此格式的閱讀器。密碼不會儲存；若忘記，巴掌小太陽無法取回。"), /*#__PURE__*/React.createElement("label", {
-    className: "block space-y-1"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-slate-700"
-  }, "密碼"), /*#__PURE__*/React.createElement("input", {
-    type: "password",
+  }, "密碼需為 4 至 8 個字元，開啟 PDF 時會需要此密碼。PDF 採 AES-256 加密，請使用支援此格式的閱讀器。密碼不會儲存；若忘記，巴掌小太陽無法取回。"), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1"
+  }, /*#__PURE__*/React.createElement("label", {
+    htmlFor: "pdf-export-password",
+    className: "block font-bold text-slate-700"
+  }, "密碼"), /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement("input", {
+    id: "pdf-export-password",
+    type: showPdfPassword ? 'text' : 'password',
     value: pdfPassword,
     onChange: event => {
       setPdfPassword(event.target.value);
@@ -6184,21 +6194,43 @@ function App() {
     },
     autoComplete: "off",
     autoFocus: true,
-    className: "w-full border border-slate-300 rounded-xl px-3 py-2.5"
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "block space-y-1"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "font-bold text-slate-700"
-  }, "再次輸入密碼"), /*#__PURE__*/React.createElement("input", {
-    type: "password",
+    className: "w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowPdfPassword(visible => !visible),
+    "aria-label": showPdfPassword ? '隱藏密碼' : '顯示密碼',
+    className: "absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "eye",
+    className: "w-5 h-5",
+    strokeWidth: 1.5
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1"
+  }, /*#__PURE__*/React.createElement("label", {
+    htmlFor: "pdf-export-password-confirm",
+    className: "block font-bold text-slate-700"
+  }, "再次輸入密碼"), /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement("input", {
+    id: "pdf-export-password-confirm",
+    type: showPdfPasswordConfirm ? 'text' : 'password',
     value: pdfPasswordConfirm,
     onChange: event => {
       setPdfPasswordConfirm(event.target.value);
       setPdfPasswordError('');
     },
     autoComplete: "off",
-    className: "w-full border border-slate-300 rounded-xl px-3 py-2.5"
-  })), pdfPasswordError && /*#__PURE__*/React.createElement("p", {
+    className: "w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setShowPdfPasswordConfirm(visible => !visible),
+    "aria-label": showPdfPasswordConfirm ? '隱藏確認密碼' : '顯示確認密碼',
+    className: "absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "eye",
+    className: "w-5 h-5",
+    strokeWidth: 1.5
+  })))), pdfPasswordError && /*#__PURE__*/React.createElement("p", {
     className: "text-red-600",
     role: "alert"
   }, pdfPasswordError), /*#__PURE__*/React.createElement("div", {

@@ -81,4 +81,15 @@ describe('PDF export settings persistence', () => {
     expect(backupPayload).not.toBeNull();
     expect(backupPayload[1]).not.toMatch(/pdfPassword/);
   });
+
+  test('password and confirmation visibility controls are independent and hidden by default', () => {
+    expect(appSource).toMatch(/const \[showPdfPassword, setShowPdfPassword\] = React\.useState\(false\)/);
+    expect(appSource).toMatch(/const \[showPdfPasswordConfirm, setShowPdfPasswordConfirm\] = React\.useState\(false\)/);
+    expect(appSource).toMatch(/type=\{showPdfPassword \? 'text' : 'password'\}/);
+    expect(appSource).toMatch(/type=\{showPdfPasswordConfirm \? 'text' : 'password'\}/);
+    expect(appSource).toMatch(/onClick=\{\(\) => setShowPdfPassword\(\(visible\) => !visible\)\}/);
+    expect(appSource).toMatch(/onClick=\{\(\) => setShowPdfPasswordConfirm\(\(visible\) => !visible\)\}/);
+    expect(appSource.match(/<Icon name="eye" className="w-5 h-5" strokeWidth=\{1\.5\} \/>/g)).toHaveLength(2);
+    expect(appSource).toContain('eye: <g><path d="M2 12c2.5-4.5 5.8-7 10-7c4.2 0 7.5 2.5 10 7c-2.5 4.5-5.8 7-10 7c-4.2 0-7.5-2.5-10-7Z" />');
+  });
 });
