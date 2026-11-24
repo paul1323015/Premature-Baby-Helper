@@ -3455,7 +3455,8 @@ function App() {
     date: getLocalDateInputValue(),
     amount: '',
     allergySeverity: 'none',
-    reactions: ''
+    reactions: '',
+    notes: ''
   });
   const safeFoods = ['十倍粥', '南瓜泥', '地瓜泥', '胡蘿蔔泥', '蘋果泥'];
   const allergyWarningFoods = ['花生', '堅果', '蛋', '牛奶', '小麥', '魚類', '蝦蟹'];
@@ -3533,7 +3534,8 @@ function App() {
           date: solidFoodForm.date,
           amount: Number(solidFoodForm.amount) || 0,
           allergySeverity: solidFoodForm.allergySeverity,
-          reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean)
+          reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
+          notes: solidFoodForm.notes.trim()
         } : null;
         const updatedSolidFoodLogs = updatedRecord ? solidFoodLogs.map(record => record.id === updatedRecord.id ? updatedRecord : record) : solidFoodLogs;
         setSolidFoodLogs(updatedSolidFoodLogs);
@@ -3543,7 +3545,8 @@ function App() {
           date: solidFoodForm.date,
           time: newLogTime,
           detail: `🥣 ${solidFoodForm.foodName.trim()}`,
-          amount: solidFoodForm.amount ? `${Number(solidFoodForm.amount) || 0}ml/湯匙` : null
+          amount: solidFoodForm.amount ? `${Number(solidFoodForm.amount) || 0}ml/湯匙` : null,
+          notes: solidFoodForm.notes.trim()
         } : log));
         showToast('💾 已儲存副食品試吃紀錄修改！');
         setShowAddLogModal(false);
@@ -3557,7 +3560,8 @@ function App() {
         date: solidFoodForm.date,
         amount: Number(solidFoodForm.amount) || 0,
         allergySeverity: solidFoodForm.allergySeverity,
-        reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean)
+        reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
+        notes: solidFoodForm.notes.trim()
       };
       setSolidFoodLogs(prevLogs => [solidFoodRecord, ...prevLogs]);
       safeSetStorageItem('sun_baby_solid_food_logs_v1', JSON.stringify([solidFoodRecord, ...solidFoodLogs]));
@@ -3568,7 +3572,8 @@ function App() {
         time: newLogTime,
         date: solidFoodForm.date,
         detail: `🥣 ${solidFoodRecord.foodName}`,
-        amount: solidFoodRecord.amount ? `${solidFoodRecord.amount}ml/湯匙` : null
+        amount: solidFoodRecord.amount ? `${solidFoodRecord.amount}ml/湯匙` : null,
+        notes: solidFoodRecord.notes
       }, ...prevLogs]);
       showToast('🥣 已新增副食品試吃紀錄！');
       setShowAddLogModal(false);
@@ -3781,7 +3786,8 @@ function App() {
           date: record.date || getLocalDateInputValue(),
           amount: record.amount ?? '',
           allergySeverity: record.allergySeverity || 'none',
-          reactions: Array.isArray(record.reactions) ? record.reactions.join('、') : record.reactions || ''
+          reactions: Array.isArray(record.reactions) ? record.reactions.join('、') : record.reactions || '',
+          notes: record.notes || ''
         });
       }
     }
@@ -3833,7 +3839,8 @@ function App() {
       date: solidFoodForm.date,
       amount: Number(solidFoodForm.amount) || 0,
       allergySeverity: solidFoodForm.allergySeverity,
-      reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean)
+      reactions: solidFoodForm.reactions.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
+      notes: solidFoodForm.notes.trim()
     };
     setSolidFoodLogs(prevLogs => [record, ...prevLogs]);
     localStorage.setItem('sun_baby_solid_food_logs_v1', JSON.stringify([record, ...solidFoodLogs]));
@@ -3843,7 +3850,8 @@ function App() {
       date: getLocalDateInputValue(),
       amount: '',
       allergySeverity: 'none',
-      reactions: ''
+      reactions: '',
+      notes: ''
     });
     showToast('🥣 已新增副食品試吃紀錄！');
   };
@@ -4544,12 +4552,16 @@ function App() {
     key: log.id,
     className: `p-3 rounded-xl border flex justify-between items-center gap-2 ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-2"
+    className: "flex min-w-0 flex-1 flex-col items-start gap-1"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-bold text-amber-600"
   }, log.date || '未設定日期', " ", log.time), /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-medium"
-  }, log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail)), /*#__PURE__*/React.createElement("div", {
+  }, log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail)), log.notes && /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-500 whitespace-pre-wrap"
+  }, log.notes)), /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 shrink-0"
   }, log.amount && /*#__PURE__*/React.createElement("span", {
     className: "text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded"
@@ -5220,6 +5232,17 @@ function App() {
     }),
     placeholder: "例如：紅疹、拉肚子",
     className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
+    value: solidFoodForm.notes,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      notes: e.target.value
+    }),
+    placeholder: "記錄試吃情形或其他觀察...",
+    className: "w-full p-2 border rounded-xl resize-y"
   }))), newLogType === 'vaccination' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "疫苗名稱"), /*#__PURE__*/React.createElement("input", {
@@ -5411,6 +5434,17 @@ function App() {
     }),
     placeholder: "例如：紅疹、拉肚子",
     className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
+    value: solidFoodForm.notes,
+    onChange: e => setSolidFoodForm({
+      ...solidFoodForm,
+      notes: e.target.value
+    }),
+    placeholder: "記錄試吃情形或其他觀察...",
+    className: "w-full p-2 border rounded-xl resize-y"
   })), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 pt-2"
   }, /*#__PURE__*/React.createElement("button", {
