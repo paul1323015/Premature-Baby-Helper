@@ -1108,11 +1108,14 @@
       const [careLogCategory, setCareLogCategory] = React.useState('all');
       const careLogTypeLabels = { feeding: '餵奶', diaper: '尿布', solidFood: '副食品', vaccination: '疫苗' };
       const careLogTypeIcons = { feeding: '🍼', diaper: '👶', solidFood: '🥣', vaccination: '💉' };
-      const formatCareLogDetail = log => (
-        log.type === 'solidFood' || log.type === 'vaccination'
-          ? (log.detail || '').replace(/^(?:🥣|💉)\s*/, '') || '—'
-          : log.detail || '—'
-      );
+      const formatCareLogDetail = log => {
+        const detail = log.detail || '';
+        if (log.type === 'solidFood' || log.type === 'vaccination') {
+          return detail.replace(/^(?:🥣|💉)\s*/, '') || '—';
+        }
+        if (log.type === 'feeding' || log.type === 'diaper') return detail;
+        return detail || '—';
+      };
 
       const isValidCareReminder = reminder => (
         reminder
@@ -1203,11 +1206,12 @@
         if (solidFoodRecord) {
           const allergySeverity = solidFoodRecord.allergySeverity === 'mild'
             ? '輕微'
-            : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無';
+            : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '';
           const reactions = Array.isArray(solidFoodRecord.reactions)
             ? solidFoodRecord.reactions.join('、')
             : solidFoodRecord.reactions || '';
-          details.push(`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`);
+          if (allergySeverity) details.push(`過敏等級：${allergySeverity}`);
+          if (reactions) details.push(`反應：${reactions}`);
         }
         if (vaccinationRecord) {
           if (vaccinationRecord.location) details.push(`接種地點：${vaccinationRecord.location}`);
@@ -4651,8 +4655,9 @@
                         </div>
                         {solidFoodRecord && (
                           <div className="space-y-0.5 text-xs text-slate-500">
-                            <p>過敏等級：{solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無'}</p>
-                            <p>反應：{solidFoodReactions || '無'}</p>
+                            {solidFoodRecord.allergySeverity === 'mild' && <p>過敏等級：輕微</p>}
+                            {solidFoodRecord.allergySeverity === 'severe' && <p>過敏等級：嚴重</p>}
+                            {solidFoodReactions && <p>反應：{solidFoodReactions}</p>}
                             {solidFoodNotes && <p className="whitespace-pre-wrap">備註：{solidFoodNotes}</p>}
                           </div>
                         )}
