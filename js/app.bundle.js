@@ -1378,9 +1378,13 @@ function App() {
     return details.join('\n');
   };
   const formatCareLogAmount = log => {
-    const record = getSolidFoodRecordForLog(log);
-    const amount = log.amount || (record?.amount ? `${record.amount}ml/湯匙` : '');
-    return amount !== null && amount !== undefined && amount !== '' ? String(amount) : '—';
+    const solidFoodRecord = getSolidFoodRecordForLog(log);
+    const vaccinationRecord = getVaccinationRecordForLog(log);
+    if (log.amount) return String(log.amount);
+    if (solidFoodRecord?.amount) return `${solidFoodRecord.amount}ml/湯匙`;
+    if (vaccinationRecord?.doseNumber) return `${vaccinationRecord.doseNumber} 劑`;
+    const legacyDose = String(log.detail || '').match(/第\s*(\d+)\s*劑/);
+    return legacyDose ? `${legacyDose[1]} 劑` : '';
   };
   const [doctorNotes, setDoctorNotes] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_doctor_notes_v1');
@@ -3340,7 +3344,7 @@ function App() {
                 text: [formatCareLogDetail(log), formatCareLogSupplement(log)].filter(Boolean).join('\n'),
                 style: 'tableCell'
               }, {
-                text: formatCareLogAmount(log),
+                text: formatCareLogAmount(log) || '—',
                 style: 'tableCell'
               }])]
             },
@@ -4605,7 +4609,7 @@ function App() {
     const solidFoodReactions = Array.isArray(solidFoodRecord?.reactions) ? solidFoodRecord.reactions.join('、') : solidFoodRecord?.reactions || '';
     const vaccinationSideEffects = Array.isArray(vaccinationRecord?.sideEffects) ? vaccinationRecord.sideEffects.join('、') : vaccinationRecord?.sideEffects || '';
     const vaccinationNotes = log.notes || vaccinationRecord?.notes;
-    const solidFoodAmount = log.amount || (solidFoodRecord?.amount ? `${solidFoodRecord.amount}ml/湯匙` : null);
+    const careLogAmount = formatCareLogAmount(log);
     return /*#__PURE__*/React.createElement("div", {
       key: log.id,
       className: `p-3 rounded-xl border flex justify-between items-start gap-2 ${cardBg}`
@@ -4631,9 +4635,9 @@ function App() {
       className: "text-xs text-slate-500 whitespace-pre-wrap"
     }, log.notes)), /*#__PURE__*/React.createElement("div", {
       className: "flex items-center gap-2 shrink-0"
-    }, solidFoodAmount && /*#__PURE__*/React.createElement("span", {
+    }, careLogAmount && /*#__PURE__*/React.createElement("span", {
       className: "text-xs font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded"
-    }, solidFoodAmount), /*#__PURE__*/React.createElement("button", {
+    }, careLogAmount), /*#__PURE__*/React.createElement("button", {
       type: "button",
       onClick: () => handleStartEditLog(log),
       className: "text-amber-600 hover:text-amber-800 font-bold text-xs",
@@ -4960,7 +4964,7 @@ function App() {
     className: "p-2 whitespace-pre-wrap"
   }, [formatCareLogDetail(log), formatCareLogSupplement(log)].filter(Boolean).join('\n')), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
-  }, formatCareLogAmount(log))))))), /*#__PURE__*/React.createElement("div", {
+  }, formatCareLogAmount(log) || '—')))))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-slate-800 border-b pb-1"
@@ -5327,7 +5331,7 @@ function App() {
     className: "grid grid-cols-2 gap-2"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "第幾劑"), /*#__PURE__*/React.createElement("input", {
+  }, "劑次"), /*#__PURE__*/React.createElement("input", {
     type: "number",
     min: "1",
     required: true,
@@ -5571,7 +5575,7 @@ function App() {
     className: "grid grid-cols-2 gap-2"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "第幾劑"), /*#__PURE__*/React.createElement("input", {
+  }, "劑次"), /*#__PURE__*/React.createElement("input", {
     type: "number",
     min: "1",
     required: true,

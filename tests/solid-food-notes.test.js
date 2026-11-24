@@ -21,12 +21,12 @@ describe('solid food notes', () => {
     expect(appSource).toContain("{solidFoodRecord.allergySeverity === 'severe' && <p>過敏等級：嚴重</p>}");
     expect(appSource).toContain('{solidFoodReactions && <p>反應：{solidFoodReactions}</p>}');
     expect(appSource).toContain('備註：{solidFoodNotes}');
-    expect(appSource).toMatch(/solidFoodRecord\?\.amount\s*\?/);
+    expect(appSource).toMatch(/if \(solidFoodRecord\?\.amount\) return/);
   });
 
   test('both PDF views include care log supplements and amount', () => {
     expect(appSource.match(/formatCareLogSupplement\(log\)/g)).toHaveLength(2);
-    expect(appSource.match(/formatCareLogAmount\(log\)/g)).toHaveLength(2);
+    expect(appSource.match(/formatCareLogAmount\(log\)/g)).toHaveLength(3);
     expect(appSource).toContain('whitespace-pre-wrap">{[formatCareLogDetail(log), formatCareLogSupplement(log)]');
     expect(appSource).toMatch(/notes: newLogNotes\.trim\(\)/);
     expect(appSource).toContain('備註（選填）');
@@ -46,5 +46,11 @@ describe('solid food notes', () => {
     expect(appSource).toContain('details.push(`副作用：${sideEffects}`)');
     expect(appSource).toMatch(/if \(allergySeverity\) details\.push/);
     expect(appSource).toMatch(/if \(reactions\) details\.push/);
+  });
+
+  test('vaccine dose is shown in the amount column and care log badge', () => {
+    expect(appSource).toContain('if (vaccinationRecord?.doseNumber) return `${vaccinationRecord.doseNumber} 劑`');
+    expect(appSource).toMatch(/const careLogAmount = formatCareLogAmount\(log\)/);
+    expect(appSource.match(/formatCareLogAmount\(log\) \|\| '—'/g)).toHaveLength(2);
   });
 });
