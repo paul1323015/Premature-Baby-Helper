@@ -5110,7 +5110,7 @@ function App() {
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-amber-700"
-  }, editingLogId !== null ? '編輯照護紀錄' : '新增今日照護紀錄'), /*#__PURE__*/React.createElement("button", {
+  }, editingLogId !== null ? '編輯照護紀錄' : '新增照護日誌'), /*#__PURE__*/React.createElement("button", {
     onClick: handleCancelEditLog,
     className: "text-slate-400 hover:text-slate-600"
   }, /*#__PURE__*/React.createElement(Icon, {

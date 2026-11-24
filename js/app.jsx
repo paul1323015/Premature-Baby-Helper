@@ -5226,7 +5226,7 @@
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
               <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="font-bold text-sm text-amber-700">{editingLogId !== null ? '編輯照護紀錄' : '新增今日照護紀錄'}</h3>
+                  <h3 className="font-bold text-sm text-amber-700">{editingLogId !== null ? '編輯照護紀錄' : '新增照護日誌'}</h3>
                   <button onClick={handleCancelEditLog} className="text-slate-400 hover:text-slate-600">
                     <Icon name="x" className="w-4 h-4" />
                   </button>
