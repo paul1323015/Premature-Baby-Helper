@@ -1343,6 +1343,20 @@ function App() {
     }
     return [];
   });
+  const getSolidFoodRecordForLog = log => log.type === 'solidFood' ? solidFoodLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.foodName)) : null;
+  const formatSolidFoodCareLogDetails = log => {
+    const record = getSolidFoodRecordForLog(log);
+    if (!record) return log.type === 'solidFood' && log.notes ? `備註：${log.notes}` : '';
+    const allergySeverity = record.allergySeverity === 'mild' ? '輕微' : record.allergySeverity === 'severe' ? '嚴重' : '無';
+    const reactions = Array.isArray(record.reactions) ? record.reactions.join('、') : record.reactions || '';
+    const notes = log.notes || record.notes;
+    return [`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`, ...(notes ? [`備註：${notes}`] : [])].join('\n');
+  };
+  const formatCareLogAmount = log => {
+    const record = getSolidFoodRecordForLog(log);
+    const amount = log.amount || (record?.amount ? `${record.amount}ml/湯匙` : '');
+    return amount !== null && amount !== undefined && amount !== '' ? String(amount) : '—';
+  };
   const [doctorNotes, setDoctorNotes] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_doctor_notes_v1');
     if (saved) {
@@ -3298,10 +3312,10 @@ function App() {
                 text: careLogTypeLabels[log.type] || log.type || '其他',
                 style: 'tableCell'
               }, {
-                text: formatCareLogDetail(log),
+                text: [formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)].filter(Boolean).join('\n'),
                 style: 'tableCell'
               }, {
-                text: log.amount !== null && log.amount !== undefined && log.amount !== '' ? String(log.amount) : '—',
+                text: formatCareLogAmount(log),
                 style: 'tableCell'
               }])]
             },
@@ -4898,10 +4912,10 @@ function App() {
   }, format24HourTime(log.time) || '—'), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
   }, careLogTypeLabels[log.type] || log.type || '其他'), /*#__PURE__*/React.createElement("td", {
+    className: "p-2 whitespace-pre-wrap"
+  }, [formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)].filter(Boolean).join('\n')), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
-  }, formatCareLogDetail(log)), /*#__PURE__*/React.createElement("td", {
-    className: "p-2"
-  }, log.amount !== null && log.amount !== undefined && log.amount !== '' ? String(log.amount) : '—')))))), /*#__PURE__*/React.createElement("div", {
+  }, formatCareLogAmount(log))))))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-slate-800 border-b pb-1"
