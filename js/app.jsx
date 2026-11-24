@@ -4113,6 +4113,9 @@
             {/* Tab 1: Dashboard */}
             {activeTab === 'dashboard' && (
               <div className="space-y-4">
+                <h3 className="font-bold text-base flex items-center gap-2 whitespace-nowrap">
+                  ☀️ <span>今日快照</span>
+                </h3>
                 <div className={`p-4 rounded-2xl border ${cardBg}`}>
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-sm flex items-center gap-1.5">
@@ -4354,9 +4357,8 @@
             {activeTab === 'growth' && (
               <div className={`p-4 rounded-2xl border space-y-4 md:p-5 ${cardBg}`}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 md:gap-3">
-                  <h3 className="font-bold text-base flex items-center gap-2">
-                    <Icon name="trendingUp" className="text-amber-500" />
-                    矯正月齡生長曲線圖表
+                  <h3 className="font-bold text-base flex items-center gap-2 whitespace-nowrap">
+                    📈 <span>矯正月齡生長曲線圖表</span>
                   </h3>
                   <div className="flex flex-wrap items-center gap-2">
                     <div className="flex rounded-xl bg-slate-100 p-1 text-xs">
@@ -4464,7 +4466,7 @@
             {activeTab === 'care' && (
               <div className="space-y-3">
                 <div className="flex justify-between items-center mb-1">
-                  <h3 className="font-bold text-sm">今日照護紀錄</h3>
+                  <h3 className="font-bold text-sm">🍼 照護日誌</h3>
                   <button
                     onClick={() => {
                       setEditingLogId(null);
@@ -4603,8 +4605,8 @@
             {activeTab === 'doctor' && (
               <div className={`p-4 rounded-2xl border space-y-4 ${cardBg}`}>
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-base flex items-center gap-2">
-                    <Icon name="stethoscope" className="text-amber-500" /> 看診備忘與門診提問
+                  <h3 className="font-bold text-base flex items-center gap-2 whitespace-nowrap">
+                    🏥 <span>看診備忘與門診提問</span>
                   </h3>
                 </div>
                 <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">

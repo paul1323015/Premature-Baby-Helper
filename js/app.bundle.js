@@ -4141,7 +4141,9 @@ function App() {
     className: `px-3 py-2 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all ${activeTab === tab.id ? 'bg-amber-500 text-white shadow-md' : 'bg-white border text-slate-600 hover:bg-amber-50'}`
   }, tab.label))), activeTab === 'dashboard' && /*#__PURE__*/React.createElement("div", {
     className: "space-y-4"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "font-bold text-base flex items-center gap-2 whitespace-nowrap"
+  }, "☀️ ", /*#__PURE__*/React.createElement("span", null, "今日快照")), /*#__PURE__*/React.createElement("div", {
     className: `p-4 rounded-2xl border ${cardBg}`
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center mb-2"
@@ -4360,11 +4362,8 @@ function App() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3 md:gap-3"
   }, /*#__PURE__*/React.createElement("h3", {
-    className: "font-bold text-base flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "trendingUp",
-    className: "text-amber-500"
-  }), "矯正月齡生長曲線圖表"), /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-base flex items-center gap-2 whitespace-nowrap"
+  }, "📈 ", /*#__PURE__*/React.createElement("span", null, "矯正月齡生長曲線圖表")), /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex rounded-xl bg-slate-100 p-1 text-xs"
@@ -4459,7 +4458,7 @@ function App() {
     className: "flex justify-between items-center mb-1"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm"
-  }, "今日照護紀錄"), /*#__PURE__*/React.createElement("button", {
+  }, "🍼 照護日誌"), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setEditingLogId(null);
       setNewLogDate(getLocalDateInputValue());
@@ -4569,11 +4568,8 @@ function App() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center"
   }, /*#__PURE__*/React.createElement("h3", {
-    className: "font-bold text-base flex items-center gap-2"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "stethoscope",
-    className: "text-amber-500"
-  }), " 看診備忘與門診提問")), /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-base flex items-center gap-2 whitespace-nowrap"
+  }, "🏥 ", /*#__PURE__*/React.createElement("span", null, "看診備忘與門診提問"))), /*#__PURE__*/React.createElement("div", {
     className: "p-3 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-start justify-between gap-2"
