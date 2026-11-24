@@ -1283,6 +1283,12 @@ function App() {
     solidFood: '副食品',
     vaccination: '疫苗'
   };
+  const careLogTypeIcons = {
+    feeding: '🍼',
+    diaper: '👶',
+    solidFood: '🥣',
+    vaccination: '💉'
+  };
   const formatCareLogDetail = log => log.type === 'solidFood' || log.type === 'vaccination' ? (log.detail || '').replace(/^(?:🥣|💉)\s*/, '') || '—' : log.detail || '—';
   const isValidCareReminder = reminder => reminder && typeof reminder.id === 'string' && typeof reminder.title === 'string' && typeof reminder.dueAt === 'string' && Number.isFinite(new Date(reminder.dueAt).getTime());
   const getCareReminderRepeatInterval = reminder => Number.isInteger(reminder.repeatIntervalMinutes) && reminder.repeatIntervalMinutes >= 1 && reminder.repeatIntervalMinutes <= 1440 ? reminder.repeatIntervalMinutes : null;
@@ -4593,8 +4599,10 @@ function App() {
     }, /*#__PURE__*/React.createElement("span", {
       className: "text-xs font-bold text-amber-600"
     }, log.date || '未設定日期', " ", log.time), /*#__PURE__*/React.createElement("span", {
-      className: "text-xs font-medium"
-    }, log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail)), solidFoodRecord && /*#__PURE__*/React.createElement("div", {
+      className: "inline-flex items-center gap-1 text-xs font-medium"
+    }, /*#__PURE__*/React.createElement("span", {
+      "aria-hidden": "true"
+    }, careLogTypeIcons[log.type]), log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : formatCareLogDetail(log))), solidFoodRecord && /*#__PURE__*/React.createElement("div", {
       className: "space-y-0.5 text-xs text-slate-500"
     }, /*#__PURE__*/React.createElement("p", null, "過敏等級：", solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無'), /*#__PURE__*/React.createElement("p", null, "反應：", solidFoodReactions || '無'), solidFoodNotes && /*#__PURE__*/React.createElement("p", {
       className: "whitespace-pre-wrap"

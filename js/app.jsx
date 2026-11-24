@@ -1107,6 +1107,7 @@
       const [careLogEndDate, setCareLogEndDate] = React.useState('');
       const [careLogCategory, setCareLogCategory] = React.useState('all');
       const careLogTypeLabels = { feeding: '餵奶', diaper: '尿布', solidFood: '副食品', vaccination: '疫苗' };
+      const careLogTypeIcons = { feeding: '🍼', diaper: '👶', solidFood: '🥣', vaccination: '💉' };
       const formatCareLogDetail = log => (
         log.type === 'solidFood' || log.type === 'vaccination'
           ? (log.detail || '').replace(/^(?:🥣|💉)\s*/, '') || '—'
@@ -4630,7 +4631,10 @@
                       <div className="flex min-w-0 flex-1 flex-col items-start gap-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-xs font-bold text-amber-600">{log.date || '未設定日期'} {log.time}</span>
-                          <span className="text-xs font-medium">{log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : log.detail}</span>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium">
+                            <span aria-hidden="true">{careLogTypeIcons[log.type]}</span>
+                            {log.type === 'feeding' && log.detail === '瓶餵母乳/配方奶' ? '' : formatCareLogDetail(log)}
+                          </span>
                         </div>
                         {solidFoodRecord && (
                           <div className="space-y-0.5 text-xs text-slate-500">
