@@ -798,7 +798,7 @@
 
           {showRecordModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
+              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b pb-2">
                   <h3 className="font-bold text-sm text-amber-700">{editingRecordId !== null ? '編輯生長數據紀錄' : '新增生長數據紀錄'}</h3>
                   <button onClick={() => { setShowRecordModal(false); setEditingRecordId(null); }} className="text-slate-400 hover:text-slate-600">
@@ -1191,21 +1191,25 @@
         record.id === log.sourceId
         || (record.date === log.date && log.detail?.includes(record.foodName))
       )) : null;
-      const formatSolidFoodCareLogDetails = log => {
-        const record = getSolidFoodRecordForLog(log);
-        if (!record) return log.type === 'solidFood' && log.notes ? `備註：${log.notes}` : '';
-        const allergySeverity = record.allergySeverity === 'mild'
-          ? '輕微'
-          : record.allergySeverity === 'severe' ? '嚴重' : '無';
-        const reactions = Array.isArray(record.reactions)
-          ? record.reactions.join('、')
-          : record.reactions || '';
-        const notes = log.notes || record.notes;
-        return [
-          `過敏等級：${allergySeverity}`,
-          `反應：${reactions || '無'}`,
-          ...(notes ? [`備註：${notes}`] : [])
-        ].join('\n');
+      const formatCareLogSupplement = log => {
+        const solidFoodRecord = getSolidFoodRecordForLog(log);
+        const vaccinationRecord = log.type === 'vaccination' ? vaccinationLogs.find(record => (
+          record.id === log.sourceId
+          || (record.date === log.date && log.detail?.includes(record.vaccineName))
+        )) : null;
+        const details = [];
+        if (solidFoodRecord) {
+          const allergySeverity = solidFoodRecord.allergySeverity === 'mild'
+            ? '輕微'
+            : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無';
+          const reactions = Array.isArray(solidFoodRecord.reactions)
+            ? solidFoodRecord.reactions.join('、')
+            : solidFoodRecord.reactions || '';
+          details.push(`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`);
+        }
+        const notes = log.notes || solidFoodRecord?.notes || vaccinationRecord?.notes;
+        if (notes) details.push(`備註：${notes}`);
+        return details.join('\n');
       };
       const formatCareLogAmount = log => {
         const record = getSolidFoodRecordForLog(log);
@@ -3261,7 +3265,7 @@
                               { text: log.date || '未設定日期', style: 'tableCell' },
                               { text: format24HourTime(log.time) || '—', style: 'tableCell' },
                               { text: careLogTypeLabels[log.type] || log.type || '其他', style: 'tableCell' },
-                              { text: [formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)].filter(Boolean).join('\n'), style: 'tableCell' },
+                              { text: [formatCareLogDetail(log), formatCareLogSupplement(log)].filter(Boolean).join('\n'), style: 'tableCell' },
                               { text: formatCareLogAmount(log), style: 'tableCell' }
                             ])
                           ]
@@ -3402,6 +3406,7 @@
       const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
       const [newLogTime, setNewLogTime] = React.useState(getLocalTimeInputValue);
       const [newLogDetail, setNewLogDetail] = React.useState('');
+      const [newLogNotes, setNewLogNotes] = React.useState('');
       const [newLogMilkType, setNewLogMilkType] = React.useState('');
       const [newLogFeedingMethod, setNewLogFeedingMethod] = React.useState('');
       const [newLogAmount, setNewLogAmount] = React.useState('');
@@ -3458,7 +3463,8 @@
                     date: vaccinationForm.date,
                     time: newLogTime,
                     detail: `💉 ${vaccinationForm.vaccineName.trim()}（第 ${Number(vaccinationForm.doseNumber) || 1} 劑）`,
-                    amount: null
+                    amount: null,
+                    notes: vaccinationForm.notes.trim()
                   }
                 : log
             )));
@@ -3487,6 +3493,7 @@
             time: newLogTime,
             detail: `💉 ${vaccinationRecord.vaccineName}（第 ${vaccinationRecord.doseNumber} 劑）`,
             amount: null,
+            notes: vaccinationRecord.notes,
           }, ...prevLogs]);
           showToast('💉 已新增疫苗接種紀錄！');
           setShowAddLogModal(false);
@@ -3568,7 +3575,7 @@
         if (editingLogId !== null) {
           setLogs(prevLogs => prevLogs.map(log => (
             log.id === editingLogId
-              ? { ...log, date: newLogDate, time: newLogTime, type: newLogType, detail, amount }
+              ? { ...log, date: newLogDate, time: newLogTime, type: newLogType, detail, amount, notes: newLogNotes.trim() }
               : log
           )));
           showToast('💾 已儲存照護紀錄修改！');
@@ -3581,6 +3588,7 @@
             time: newLogTime,
             detail,
             amount,
+            notes: newLogNotes.trim(),
           }, ...prevLogs]);
           showToast('🍼 已新增今日快照紀錄！');
         }
@@ -3588,6 +3596,7 @@
         setShowAddLogModal(false);
         setEditingLogId(null);
         setNewLogDetail('');
+        setNewLogNotes('');
         setNewLogMilkType('');
         setNewLogFeedingMethod('');
         setNewLogAmount('');
@@ -3694,6 +3703,7 @@
         setEditingLogId(log.id);
         setNewLogDate(log.date || getLocalDateInputValue());
         setNewLogTime(format24HourTime(log.time) || getLocalTimeInputValue());
+        setNewLogNotes(log.notes || '');
         setNewLogType(log.type);
         const logDetail = log.detail || '';
         if (log.type === 'feeding') {
@@ -3769,6 +3779,7 @@
         setNewLogDate(getLocalDateInputValue());
         setNewLogTime(getLocalTimeInputValue());
         setNewLogDetail('');
+        setNewLogNotes('');
         setNewLogMilkType('');
         setNewLogFeedingMethod('');
         setNewLogAmount('');
@@ -4167,13 +4178,13 @@
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                   <button
-                    onClick={() => { setEditingLogId(null); setNewLogType('feeding'); setNewLogDetail(''); setNewLogMilkType(''); setNewLogFeedingMethod(''); setNewLogAmount(''); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('feeding'); setNewLogDetail(''); setNewLogNotes(''); setNewLogMilkType(''); setNewLogFeedingMethod(''); setNewLogAmount(''); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-amber-50 border-amber-200 text-amber-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-amber-100 transition-colors shadow-sm md:p-5"
                   >
                     🍼 記餵奶
                   </button>
                   <button
-                    onClick={() => { setEditingLogId(null); setNewLogType('diaper'); setNewLogDetail(''); setNewLogMilkType(''); setNewLogFeedingMethod(''); setNewLogAmount(''); setShowAddLogModal(true); }}
+                    onClick={() => { setEditingLogId(null); setNewLogType('diaper'); setNewLogDetail(''); setNewLogNotes(''); setNewLogMilkType(''); setNewLogFeedingMethod(''); setNewLogAmount(''); setShowAddLogModal(true); }}
                     className="p-4 rounded-2xl border bg-blue-50 border-blue-200 text-blue-900 font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors shadow-sm md:p-5"
                   >
                     👶 記尿布
@@ -4505,6 +4516,7 @@
                       setNewLogTime(getLocalTimeInputValue());
                       setNewLogType('feeding');
                       setNewLogDetail('');
+                      setNewLogNotes('');
                       setNewLogMilkType('');
                       setNewLogFeedingMethod('');
                       setNewLogAmount('');
@@ -5020,7 +5032,7 @@
                         <td className="p-2">{log.date || '未設定日期'}</td>
                         <td className="p-2">{format24HourTime(log.time) || '—'}</td>
                         <td className="p-2">{careLogTypeLabels[log.type] || log.type || '其他'}</td>
-                        <td className="p-2 whitespace-pre-wrap">{[formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)].filter(Boolean).join('\n')}</td>
+                        <td className="p-2 whitespace-pre-wrap">{[formatCareLogDetail(log), formatCareLogSupplement(log)].filter(Boolean).join('\n')}</td>
                         <td className="p-2">{formatCareLogAmount(log)}</td>
                       </tr>
                     ))}
@@ -5208,7 +5220,7 @@
           {/* Add Care Log Modal */}
           {showAddLogModal && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3">
+              <div className="w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto">
                 <div className="flex justify-between items-center border-b pb-2">
                   <h3 className="font-bold text-sm text-amber-700">{editingLogId !== null ? '編輯照護紀錄' : '新增今日照護紀錄'}</h3>
                   <button onClick={handleCancelEditLog} className="text-slate-400 hover:text-slate-600">
@@ -5337,7 +5349,7 @@
                         <input value={solidFoodForm.reactions} onChange={(e) => setSolidFoodForm({ ...solidFoodForm, reactions: e.target.value })} placeholder="例如：紅疹、拉肚子" className="w-full p-2 border rounded-xl" />
                       </div>
                       <div>
-                        <label className="font-bold block mb-1">備註</label>
+                        <label className="font-bold block mb-1">備註（選填）</label>
                         <textarea
                           rows={3}
                           value={solidFoodForm.notes}
@@ -5370,7 +5382,7 @@
                         <input value={vaccinationForm.sideEffects} onChange={(e) => setVaccinationForm({ ...vaccinationForm, sideEffects: e.target.value })} placeholder="例如：發燒、腫脹" className="w-full p-2 border rounded-xl" />
                       </div>
                       <div>
-                        <label className="font-bold block mb-1">備註</label>
+                        <label className="font-bold block mb-1">備註（選填）</label>
                         <textarea value={vaccinationForm.notes} onChange={(e) => setVaccinationForm({ ...vaccinationForm, notes: e.target.value })} rows="2" className="w-full p-2 border rounded-xl resize-y" />
                       </div>
                     </>
@@ -5411,7 +5423,7 @@
                         </div>
                       </div>
                       <div>
-                        <label className="font-bold block mb-1">備註/細節（選填）</label>
+                        <label className="font-bold block mb-1">細節（選填）</label>
                         <textarea
                           rows={3}
                           placeholder="輸入額外細節"
@@ -5420,16 +5432,34 @@
                           className="w-full p-2 border rounded-xl resize-y"
                         />
                       </div>
+                      <div>
+                        <label className="font-bold block mb-1">備註（選填）</label>
+                        <textarea
+                          rows={3}
+                          placeholder="輸入其他備註"
+                          value={newLogNotes}
+                          onChange={(e) => setNewLogNotes(e.target.value)}
+                          className="w-full p-2 border rounded-xl resize-y"
+                        />
+                      </div>
                     </div>
                   )}
 
                   {newLogType === 'diaper' && <div>
-                    <label className="font-bold block mb-1">備註/細節</label>
+                    <label className="font-bold block mb-1">細節（選填）</label>
                     <textarea
                       rows={3}
                       placeholder="濕尿布 / 便便 / 量多"
                       value={newLogDetail}
                       onChange={(e) => setNewLogDetail(e.target.value)}
+                      className="w-full p-2 border rounded-xl resize-y"
+                    />
+                    <label className="font-bold block mb-1 mt-2">備註（選填）</label>
+                    <textarea
+                      rows={3}
+                      placeholder="輸入其他備註"
+                      value={newLogNotes}
+                      onChange={(e) => setNewLogNotes(e.target.value)}
                       className="w-full p-2 border rounded-xl resize-y"
                     />
                   </div>}
@@ -5486,7 +5516,7 @@
                     <input value={solidFoodForm.reactions} onChange={(e) => setSolidFoodForm({ ...solidFoodForm, reactions: e.target.value })} placeholder="例如：紅疹、拉肚子" className="w-full p-2 border rounded-xl" />
                   </div>
                   <div>
-                    <label className="font-bold block mb-1">備註</label>
+                    <label className="font-bold block mb-1">備註（選填）</label>
                     <textarea
                       rows={3}
                       value={solidFoodForm.notes}
@@ -5537,7 +5567,7 @@
                     <input value={vaccinationForm.sideEffects} onChange={(e) => setVaccinationForm({ ...vaccinationForm, sideEffects: e.target.value })} placeholder="例如：發燒、腫脹" className="w-full p-2 border rounded-xl" />
                   </div>
                   <div>
-                    <label className="font-bold block mb-1">備註</label>
+                    <label className="font-bold block mb-1">備註（選填）</label>
                     <textarea value={vaccinationForm.notes} onChange={(e) => setVaccinationForm({ ...vaccinationForm, notes: e.target.value })} rows="2" className="w-full p-2 border rounded-xl resize-y" />
                   </div>
                   <div className="flex gap-2 pt-2">

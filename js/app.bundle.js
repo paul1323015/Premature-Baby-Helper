@@ -929,7 +929,7 @@ const PretermGrowthChart = ({
   }))), showRecordModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3"
+    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
@@ -1344,13 +1344,18 @@ function App() {
     return [];
   });
   const getSolidFoodRecordForLog = log => log.type === 'solidFood' ? solidFoodLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.foodName)) : null;
-  const formatSolidFoodCareLogDetails = log => {
-    const record = getSolidFoodRecordForLog(log);
-    if (!record) return log.type === 'solidFood' && log.notes ? `備註：${log.notes}` : '';
-    const allergySeverity = record.allergySeverity === 'mild' ? '輕微' : record.allergySeverity === 'severe' ? '嚴重' : '無';
-    const reactions = Array.isArray(record.reactions) ? record.reactions.join('、') : record.reactions || '';
-    const notes = log.notes || record.notes;
-    return [`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`, ...(notes ? [`備註：${notes}`] : [])].join('\n');
+  const formatCareLogSupplement = log => {
+    const solidFoodRecord = getSolidFoodRecordForLog(log);
+    const vaccinationRecord = log.type === 'vaccination' ? vaccinationLogs.find(record => record.id === log.sourceId || record.date === log.date && log.detail?.includes(record.vaccineName)) : null;
+    const details = [];
+    if (solidFoodRecord) {
+      const allergySeverity = solidFoodRecord.allergySeverity === 'mild' ? '輕微' : solidFoodRecord.allergySeverity === 'severe' ? '嚴重' : '無';
+      const reactions = Array.isArray(solidFoodRecord.reactions) ? solidFoodRecord.reactions.join('、') : solidFoodRecord.reactions || '';
+      details.push(`過敏等級：${allergySeverity}`, `反應：${reactions || '無'}`);
+    }
+    const notes = log.notes || solidFoodRecord?.notes || vaccinationRecord?.notes;
+    if (notes) details.push(`備註：${notes}`);
+    return details.join('\n');
   };
   const formatCareLogAmount = log => {
     const record = getSolidFoodRecordForLog(log);
@@ -3312,7 +3317,7 @@ function App() {
                 text: careLogTypeLabels[log.type] || log.type || '其他',
                 style: 'tableCell'
               }, {
-                text: [formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)].filter(Boolean).join('\n'),
+                text: [formatCareLogDetail(log), formatCareLogSupplement(log)].filter(Boolean).join('\n'),
                 style: 'tableCell'
               }, {
                 text: formatCareLogAmount(log),
@@ -3451,6 +3456,7 @@ function App() {
   const [newLogDate, setNewLogDate] = React.useState(getLocalDateInputValue);
   const [newLogTime, setNewLogTime] = React.useState(getLocalTimeInputValue);
   const [newLogDetail, setNewLogDetail] = React.useState('');
+  const [newLogNotes, setNewLogNotes] = React.useState('');
   const [newLogMilkType, setNewLogMilkType] = React.useState('');
   const [newLogFeedingMethod, setNewLogFeedingMethod] = React.useState('');
   const [newLogAmount, setNewLogAmount] = React.useState('');
@@ -3505,7 +3511,8 @@ function App() {
           date: vaccinationForm.date,
           time: newLogTime,
           detail: `💉 ${vaccinationForm.vaccineName.trim()}（第 ${Number(vaccinationForm.doseNumber) || 1} 劑）`,
-          amount: null
+          amount: null,
+          notes: vaccinationForm.notes.trim()
         } : log));
         showToast('💾 已儲存疫苗接種紀錄修改！');
         setShowAddLogModal(false);
@@ -3531,7 +3538,8 @@ function App() {
         sourceId: vaccinationRecord.id,
         time: newLogTime,
         detail: `💉 ${vaccinationRecord.vaccineName}（第 ${vaccinationRecord.doseNumber} 劑）`,
-        amount: null
+        amount: null,
+        notes: vaccinationRecord.notes
       }, ...prevLogs]);
       showToast('💉 已新增疫苗接種紀錄！');
       setShowAddLogModal(false);
@@ -3604,7 +3612,8 @@ function App() {
         time: newLogTime,
         type: newLogType,
         detail,
-        amount
+        amount,
+        notes: newLogNotes.trim()
       } : log));
       showToast('💾 已儲存照護紀錄修改！');
     } else {
@@ -3615,13 +3624,15 @@ function App() {
         type: newLogType,
         time: newLogTime,
         detail,
-        amount
+        amount,
+        notes: newLogNotes.trim()
       }, ...prevLogs]);
       showToast('🍼 已新增今日快照紀錄！');
     }
     setShowAddLogModal(false);
     setEditingLogId(null);
     setNewLogDetail('');
+    setNewLogNotes('');
     setNewLogMilkType('');
     setNewLogFeedingMethod('');
     setNewLogAmount('');
@@ -3717,6 +3728,7 @@ function App() {
     setEditingLogId(log.id);
     setNewLogDate(log.date || getLocalDateInputValue());
     setNewLogTime(format24HourTime(log.time) || getLocalTimeInputValue());
+    setNewLogNotes(log.notes || '');
     setNewLogType(log.type);
     const logDetail = log.detail || '';
     if (log.type === 'feeding') {
@@ -3813,6 +3825,7 @@ function App() {
     setNewLogDate(getLocalDateInputValue());
     setNewLogTime(getLocalTimeInputValue());
     setNewLogDetail('');
+    setNewLogNotes('');
     setNewLogMilkType('');
     setNewLogFeedingMethod('');
     setNewLogAmount('');
@@ -4192,6 +4205,7 @@ function App() {
       setEditingLogId(null);
       setNewLogType('feeding');
       setNewLogDetail('');
+      setNewLogNotes('');
       setNewLogMilkType('');
       setNewLogFeedingMethod('');
       setNewLogAmount('');
@@ -4203,6 +4217,7 @@ function App() {
       setEditingLogId(null);
       setNewLogType('diaper');
       setNewLogDetail('');
+      setNewLogNotes('');
       setNewLogMilkType('');
       setNewLogFeedingMethod('');
       setNewLogAmount('');
@@ -4487,6 +4502,7 @@ function App() {
       setNewLogTime(getLocalTimeInputValue());
       setNewLogType('feeding');
       setNewLogDetail('');
+      setNewLogNotes('');
       setNewLogMilkType('');
       setNewLogFeedingMethod('');
       setNewLogAmount('');
@@ -4913,7 +4929,7 @@ function App() {
     className: "p-2"
   }, careLogTypeLabels[log.type] || log.type || '其他'), /*#__PURE__*/React.createElement("td", {
     className: "p-2 whitespace-pre-wrap"
-  }, [formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)].filter(Boolean).join('\n')), /*#__PURE__*/React.createElement("td", {
+  }, [formatCareLogDetail(log), formatCareLogSupplement(log)].filter(Boolean).join('\n')), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
   }, formatCareLogAmount(log))))))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
@@ -5104,7 +5120,7 @@ function App() {
   }, "儲存設定"))))), showAddLogModal && /*#__PURE__*/React.createElement("div", {
     className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3"
+    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex justify-between items-center border-b pb-2"
   }, /*#__PURE__*/React.createElement("h3", {
@@ -5258,7 +5274,7 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 3,
     value: solidFoodForm.notes,
     onChange: e => setSolidFoodForm({
@@ -5314,7 +5330,7 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     value: vaccinationForm.notes,
     onChange: e => setVaccinationForm({
       ...vaccinationForm,
@@ -5350,19 +5366,35 @@ function App() {
     className: `px-3 py-1.5 rounded-full border font-medium transition-colors ${newLogFeedingMethod === tag ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-600 border-slate-300'}`
   }, tag)))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註/細節（選填）"), /*#__PURE__*/React.createElement("textarea", {
+  }, "細節（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 3,
     placeholder: "輸入額外細節",
     value: newLogDetail,
     onChange: e => setNewLogDetail(e.target.value),
     className: "w-full p-2 border rounded-xl resize-y"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
+    placeholder: "輸入其他備註",
+    value: newLogNotes,
+    onChange: e => setNewLogNotes(e.target.value),
+    className: "w-full p-2 border rounded-xl resize-y"
   }))), newLogType === 'diaper' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註/細節"), /*#__PURE__*/React.createElement("textarea", {
+  }, "細節（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 3,
     placeholder: "濕尿布 / 便便 / 量多",
     value: newLogDetail,
     onChange: e => setNewLogDetail(e.target.value),
+    className: "w-full p-2 border rounded-xl resize-y"
+  }), /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1 mt-2"
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 3,
+    placeholder: "輸入其他備註",
+    value: newLogNotes,
+    onChange: e => setNewLogNotes(e.target.value),
     className: "w-full p-2 border rounded-xl resize-y"
   })), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 pt-2"
@@ -5460,7 +5492,7 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 3,
     value: solidFoodForm.notes,
     onChange: e => setSolidFoodForm({
@@ -5553,7 +5585,7 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "備註"), /*#__PURE__*/React.createElement("textarea", {
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     value: vaccinationForm.notes,
     onChange: e => setVaccinationForm({
       ...vaccinationForm,

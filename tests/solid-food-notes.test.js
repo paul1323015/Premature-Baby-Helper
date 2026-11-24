@@ -23,9 +23,12 @@ describe('solid food notes', () => {
     expect(appSource).toMatch(/solidFoodRecord\?\.amount\s*\?/);
   });
 
-  test('both PDF views include solid food details and amount', () => {
-    expect(appSource.match(/formatSolidFoodCareLogDetails\(log\)/g)).toHaveLength(2);
+  test('both PDF views include care log supplements and amount', () => {
+    expect(appSource.match(/formatCareLogSupplement\(log\)/g)).toHaveLength(2);
     expect(appSource.match(/formatCareLogAmount\(log\)/g)).toHaveLength(2);
-    expect(appSource).toContain('whitespace-pre-wrap">{[formatCareLogDetail(log), formatSolidFoodCareLogDetails(log)]');
+    expect(appSource).toContain('whitespace-pre-wrap">{[formatCareLogDetail(log), formatCareLogSupplement(log)]');
+    expect(appSource).toMatch(/notes: newLogNotes\.trim\(\)/);
+    expect(appSource).toContain('備註（選填）');
+    expect(appSource).toContain('細節（選填）');
   });
 });
