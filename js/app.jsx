@@ -892,6 +892,10 @@
       const [showNotesModal, setShowNotesModal] = React.useState(false);
       const [isExporting, setIsExporting] = React.useState(false);
       const [showPdfSettingsModal, setShowPdfSettingsModal] = React.useState(false);
+      const [showPdfPasswordModal, setShowPdfPasswordModal] = React.useState(false);
+      const [pdfPassword, setPdfPassword] = React.useState('');
+      const [pdfPasswordConfirm, setPdfPasswordConfirm] = React.useState('');
+      const [pdfPasswordError, setPdfPasswordError] = React.useState('');
       const DEFAULT_PDF_EXPORT_OPTIONS = {
         profile: true,
         growthRecords: true,
@@ -899,6 +903,7 @@
         careLogs: true,
         doctor: true,
         notes: true,
+        encryptPdf: false,
         showExportTime: true,
         range: 'all',
         startDate: '',
@@ -1609,7 +1614,7 @@
         if (hasOwn('pdfExportOptions')) {
           const options = backupData.pdfExportOptions;
           if (!isBackupRecord(options)) return false;
-          if (['profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'showExportTime']
+          if (['profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'encryptPdf', 'showExportTime']
             .some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
           if (Object.prototype.hasOwnProperty.call(options, 'range')
             && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
@@ -2847,7 +2852,30 @@
         }
       };
 
-      const handleDownloadPDF = () => {
+      const closePdfPasswordModal = () => {
+        setShowPdfPasswordModal(false);
+        setPdfPassword('');
+        setPdfPasswordConfirm('');
+        setPdfPasswordError('');
+      };
+
+      const handleConfirmPdfPassword = () => {
+        if (Array.from(pdfPassword).length < 4 || Array.from(pdfPassword).length > 8) {
+          setPdfPasswordError('密碼需為 4 至 8 個字元。');
+          return;
+        }
+        if (pdfPassword !== pdfPasswordConfirm) {
+          setPdfPasswordError('兩次輸入的密碼不一致，請重新確認。');
+          return;
+        }
+        setShowPdfPasswordModal(false);
+        handleDownloadPDF(pdfPassword);
+        setPdfPassword('');
+        setPdfPasswordConfirm('');
+        setPdfPasswordError('');
+      };
+
+      const handleDownloadPDF = (password) => {
         if (pdfExportOptions.range === 'custom' && (!pdfExportOptions.startDate || !pdfExportOptions.endDate)) {
           openPdfSettingsModal();
           showToast('⚠️ 請先選擇自訂匯出的開始與結束日期。', 'info');
@@ -2856,6 +2884,13 @@
         if (pdfExportOptions.range === 'custom' && pdfExportOptions.startDate > pdfExportOptions.endDate) {
           openPdfSettingsModal();
           showToast('⚠️ 開始日期不可晚於結束日期。', 'info');
+          return;
+        }
+        if (pdfExportOptions.encryptPdf && (typeof password !== 'string' || Array.from(password).length < 4 || Array.from(password).length > 8)) {
+          setPdfPassword('');
+          setPdfPasswordConfirm('');
+          setPdfPasswordError('');
+          setShowPdfPasswordModal(true);
           return;
         }
         setIsExporting(true);
@@ -2993,6 +3028,7 @@
 
           const docDefinition = {
             pageSize: 'A4',
+            ...(pdfExportOptions.encryptPdf ? { userPassword: password, version: '1.7ext3' } : {}),
             // 頁面留白，避免表格與卡片貼近紙張邊緣。
             pageMargins: [40, 42, 40, 42],
             defaultStyle: {
@@ -3286,11 +3322,15 @@
           const filename = `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`;
           pdfMake.createPdf(docDefinition).download(filename, () => {
             setIsExporting(false);
+            setPdfPassword('');
+            setPdfPasswordConfirm('');
             showToast('✅ PDF 報告已順利匯出下載！');
           });
         } catch (err) {
           console.error(err);
           setIsExporting(false);
+          setPdfPassword('');
+          setPdfPasswordConfirm('');
           showToast('❌ PDF 報告產生失敗，請稍後再試。若問題持續發生，請確認瀏覽器可正常下載檔案。');
         }
       };
@@ -3956,7 +3996,7 @@
                 </button>
                 <div className="flex items-center rounded-xl bg-amber-600 text-white shadow-sm flex-shrink-0">
                   <button
-                    onClick={handleDownloadPDF}
+                    onClick={() => handleDownloadPDF()}
                     disabled={isExporting}
                     className="px-2.5 py-1.5 text-[10px] sm:text-xs font-bold transition-colors flex items-center gap-1 disabled:opacity-50"
                     title="依目前設定下載完整記錄 PDF"
@@ -6068,6 +6108,23 @@
                   <span className="font-bold text-slate-700">顯示匯出時間</span>
                 </label>
 
+                <div className="space-y-1">
+                  <label className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2.5 cursor-pointer hover:bg-amber-50/60">
+                    <input
+                      type="checkbox"
+                      checked={pdfExportDraft.encryptPdf}
+                      onChange={(event) => setPdfExportDraft((current) => ({ ...current, encryptPdf: event.target.checked }))}
+                      className="accent-amber-600"
+                    />
+                    <span className="font-bold text-slate-700">匯出加密 PDF</span>
+                  </label>
+                  {pdfExportDraft.encryptPdf && (
+                    <p className="ml-1 rounded-lg bg-amber-50 px-3 py-2 text-amber-800">
+                      匯出時需設定 4 至 8 個字元的密碼，PDF 採 AES-256 加密。密碼不會儲存；忘記密碼後，巴掌小太陽無法取回。
+                    </p>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <label className="font-bold text-slate-700 block">時間範圍</label>
                   <select
@@ -6134,6 +6191,73 @@
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {showPdfPasswordModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+              <form
+                autoComplete="off"
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleConfirmPdfPassword();
+                }}
+                className="w-full max-w-md p-5 rounded-2xl border shadow-xl bg-white space-y-4"
+              >
+                <div className="flex items-center justify-between pb-3 border-b">
+                  <h3 className="font-bold text-base text-amber-800">設定 PDF 開啟密碼</h3>
+                  <button type="button" onClick={closePdfPasswordModal} className="p-1.5 rounded-lg hover:bg-slate-100" title="取消">
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs leading-relaxed text-amber-900 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                  密碼需為 4 至 8 個字元，開啟 PDF 時會需要此密碼。PDF 採 AES-256 加密，請使用支援此格式的閱讀器。密碼不會儲存；若忘記，巴掌小太陽無法取回。
+                </p>
+                <label className="block space-y-1">
+                  <span className="font-bold text-slate-700">密碼</span>
+                  <input
+                    type="password"
+                    value={pdfPassword}
+                    onChange={(event) => {
+                      setPdfPassword(event.target.value);
+                      setPdfPasswordError('');
+                    }}
+                    autoComplete="off"
+                    autoFocus
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5"
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="font-bold text-slate-700">再次輸入密碼</span>
+                  <input
+                    type="password"
+                    value={pdfPasswordConfirm}
+                    onChange={(event) => {
+                      setPdfPasswordConfirm(event.target.value);
+                      setPdfPasswordError('');
+                    }}
+                    autoComplete="off"
+                    className="w-full border border-slate-300 rounded-xl px-3 py-2.5"
+                  />
+                </label>
+                {pdfPasswordError && <p className="text-red-600" role="alert">{pdfPasswordError}</p>}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={closePdfPasswordModal}
+                    className="py-2.5 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-50"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                  >
+                    加密並匯出
+                  </button>
+                </div>
+              </form>
             </div>
           )}
 
