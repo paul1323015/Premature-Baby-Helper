@@ -606,10 +606,7 @@ const PretermGrowthChart = ({
     className: "p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex flex-col gap-2 shadow-sm sm:flex-row sm:items-start"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex items-start gap-2 flex-1 min-w-0"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "sparkles",
-    className: "w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "flex-1 min-w-0"
   }, /*#__PURE__*/React.createElement("span", {
     className: "font-bold block text-amber-800"

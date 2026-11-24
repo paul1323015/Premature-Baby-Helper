@@ -525,7 +525,6 @@
         <div className="space-y-3">
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 leading-relaxed flex flex-col gap-2 shadow-sm sm:flex-row sm:items-start">
             <div className="flex items-start gap-2 flex-1 min-w-0">
-              <Icon name="sparkles" className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <span className="font-bold block text-amber-800">⚡️ 生長曲線設定：</span>
                 <span className="block">預設以【預產期】為 0 個月對齊矯正月齡；如需查看實際出生月齡，可點擊上方按鈕切換觀看。</span>
