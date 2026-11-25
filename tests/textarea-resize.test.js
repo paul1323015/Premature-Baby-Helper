@@ -8,10 +8,14 @@ describe('textarea resizing', () => {
       'utf8'
     );
     const textareaTags = appSource.match(/<textarea\b[\s\S]*?\/>/g) || [];
+    const solidFoodReactionTextareas = appSource.match(
+      /<label className="font-bold block mb-1">反應（以逗號分隔）<\/label>\s*<textarea\b[\s\S]*?\/>/g
+    ) || [];
 
     expect(textareaTags.length).toBeGreaterThan(0);
     textareaTags.forEach(tag => {
       expect(tag).toMatch(/className="[^"]*\bresize-y\b[^"]*"/);
     });
+    expect(solidFoodReactionTextareas).toHaveLength(2);
   });
 });

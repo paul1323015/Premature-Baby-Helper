@@ -5365,14 +5365,15 @@ function App() {
     value: "severe"
   }, "嚴重"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "反應（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+  }, "反應（以逗號分隔）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 2,
     value: solidFoodForm.reactions,
     onChange: e => setSolidFoodForm({
       ...solidFoodForm,
       reactions: e.target.value
     }),
     placeholder: "例如：紅疹、拉肚子",
-    className: "w-full p-2 border rounded-xl"
+    className: "w-full p-2 border rounded-xl resize-y"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
@@ -5631,14 +5632,15 @@ function App() {
     value: "severe"
   }, "嚴重"))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "反應（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+  }, "反應（以逗號分隔）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 2,
     value: solidFoodForm.reactions,
     onChange: e => setSolidFoodForm({
       ...solidFoodForm,
       reactions: e.target.value
     }),
     placeholder: "例如：紅疹、拉肚子",
-    className: "w-full p-2 border rounded-xl"
+    className: "w-full p-2 border rounded-xl resize-y"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
