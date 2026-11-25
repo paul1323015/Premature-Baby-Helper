@@ -361,6 +361,33 @@
       const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
       const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
       const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
+      const [recNotes, setRecNotes] = React.useState('');
+      const [recNotesHeight, setRecNotesHeight] = React.useState(72);
+      const recNotesResizeRef = React.useRef(null);
+      const handleRecNotesResizeStart = event => {
+        if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
+        recNotesResizeRef.current = {
+          pointerId: event.pointerId,
+          startY: event.clientY,
+          startHeight: recNotesHeight
+        };
+      };
+      const handleRecNotesResizeMove = event => {
+        const resize = recNotesResizeRef.current;
+        if (!resize || resize.pointerId !== event.pointerId) return;
+        setRecNotesHeight(Math.max(56, Math.min(360, resize.startHeight + event.clientY - resize.startY)));
+      };
+      const handleRecNotesResizeEnd = event => {
+        if (recNotesResizeRef.current?.pointerId === event.pointerId) {
+          recNotesResizeRef.current = null;
+        }
+      };
+      const handleRecNotesResizeKeyDown = event => {
+        if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+        event.preventDefault();
+        const heightChange = event.key === 'ArrowUp' ? -16 : 16;
+        setRecNotesHeight(height => Math.max(56, Math.min(360, height + heightChange)));
+      };
 
       const metricConfig = {
         weight: { label: '體重', unit: 'kg', minY: GrowthChartScale.METRIC_DOMAINS.weight.min, maxY: GrowthChartScale.METRIC_DOMAINS.weight.max, yTicks: [0, 2, 4, 6, 8, 10, 12, 14, 16] },
@@ -495,7 +522,8 @@
             time: recTime,
             weight: recWeight,
             height: recHeight,
-            head: recHead
+            head: recHead,
+            notes: recNotes.trim()
           });
           setEditingRecordId(null);
           setShowRecordModal(false);
@@ -509,6 +537,7 @@
           weight: recWeight,
           height: recHeight,
           head: recHead,
+          notes: recNotes.trim(),
           plotOnChart: window.confirm('是否要將這筆測量資料繪製在生長圖表上？')
         });
         setShowRecordModal(false);
@@ -618,6 +647,7 @@
                     setRecWeight(babyInfo.currentWeight || '');
                     setRecHeight(babyInfo.currentHeight || '');
                     setRecHead(babyInfo.currentHead || '');
+                    setRecNotes('');
                     setShowRecordModal(true);
                   }}
                   className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
@@ -765,6 +795,7 @@
                           {rec.height && <span>身長: <b className="text-slate-700">{rec.height} cm</b></span>}
                           {rec.head && <span>頭圍: <b className="text-slate-700">{rec.head} cm</b></span>}
                         </div>
+                        {rec.notes && <div className="text-[11px] text-slate-500 mt-1 whitespace-pre-wrap">備註：{rec.notes}</div>}
                       </div>
                       <button
                         onClick={() => {
@@ -774,6 +805,7 @@
                           setRecWeight(rec.weight || '');
                           setRecHeight(rec.height || '');
                           setRecHead(rec.head || '');
+                          setRecNotes(rec.notes || '');
                           setShowRecordModal(true);
                         }}
                         className="p-1 text-slate-400 hover:text-amber-600 transition-colors"
@@ -858,6 +890,29 @@
                       <label className="font-bold block mb-1">頭圍(cm)</label>
                       <input type="number" min="0" step="0.1" placeholder="34" value={recHead} onChange={(e) => setRecHead(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value)} className="w-full p-2 border rounded-xl" />
                     </div>
+                  </div>
+                  <div>
+                    <label className="font-bold block mb-1">備註（選填）</label>
+                    <textarea
+                      rows={2}
+                      value={recNotes}
+                      onChange={(e) => setRecNotes(e.target.value)}
+                      style={{ height: `${recNotesHeight}px` }}
+                      className="w-full p-2 border rounded-xl resize-y"
+                    />
+                    <button
+                      type="button"
+                      aria-label="拖曳調整測量備註欄位高度"
+                      title="拖曳調整高度"
+                      onPointerDown={handleRecNotesResizeStart}
+                      onPointerMove={handleRecNotesResizeMove}
+                      onPointerUp={handleRecNotesResizeEnd}
+                      onPointerCancel={handleRecNotesResizeEnd}
+                      onLostPointerCapture={handleRecNotesResizeEnd}
+                      onKeyDown={handleRecNotesResizeKeyDown}
+                      className="w-full flex items-center justify-center py-2"
+                      style={{ touchAction: 'none', minHeight: '44px', cursor: 'ns-resize' }}
+                    />
                   </div>
                   <div className="flex gap-2 pt-2">
                     <button type="button" onClick={() => { setShowRecordModal(false); setEditingRecordId(null); }} className="flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold">取消</button>
@@ -3258,20 +3313,22 @@
                     : {
                         table: {
                           headerRows: 1,
-                          widths: ['*', '*', '*', '*'],
+                          widths: ['1.2*', '0.8*', '0.8*', '0.8*', '2*'],
                           dontBreakRows: true,
                           body: [
                             [
                               { text: '日期／時間', style: 'tableHeader' },
                               { text: '體重 (kg)', style: 'tableHeader' },
                               { text: '身長 (cm)', style: 'tableHeader' },
-                              { text: '頭圍 (cm)', style: 'tableHeader' }
+                              { text: '頭圍 (cm)', style: 'tableHeader' },
+                              { text: '備註', style: 'tableHeader' }
                             ],
                             ...pdfGrowthHistory.map((rec) => [
                               { text: `${rec.date || '—'}${rec.time ? ` ${rec.time}` : ''}`, style: 'tableCell' },
                               { text: rec.weight || '—', style: 'tableCell' },
                               { text: rec.height || '—', style: 'tableCell' },
-                              { text: rec.head || '—', style: 'tableCell' }
+                              { text: rec.head || '—', style: 'tableCell' },
+                              { text: rec.notes || '—', style: 'tableCell' }
                             ])
                           ]
                         },
@@ -5148,6 +5205,7 @@
                       <th className="p-2 border-b">體重 (kg)</th>
                       <th className="p-2 border-b">身長 (cm)</th>
                       <th className="p-2 border-b">頭圍 (cm)</th>
+                      <th className="p-2 border-b">備註</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5157,6 +5215,7 @@
                         <td className="p-2">{rec.weight || '—'}</td>
                         <td className="p-2">{rec.height || '—'}</td>
                         <td className="p-2">{rec.head || '—'}</td>
+                        <td className="p-2 whitespace-pre-wrap">{rec.notes || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

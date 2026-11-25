@@ -435,6 +435,33 @@ const PretermGrowthChart = ({
   const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
   const [recHeight, setRecHeight] = React.useState(babyInfo.currentHeight || '');
   const [recHead, setRecHead] = React.useState(babyInfo.currentHead || '');
+  const [recNotes, setRecNotes] = React.useState('');
+  const [recNotesHeight, setRecNotesHeight] = React.useState(72);
+  const recNotesResizeRef = React.useRef(null);
+  const handleRecNotesResizeStart = event => {
+    if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
+    recNotesResizeRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: recNotesHeight
+    };
+  };
+  const handleRecNotesResizeMove = event => {
+    const resize = recNotesResizeRef.current;
+    if (!resize || resize.pointerId !== event.pointerId) return;
+    setRecNotesHeight(Math.max(56, Math.min(360, resize.startHeight + event.clientY - resize.startY)));
+  };
+  const handleRecNotesResizeEnd = event => {
+    if (recNotesResizeRef.current?.pointerId === event.pointerId) {
+      recNotesResizeRef.current = null;
+    }
+  };
+  const handleRecNotesResizeKeyDown = event => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    const heightChange = event.key === 'ArrowUp' ? -16 : 16;
+    setRecNotesHeight(height => Math.max(56, Math.min(360, height + heightChange)));
+  };
   const metricConfig = {
     weight: {
       label: '體重',
@@ -577,7 +604,8 @@ const PretermGrowthChart = ({
         time: recTime,
         weight: recWeight,
         height: recHeight,
-        head: recHead
+        head: recHead,
+        notes: recNotes.trim()
       });
       setEditingRecordId(null);
       setShowRecordModal(false);
@@ -590,6 +618,7 @@ const PretermGrowthChart = ({
       weight: recWeight,
       height: recHeight,
       head: recHead,
+      notes: recNotes.trim(),
       plotOnChart: window.confirm('是否要將這筆測量資料繪製在生長圖表上？')
     });
     setShowRecordModal(false);
@@ -674,6 +703,7 @@ const PretermGrowthChart = ({
       setRecWeight(babyInfo.currentWeight || '');
       setRecHeight(babyInfo.currentHeight || '');
       setRecHead(babyInfo.currentHead || '');
+      setRecNotes('');
       setShowRecordModal(true);
     },
     className: "px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
@@ -895,7 +925,9 @@ const PretermGrowthChart = ({
       className: "text-slate-700"
     }, rec.height, " cm")), rec.head && /*#__PURE__*/React.createElement("span", null, "頭圍: ", /*#__PURE__*/React.createElement("b", {
       className: "text-slate-700"
-    }, rec.head, " cm")))), /*#__PURE__*/React.createElement("button", {
+    }, rec.head, " cm"))), rec.notes && /*#__PURE__*/React.createElement("div", {
+      className: "text-[11px] text-slate-500 mt-1 whitespace-pre-wrap"
+    }, "備註：", rec.notes)), /*#__PURE__*/React.createElement("button", {
       onClick: () => {
         setEditingRecordId(rec.id);
         setRecDate(cleanDate);
@@ -903,6 +935,7 @@ const PretermGrowthChart = ({
         setRecWeight(rec.weight || '');
         setRecHeight(rec.height || '');
         setRecHead(rec.head || '');
+        setRecNotes(rec.notes || '');
         setShowRecordModal(true);
       },
       className: "p-1 text-slate-400 hover:text-amber-600 transition-colors",
@@ -1005,7 +1038,33 @@ const PretermGrowthChart = ({
     value: recHead,
     onChange: e => setRecHead(e.target.value !== '' && Number(e.target.value) < 0 ? '0' : e.target.value),
     className: "w-full p-2 border rounded-xl"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 2,
+    value: recNotes,
+    onChange: e => setRecNotes(e.target.value),
+    style: {
+      height: `${recNotesHeight}px`
+    },
+    className: "w-full p-2 border rounded-xl resize-y"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "拖曳調整測量備註欄位高度",
+    title: "拖曳調整高度",
+    onPointerDown: handleRecNotesResizeStart,
+    onPointerMove: handleRecNotesResizeMove,
+    onPointerUp: handleRecNotesResizeEnd,
+    onPointerCancel: handleRecNotesResizeEnd,
+    onLostPointerCapture: handleRecNotesResizeEnd,
+    onKeyDown: handleRecNotesResizeKeyDown,
+    className: "w-full flex items-center justify-center py-2",
+    style: {
+      touchAction: 'none',
+      minHeight: '44px',
+      cursor: 'ns-resize'
+    }
+  })), /*#__PURE__*/React.createElement("div", {
     className: "flex gap-2 pt-2"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -3291,7 +3350,7 @@ function App() {
           } : {
             table: {
               headerRows: 1,
-              widths: ['*', '*', '*', '*'],
+              widths: ['1.2*', '0.8*', '0.8*', '0.8*', '2*'],
               dontBreakRows: true,
               body: [[{
                 text: '日期／時間',
@@ -3305,6 +3364,9 @@ function App() {
               }, {
                 text: '頭圍 (cm)',
                 style: 'tableHeader'
+              }, {
+                text: '備註',
+                style: 'tableHeader'
               }], ...pdfGrowthHistory.map(rec => [{
                 text: `${rec.date || '—'}${rec.time ? ` ${rec.time}` : ''}`,
                 style: 'tableCell'
@@ -3316,6 +3378,9 @@ function App() {
                 style: 'tableCell'
               }, {
                 text: rec.head || '—',
+                style: 'tableCell'
+              }, {
+                text: rec.notes || '—',
                 style: 'tableCell'
               }])]
             },
@@ -5042,7 +5107,9 @@ function App() {
     className: "p-2 border-b"
   }, "身長 (cm)"), /*#__PURE__*/React.createElement("th", {
     className: "p-2 border-b"
-  }, "頭圍 (cm)"))), /*#__PURE__*/React.createElement("tbody", null, growthHistory.map(rec => /*#__PURE__*/React.createElement("tr", {
+  }, "頭圍 (cm)"), /*#__PURE__*/React.createElement("th", {
+    className: "p-2 border-b"
+  }, "備註"))), /*#__PURE__*/React.createElement("tbody", null, growthHistory.map(rec => /*#__PURE__*/React.createElement("tr", {
     key: rec.id,
     className: "border-b"
   }, /*#__PURE__*/React.createElement("td", {
@@ -5053,7 +5120,9 @@ function App() {
     className: "p-2"
   }, rec.height || '—'), /*#__PURE__*/React.createElement("td", {
     className: "p-2"
-  }, rec.head || '—')))))), /*#__PURE__*/React.createElement("div", {
+  }, rec.head || '—'), /*#__PURE__*/React.createElement("td", {
+    className: "p-2 whitespace-pre-wrap"
+  }, rec.notes || '—')))))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "font-bold text-sm text-slate-800 border-b pb-1"
