@@ -3,11 +3,17 @@ const path = require('path');
 
 const indexPath = path.join(__dirname, '..', 'index.html');
 const indexHtml = fs.readFileSync(indexPath, 'utf8');
-const timestampPattern = /(\.\/js\/app\.bundle\.js\?v=)\d+(?=["'])/g;
-const matches = [...indexHtml.matchAll(timestampPattern)];
+const appBundleTimestampPattern = /(\.\/js\/app\.bundle\.js\?v=)\d+(?=["'])/g;
+const chartScaleTimestampPattern = /(\.\/js\/chart-scale\.js\?v=)\d+(?=["'])/g;
+const appBundleMatches = [...indexHtml.matchAll(appBundleTimestampPattern)];
+const chartScaleMatches = [...indexHtml.matchAll(chartScaleTimestampPattern)];
 
-if (matches.length !== 1) {
-  throw new Error(`Expected exactly one app bundle timestamp in index.html, found ${matches.length}.`);
+if (appBundleMatches.length !== 1) {
+  throw new Error(`Expected exactly one app bundle timestamp in index.html, found ${appBundleMatches.length}.`);
+}
+
+if (chartScaleMatches.length !== 1) {
+  throw new Error(`Expected exactly one chart-scale timestamp in index.html, found ${chartScaleMatches.length}.`);
 }
 
 const now = new Date();
@@ -19,7 +25,9 @@ const timestamp = [
   String(now.getMinutes()).padStart(2, '0'),
   String(now.getSeconds()).padStart(2, '0')
 ].join('');
-const updatedHtml = indexHtml.replace(timestampPattern, `$1${timestamp}`);
+const updatedHtml = indexHtml
+  .replace(appBundleTimestampPattern, `$1${timestamp}`)
+  .replace(chartScaleTimestampPattern, `$1${timestamp}`);
 
 fs.writeFileSync(indexPath, updatedHtml);
 console.log(`Updated app bundle timestamp to ${timestamp}.`);

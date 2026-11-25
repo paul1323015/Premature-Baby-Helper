@@ -19,4 +19,23 @@ describe('growth chart month range', () => {
     expect(appSource.match(/GrowthChartScale\.getGrowthChartMaxMonth/g)).toHaveLength(2);
     expect(appSource).toMatch(/monthTicks\.push\(maxX\)/);
   });
+
+  test('chart scale helper shares the app bundle cache version', () => {
+    const indexSource = fs.readFileSync(
+      path.join(__dirname, '..', 'index.html'),
+      'utf8'
+    );
+    const timestampScript = fs.readFileSync(
+      path.join(__dirname, '..', 'scripts', 'update-app-timestamp.js'),
+      'utf8'
+    );
+
+    const appBundleVersion = indexSource.match(/\.\/js\/app\.bundle\.js\?v=(\d+)/);
+    const chartScaleVersion = indexSource.match(/\.\/js\/chart-scale\.js\?v=(\d+)/);
+
+    expect(appBundleVersion).not.toBeNull();
+    expect(chartScaleVersion).not.toBeNull();
+    expect(chartScaleVersion[1]).toBe(appBundleVersion[1]);
+    expect(timestampScript).toMatch(/chartScaleTimestampPattern/);
+  });
 });
