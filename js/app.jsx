@@ -5450,7 +5450,7 @@
                       <div>
                         <label className="font-bold block mb-1">備註（選填）</label>
                         <textarea
-                          rows={3}
+                          rows={5}
                           value={solidFoodForm.notes}
                           onChange={(e) => setSolidFoodForm({ ...solidFoodForm, notes: e.target.value })}
                           placeholder="記錄試吃情形或其他觀察..."
@@ -5663,7 +5663,7 @@
                   <div>
                     <label className="font-bold block mb-1">備註（選填）</label>
                     <textarea
-                      rows={3}
+                      rows={5}
                       value={solidFoodForm.notes}
                       onChange={(e) => setSolidFoodForm({ ...solidFoodForm, notes: e.target.value })}
                       placeholder="記錄試吃情形或其他觀察..."
@@ -5865,7 +5865,7 @@
                           value={noteContent}
                           onFocus={() => setNoteVoiceTarget('content')}
                           onChange={(e) => setNoteContent(e.target.value)}
-                          className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                          className="min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white resize-y focus:outline-none focus:ring-2 focus:ring-amber-400"
                         />
                         {noteVoiceControls}
                       </div>

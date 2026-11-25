@@ -5376,7 +5376,7 @@ function App() {
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
-    rows: 3,
+    rows: 5,
     value: solidFoodForm.notes,
     onChange: e => setSolidFoodForm({
       ...solidFoodForm,
@@ -5642,7 +5642,7 @@ function App() {
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
-    rows: 3,
+    rows: 5,
     value: solidFoodForm.notes,
     onChange: e => setSolidFoodForm({
       ...solidFoodForm,
@@ -5888,7 +5888,7 @@ function App() {
     value: noteContent,
     onFocus: () => setNoteVoiceTarget('content'),
     onChange: e => setNoteContent(e.target.value),
-    className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+    className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white resize-y focus:outline-none focus:ring-2 focus:ring-amber-400"
   }), noteVoiceControls), noteVoiceField !== null && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
