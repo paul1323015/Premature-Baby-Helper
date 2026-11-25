@@ -1,4 +1,55 @@
-# Premature-Baby-Helper
-巴掌小太陽·早產兒照護小幫手
+# 巴掌小太陽・早產兒照護小幫手
 
-Run `npm run build:css` after changing Tailwind classes to regenerate `css/tailwind.css`.
+## 開啟程式
+
+### 建議方式：使用 VS Code Live Server
+
+1. 將專案資料夾解壓縮，並在 VS Code 開啟該資料夾。
+2. 若尚未安裝，請在 VS Code 擴充功能中安裝 **Live Server**。
+3. 在檔案總管中對 `index.html` 按右鍵，選擇 **Open with Live Server**。
+4. 瀏覽器開啟本機網址後即可使用。
+
+也可以直接用瀏覽器開啟 `index.html`。不過不同瀏覽器對本機檔案的儲存與麥克風權限處理可能不同；若功能異常，請改用 Live Server。
+
+## 備份與還原資料
+
+1. 在程式上方開啟 **備份/還原**。
+2. 在「匯出備份」按 **下載備份檔案**，並將下載的 JSON 檔妥善保存。
+3. 要還原時，在「還原資料」按 **選擇備份檔案**，選取先前下載的 JSON 檔。
+4. 匯入前建議先下載目前資料的備份。還原會將備份資料載入程式，請確認選取正確檔案。
+
+更換裝置、瀏覽器或瀏覽器設定檔時，請先匯出備份，再於新環境匯入。ZIP 專案備份不包含瀏覽器內儲存的照護資料，照護資料需另外使用程式的備份/還原功能匯出。
+
+## 資料與隱私
+
+- 寶寶基本資料、照護紀錄與設定保存在目前瀏覽器的本機儲存空間（Local Storage）。
+- 程式不會自動將這些資料同步到其他裝置，也不會主動上傳至伺服器。
+- 清除瀏覽器網站資料、改用其他瀏覽器或裝置，可能無法看到原有資料；請定期下載備份。
+- 使用相同瀏覽器與相同開啟方式／本機網址，較容易繼續使用同一份本機資料。從 `file://` 切換到 Live Server 網址時，瀏覽器可能會視為不同位置。
+- 備份檔可能包含寶寶與家庭的個人資料，請保存於安全位置，不要公開分享。
+
+## 開發者
+
+安裝專案依賴：
+
+```powershell
+npm ci
+```
+
+執行測試：
+
+```powershell
+npm test -- --runInBand
+```
+
+修改 Tailwind class 後，重新產生靜態 CSS：
+
+```powershell
+npm run build:css
+```
+
+重新建置應用程式 bundle：
+
+```powershell
+npm run build:app
+```
