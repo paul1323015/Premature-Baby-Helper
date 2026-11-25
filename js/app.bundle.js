@@ -3592,6 +3592,32 @@ function App() {
     const heightChange = event.key === 'ArrowUp' ? -16 : 16;
     setSolidFoodReactionHeight(height => Math.max(56, Math.min(360, height + heightChange)));
   };
+  const [vaccinationSideEffectsHeight, setVaccinationSideEffectsHeight] = React.useState(72);
+  const vaccinationSideEffectsResizeRef = React.useRef(null);
+  const handleVaccinationSideEffectsResizeStart = event => {
+    if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
+    vaccinationSideEffectsResizeRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: vaccinationSideEffectsHeight
+    };
+  };
+  const handleVaccinationSideEffectsResizeMove = event => {
+    const resize = vaccinationSideEffectsResizeRef.current;
+    if (!resize || resize.pointerId !== event.pointerId) return;
+    setVaccinationSideEffectsHeight(Math.max(56, Math.min(360, resize.startHeight + event.clientY - resize.startY)));
+  };
+  const handleVaccinationSideEffectsResizeEnd = event => {
+    if (vaccinationSideEffectsResizeRef.current?.pointerId === event.pointerId) {
+      vaccinationSideEffectsResizeRef.current = null;
+    }
+  };
+  const handleVaccinationSideEffectsResizeKeyDown = event => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    const heightChange = event.key === 'ArrowUp' ? -16 : 16;
+    setVaccinationSideEffectsHeight(height => Math.max(56, Math.min(360, height + heightChange)));
+  };
   const safeFoods = ['十倍粥', '南瓜泥', '地瓜泥', '胡蘿蔔泥', '蘋果泥'];
   const allergyWarningFoods = ['花生', '堅果', '蛋', '牛奶', '小麥', '魚類', '蝦蟹'];
   const todayTotalMilk = React.useMemo(() => {
@@ -5503,14 +5529,34 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+  }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 2,
     value: vaccinationForm.sideEffects,
     onChange: e => setVaccinationForm({
       ...vaccinationForm,
       sideEffects: e.target.value
     }),
     placeholder: "例如：發燒、腫脹",
-    className: "w-full p-2 border rounded-xl"
+    style: {
+      height: `${vaccinationSideEffectsHeight}px`
+    },
+    className: "w-full p-2 border rounded-xl resize-y"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "拖曳調整副作用欄位高度",
+    title: "拖曳調整高度",
+    onPointerDown: handleVaccinationSideEffectsResizeStart,
+    onPointerMove: handleVaccinationSideEffectsResizeMove,
+    onPointerUp: handleVaccinationSideEffectsResizeEnd,
+    onPointerCancel: handleVaccinationSideEffectsResizeEnd,
+    onLostPointerCapture: handleVaccinationSideEffectsResizeEnd,
+    onKeyDown: handleVaccinationSideEffectsResizeKeyDown,
+    className: "w-full flex items-center justify-center py-2",
+    style: {
+      touchAction: 'none',
+      minHeight: '44px',
+      cursor: 'ns-resize'
+    }
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
@@ -5826,14 +5872,34 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
+  }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("textarea", {
+    rows: 2,
     value: vaccinationForm.sideEffects,
     onChange: e => setVaccinationForm({
       ...vaccinationForm,
       sideEffects: e.target.value
     }),
     placeholder: "例如：發燒、腫脹",
-    className: "w-full p-2 border rounded-xl"
+    style: {
+      height: `${vaccinationSideEffectsHeight}px`
+    },
+    className: "w-full p-2 border rounded-xl resize-y"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "拖曳調整副作用欄位高度",
+    title: "拖曳調整高度",
+    onPointerDown: handleVaccinationSideEffectsResizeStart,
+    onPointerMove: handleVaccinationSideEffectsResizeMove,
+    onPointerUp: handleVaccinationSideEffectsResizeEnd,
+    onPointerCancel: handleVaccinationSideEffectsResizeEnd,
+    onLostPointerCapture: handleVaccinationSideEffectsResizeEnd,
+    onKeyDown: handleVaccinationSideEffectsResizeKeyDown,
+    className: "w-full flex items-center justify-center py-2",
+    style: {
+      touchAction: 'none',
+      minHeight: '44px',
+      cursor: 'ns-resize'
+    }
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
