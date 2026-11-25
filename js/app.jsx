@@ -5491,9 +5491,7 @@
                           onKeyDown={handleSolidFoodReactionResizeKeyDown}
                           className="w-full flex items-center justify-center py-2"
                           style={{ touchAction: 'none', minHeight: '44px', cursor: 'ns-resize' }}
-                        >
-                          <span aria-hidden="true" className="block rounded-full bg-slate-400" style={{ width: '2.5rem', height: '0.25rem' }} />
-                        </button>
+                        />
                       </div>
                       <div>
                         <label className="font-bold block mb-1">備註（選填）</label>
@@ -5726,9 +5724,7 @@
                       onKeyDown={handleSolidFoodReactionResizeKeyDown}
                       className="w-full flex items-center justify-center py-2"
                       style={{ touchAction: 'none', minHeight: '44px', cursor: 'ns-resize' }}
-                    >
-                      <span aria-hidden="true" className="block rounded-full bg-slate-400" style={{ width: '2.5rem', height: '0.25rem' }} />
-                    </button>
+                    />
                   </div>
                   <div>
                     <label className="font-bold block mb-1">備註（選填）</label>

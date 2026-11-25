@@ -5419,14 +5419,7 @@ function App() {
       minHeight: '44px',
       cursor: 'ns-resize'
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    className: "block rounded-full bg-slate-400",
-    style: {
-      width: '2.5rem',
-      height: '0.25rem'
-    }
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 5,
@@ -5712,14 +5705,7 @@ function App() {
       minHeight: '44px',
       cursor: 'ns-resize'
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    "aria-hidden": "true",
-    className: "block rounded-full bg-slate-400",
-    style: {
-      width: '2.5rem',
-      height: '0.25rem'
-    }
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 5,
