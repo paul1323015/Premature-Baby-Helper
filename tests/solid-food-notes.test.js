@@ -54,7 +54,7 @@ describe('solid food notes', () => {
     expect(appSource).toContain('if (vaccinationRecord?.doseNumber) return `${vaccinationRecord.doseNumber} 劑`');
     expect(appSource).toContain('dose: formatVaccinationDose(vaccinationForm)');
     expect(appSource).toContain('const parseVaccinationDose = dose =>');
-    expect(appSource).toContain("{ value: 'mL', label: 'mL（毫升）' }");
+    expect(appSource).toContain("{ value: 'ml', label: 'ml（毫升）' }");
     expect(appSource).toContain("{ value: 'mcg', label: 'mcg（微克）' }");
     expect(appSource).toContain("{ value: 'IU', label: 'IU（國際單位）' }");
     expect(appSource).toContain(".replace(/[μµ]g/gi, 'mcg')");

@@ -1385,7 +1385,7 @@ function App() {
     const doseUnit = match[2].trim();
     const normalizedDoseUnit = doseUnit.toLowerCase();
     const knownDoseUnits = {
-      ml: 'mL',
+      ml: 'ml',
       mg: 'mg',
       'μg': 'mcg',
       'µg': 'mcg',
@@ -1401,8 +1401,8 @@ function App() {
     };
   };
   const vaccinationDoseUnitOptions = [{
-    value: 'mL',
-    label: 'mL（毫升）'
+    value: 'ml',
+    label: 'ml（毫升）'
   }, {
     value: 'mg',
     label: 'mg（毫克）'
@@ -3541,7 +3541,7 @@ function App() {
     vaccineName: '',
     doseNumber: 1,
     dose: '',
-    doseUnit: 'mL',
+    doseUnit: 'ml',
     customDoseUnit: '',
     date: getLocalDateInputValue(),
     location: '',
@@ -3932,7 +3932,7 @@ function App() {
       vaccineName: '',
       doseNumber: 1,
       dose: '',
-      doseUnit: 'mL',
+      doseUnit: 'ml',
       customDoseUnit: '',
       date: getLocalDateInputValue(),
       location: '',

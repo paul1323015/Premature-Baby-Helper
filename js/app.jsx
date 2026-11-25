@@ -1230,7 +1230,7 @@
         const doseUnit = match[2].trim();
         const normalizedDoseUnit = doseUnit.toLowerCase();
         const knownDoseUnits = {
-          ml: 'mL',
+          ml: 'ml',
           mg: 'mg',
           'μg': 'mcg',
           'µg': 'mcg',
@@ -1246,7 +1246,7 @@
         };
       };
       const vaccinationDoseUnitOptions = [
-        { value: 'mL', label: 'mL（毫升）' },
+        { value: 'ml', label: 'ml（毫升）' },
         { value: 'mg', label: 'mg（毫克）' },
         { value: 'mcg', label: 'mcg（微克）' },
         { value: 'IU', label: 'IU（國際單位）' },
@@ -3468,7 +3468,7 @@
       const [showVaccinationModal, setShowVaccinationModal] = React.useState(false);
       const [showSolidFoodModal, setShowSolidFoodModal] = React.useState(false);
       const [vaccinationForm, setVaccinationForm] = React.useState({
-        vaccineName: '', doseNumber: 1, dose: '', doseUnit: 'mL', customDoseUnit: '', date: getLocalDateInputValue(), location: '', sideEffects: '', notes: ''
+        vaccineName: '', doseNumber: 1, dose: '', doseUnit: 'ml', customDoseUnit: '', date: getLocalDateInputValue(), location: '', sideEffects: '', notes: ''
       });
       const [solidFoodForm, setSolidFoodForm] = React.useState({
         foodName: '', date: getLocalDateInputValue(), amount: '', allergySeverity: 'none', reactions: '', notes: ''
@@ -3860,7 +3860,7 @@
         setVaccinationLogs(prevLogs => [record, ...prevLogs]);
         localStorage.setItem('sun_baby_vaccination_logs_v1', JSON.stringify([record, ...vaccinationLogs]));
         setShowVaccinationModal(false);
-        setVaccinationForm({ vaccineName: '', doseNumber: 1, dose: '', doseUnit: 'mL', customDoseUnit: '', date: getLocalDateInputValue(), location: '', sideEffects: '', notes: '' });
+        setVaccinationForm({ vaccineName: '', doseNumber: 1, dose: '', doseUnit: 'ml', customDoseUnit: '', date: getLocalDateInputValue(), location: '', sideEffects: '', notes: '' });
         showToast('💉 已新增疫苗接種紀錄！');
       };
 
