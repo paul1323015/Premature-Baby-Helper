@@ -457,7 +457,7 @@
       const maxBabyMonth = babyMonths.length > 0 ? Math.max(...babyMonths) : 12;
 
       const minX = Math.min(-2, Math.floor(minBabyMonth - 0.5));
-      const maxX = Math.max(36, Math.ceil(Math.min(36, maxBabyMonth + 1)));
+      const maxX = GrowthChartScale.getGrowthChartMaxMonth(maxBabyMonth);
 
       const xScale = (month) => padding.left + ((month - minX) / (maxX - minX)) * (width - padding.left - padding.right);
       const yScale = (val) => GrowthChartScale.mapValueToY(val, { min: metricConfig.minY, max: metricConfig.maxY }, height, padding);
@@ -3130,10 +3130,10 @@
                 const age = getAgesForDate(date, babyInfo.birthDate, babyInfo.dueDate);
                 return { age: age.correctedDays / 30.4375, value };
               })
-              .filter(point => point !== null && point.age <= 36 && point.value >= metricConfig.minY && point.value <= metricConfig.maxY)
+              .filter(point => point !== null && point.value >= metricConfig.minY && point.value <= metricConfig.maxY)
               .sort((a, b) => a.age - b.age);
             const minX = Math.min(-2, Math.floor((points.length ? Math.min(...points.map(point => point.age)) : 0) - 0.5));
-            const maxX = Math.max(36, Math.ceil(Math.min(36, (points.length ? Math.max(...points.map(point => point.age)) : 12) + 1)));
+            const maxX = GrowthChartScale.getGrowthChartMaxMonth(points.length ? Math.max(...points.map(point => point.age)) : 12);
             const xScale = month => chartPadding.left + ((month - minX) / (maxX - minX)) * (chartWidth - chartPadding.left - chartPadding.right);
             const yScale = value => GrowthChartScale.mapValueToY(value, { min: metricConfig.minY, max: metricConfig.maxY }, chartHeight, chartPadding);
             const svg = [
@@ -3145,11 +3145,16 @@
               svg.push(`<line x1="${chartPadding.left}" y1="${y}" x2="${chartWidth - chartPadding.right}" y2="${y}" stroke="#e2e8f0" stroke-width="1"/>`);
               svg.push(`<text x="${chartPadding.left - 8}" y="${y + 4}" text-anchor="end" font-family="sans-serif" font-size="11" fill="#475569">${value}</text>`);
             });
+            const monthTicks = [];
             for (let month = Math.ceil(minX / 6) * 6; month <= maxX; month += 6) {
+              monthTicks.push(month);
+            }
+            if (monthTicks[monthTicks.length - 1] !== maxX) monthTicks.push(maxX);
+            monthTicks.forEach(month => {
               const x = xScale(month);
               svg.push(`<line x1="${x}" y1="${chartPadding.top}" x2="${x}" y2="${plotBottom}" stroke="#f1f5f9" stroke-width="1"/>`);
               svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
-            }
+            });
             if (showZeroBaseline && minX <= 0 && maxX >= 0) {
               const zeroX = xScale(0);
               svg.push(`<line x1="${zeroX}" y1="${chartPadding.top}" x2="${zeroX}" y2="${plotBottom}" stroke="#d97706" stroke-width="2" stroke-dasharray="6 3"/>`);

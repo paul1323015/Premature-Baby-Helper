@@ -62,11 +62,17 @@
     return rows[rows.length - 1][percentileIndex];
   }
 
+  function getGrowthChartMaxMonth(maxRecordedMonth = 12) {
+    if (!Number.isFinite(maxRecordedMonth) || maxRecordedMonth <= 24) return 24;
+    return Math.ceil(maxRecordedMonth + 1);
+  }
+
   return {
     METRIC_DOMAINS,
     BOY_WEIGHT_PERCENTILES,
     GIRL_WEIGHT_PERCENTILES,
     mapValueToY,
-    interpolatePercentile
+    interpolatePercentile,
+    getGrowthChartMaxMonth
   };
 });
