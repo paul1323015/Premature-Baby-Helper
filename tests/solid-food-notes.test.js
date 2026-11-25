@@ -49,7 +49,19 @@ describe('solid food notes', () => {
   });
 
   test('vaccine dose is shown in the amount column and care log badge', () => {
+    expect(appSource).toContain("Object.prototype.hasOwnProperty.call(vaccinationRecord, 'dose')");
+    expect(appSource).toContain("return String(vaccinationRecord.dose || '')");
     expect(appSource).toContain('if (vaccinationRecord?.doseNumber) return `${vaccinationRecord.doseNumber} 劑`');
+    expect(appSource).toContain('dose: formatVaccinationDose(vaccinationForm)');
+    expect(appSource).toContain('const parseVaccinationDose = dose =>');
+    expect(appSource).toContain("{ value: 'mL', label: 'mL（毫升）' }");
+    expect(appSource).toContain("{ value: 'mcg', label: 'mcg（微克）' }");
+    expect(appSource).toContain("{ value: 'IU', label: 'IU（國際單位）' }");
+    expect(appSource).toContain(".replace(/[μµ]g/gi, 'mcg')");
+    expect(appSource.match(/vaccinationDoseUnitOptions\.map\(unit =>/g)).toHaveLength(2);
+    expect(appSource.match(/placeholder="例如：支、粒"/g)).toHaveLength(2);
+    expect(appSource.match(/className="grid grid-cols-1 gap-2"/g)).toHaveLength(2);
+    expect(appSource.match(/劑量（選填）/g)).toHaveLength(2);
     expect(appSource).toMatch(/const careLogAmount = formatCareLogAmount\(log\)/);
     expect(appSource.match(/formatCareLogAmount\(log\) \|\| '—'/g)).toHaveLength(2);
   });

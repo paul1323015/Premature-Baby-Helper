@@ -1374,9 +1374,63 @@ function App() {
     if (notes) details.push(`備註：${notes}`);
     return details.join('\n');
   };
+  const parseVaccinationDose = dose => {
+    const value = String(dose || '').trim();
+    const match = value.match(/^(\d+(?:\.\d+)?)\s*(.*)$/);
+    if (!match) return {
+      dose: value,
+      doseUnit: 'custom',
+      customDoseUnit: ''
+    };
+    const doseUnit = match[2].trim();
+    const normalizedDoseUnit = doseUnit.toLowerCase();
+    const knownDoseUnits = {
+      ml: 'mL',
+      mg: 'mg',
+      'μg': 'mcg',
+      'µg': 'mcg',
+      mcg: 'mcg',
+      iu: 'IU',
+      '滴': '滴'
+    };
+    const matchedDoseUnit = knownDoseUnits[normalizedDoseUnit];
+    return {
+      dose: match[1],
+      doseUnit: matchedDoseUnit || 'custom',
+      customDoseUnit: matchedDoseUnit ? '' : doseUnit
+    };
+  };
+  const vaccinationDoseUnitOptions = [{
+    value: 'mL',
+    label: 'mL（毫升）'
+  }, {
+    value: 'mg',
+    label: 'mg（毫克）'
+  }, {
+    value: 'mcg',
+    label: 'mcg（微克）'
+  }, {
+    value: 'IU',
+    label: 'IU（國際單位）'
+  }, {
+    value: '滴',
+    label: '滴'
+  }, {
+    value: 'custom',
+    label: '自訂'
+  }];
+  const formatVaccinationDose = form => {
+    const dose = String(form.dose || '').trim();
+    if (!dose) return '';
+    const doseUnit = form.doseUnit === 'custom' ? String(form.customDoseUnit || '').trim() : form.doseUnit;
+    return doseUnit ? `${dose} ${doseUnit}` : dose;
+  };
   const formatCareLogAmount = log => {
     const solidFoodRecord = getSolidFoodRecordForLog(log);
     const vaccinationRecord = getVaccinationRecordForLog(log);
+    if (vaccinationRecord && Object.prototype.hasOwnProperty.call(vaccinationRecord, 'dose')) {
+      return String(vaccinationRecord.dose || '').replace(/[μµ]g/gi, 'mcg');
+    }
     if (log.amount) return String(log.amount);
     if (solidFoodRecord?.amount) return `${solidFoodRecord.amount}ml/湯匙`;
     if (vaccinationRecord?.doseNumber) return `${vaccinationRecord.doseNumber} 劑`;
@@ -3486,6 +3540,9 @@ function App() {
   const [vaccinationForm, setVaccinationForm] = React.useState({
     vaccineName: '',
     doseNumber: 1,
+    dose: '',
+    doseUnit: 'mL',
+    customDoseUnit: '',
     date: getLocalDateInputValue(),
     location: '',
     sideEffects: '',
@@ -3519,6 +3576,7 @@ function App() {
           ...existingRecord,
           vaccineName: vaccinationForm.vaccineName.trim(),
           doseNumber: Number(vaccinationForm.doseNumber) || 1,
+          dose: formatVaccinationDose(vaccinationForm),
           date: vaccinationForm.date,
           location: vaccinationForm.location.trim(),
           sideEffects: vaccinationForm.sideEffects.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
@@ -3545,6 +3603,7 @@ function App() {
         id: String(Date.now()),
         vaccineName: vaccinationForm.vaccineName.trim(),
         doseNumber: Number(vaccinationForm.doseNumber) || 1,
+        dose: formatVaccinationDose(vaccinationForm),
         date: vaccinationForm.date,
         location: vaccinationForm.location.trim(),
         sideEffects: vaccinationForm.sideEffects.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
@@ -3818,6 +3877,7 @@ function App() {
         setVaccinationForm({
           vaccineName: record.vaccineName,
           doseNumber: record.doseNumber || 1,
+          ...parseVaccinationDose(record.dose),
           date: record.date || getLocalDateInputValue(),
           location: record.location || '',
           sideEffects: Array.isArray(record.sideEffects) ? record.sideEffects.join('、') : record.sideEffects || '',
@@ -3859,6 +3919,7 @@ function App() {
       id: String(Date.now()),
       vaccineName: vaccinationForm.vaccineName.trim(),
       doseNumber: Number(vaccinationForm.doseNumber) || 1,
+      dose: formatVaccinationDose(vaccinationForm),
       date: vaccinationForm.date,
       location: vaccinationForm.location.trim(),
       sideEffects: vaccinationForm.sideEffects.split(/[,，、\n]/).map(item => item.trim()).filter(Boolean),
@@ -3870,6 +3931,9 @@ function App() {
     setVaccinationForm({
       vaccineName: '',
       doseNumber: 1,
+      dose: '',
+      doseUnit: 'mL',
+      customDoseUnit: '',
       date: getLocalDateInputValue(),
       location: '',
       sideEffects: '',
@@ -5300,7 +5364,43 @@ function App() {
     }),
     placeholder: "例如：兒科診所",
     className: "w-full p-2 border rounded-xl"
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "劑量（選填）"), /*#__PURE__*/React.createElement("input", {
+    inputMode: "decimal",
+    value: vaccinationForm.dose,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      dose: e.target.value
+    }),
+    placeholder: "例如：0.5",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "單位"), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, vaccinationDoseUnitOptions.map(unit => /*#__PURE__*/React.createElement("button", {
+    key: unit.value,
+    type: "button",
+    onClick: () => setVaccinationForm({
+      ...vaccinationForm,
+      doseUnit: unit.value
+    }),
+    "aria-pressed": vaccinationForm.doseUnit === unit.value,
+    className: `min-w-0 p-2 border rounded-xl text-left whitespace-normal ${vaccinationForm.doseUnit === unit.value ? 'border-purple-400 bg-purple-50 text-purple-700' : 'border-slate-300 bg-white text-slate-700'}`
+  }, unit.label))))), vaccinationForm.doseUnit === 'custom' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "自訂單位"), /*#__PURE__*/React.createElement("input", {
+    value: vaccinationForm.customDoseUnit,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      customDoseUnit: e.target.value
+    }),
+    placeholder: "例如：支、粒",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "副作用（以逗號分隔）"), /*#__PURE__*/React.createElement("input", {
     value: vaccinationForm.sideEffects,
@@ -5545,7 +5645,43 @@ function App() {
       date: e.target.value
     }),
     className: "w-full p-2 border rounded-xl"
-  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 gap-2"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "劑量（選填）"), /*#__PURE__*/React.createElement("input", {
+    inputMode: "decimal",
+    value: vaccinationForm.dose,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      dose: e.target.value
+    }),
+    placeholder: "例如：0.5",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "單位"), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-2 gap-2"
+  }, vaccinationDoseUnitOptions.map(unit => /*#__PURE__*/React.createElement("button", {
+    key: unit.value,
+    type: "button",
+    onClick: () => setVaccinationForm({
+      ...vaccinationForm,
+      doseUnit: unit.value
+    }),
+    "aria-pressed": vaccinationForm.doseUnit === unit.value,
+    className: `min-w-0 p-2 border rounded-xl text-left whitespace-normal ${vaccinationForm.doseUnit === unit.value ? 'border-purple-400 bg-purple-50 text-purple-700' : 'border-slate-300 bg-white text-slate-700'}`
+  }, unit.label))))), vaccinationForm.doseUnit === 'custom' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+    className: "font-bold block mb-1"
+  }, "自訂單位"), /*#__PURE__*/React.createElement("input", {
+    value: vaccinationForm.customDoseUnit,
+    onChange: e => setVaccinationForm({
+      ...vaccinationForm,
+      customDoseUnit: e.target.value
+    }),
+    placeholder: "例如：支、粒",
+    className: "w-full p-2 border rounded-xl"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "接種地點"), /*#__PURE__*/React.createElement("input", {
     value: vaccinationForm.location,
