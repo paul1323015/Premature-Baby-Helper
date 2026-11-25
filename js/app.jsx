@@ -6354,7 +6354,7 @@
                       }}
                       autoComplete="off"
                       autoFocus
-                      className="w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11 focus:outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11 focus:outline-none"
                     />
                     <button
                       type="button"
@@ -6378,7 +6378,7 @@
                         setPdfPasswordError('');
                       }}
                       autoComplete="off"
-                      className="w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11 focus:outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+                      className="w-full border border-slate-300 rounded-xl px-3 py-2.5 pr-11 focus:outline-none"
                     />
                     <button
                       type="button"
