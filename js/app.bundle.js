@@ -6283,7 +6283,7 @@ function App() {
   }, /*#__PURE__*/React.createElement("label", {
     htmlFor: "pdf-export-password-confirm",
     className: "block font-bold text-slate-700"
-  }, "再次輸入密碼"), /*#__PURE__*/React.createElement("div", {
+  }, "請再次輸入密碼"), /*#__PURE__*/React.createElement("div", {
     className: "relative"
   }, /*#__PURE__*/React.createElement("input", {
     id: "pdf-export-password-confirm",

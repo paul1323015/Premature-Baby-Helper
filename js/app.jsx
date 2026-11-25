@@ -6367,7 +6367,7 @@
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <label htmlFor="pdf-export-password-confirm" className="block font-bold text-slate-700">再次輸入密碼</label>
+                  <label htmlFor="pdf-export-password-confirm" className="block font-bold text-slate-700">請再次輸入密碼</label>
                   <div className="relative">
                     <input
                       id="pdf-export-password-confirm"
