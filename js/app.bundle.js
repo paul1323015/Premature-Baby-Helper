@@ -1486,6 +1486,7 @@ function App() {
   });
 
   // Notebook Form & Editing States
+  const NOTE_CATEGORY_MAX_LENGTH = 20;
   const [noteCategory, setNoteCategory] = React.useState(() => noteCategories.includes('回診提問') ? '回診提問' : '未分類');
   const [isCustomNoteCategory, setIsCustomNoteCategory] = React.useState(false);
   const [showNoteCategoryManager, setShowNoteCategoryManager] = React.useState(false);
@@ -2284,7 +2285,8 @@ function App() {
     }
     const selectionStart = field === 'category' && !isCustomNoteCategory ? 0 : input?.selectionStart ?? (field === 'category' ? noteCategory.length : field === 'newCategory' ? newNoteCategory.length : field === 'search' ? noteSearchQuery.length : input.value.length);
     const selectionEnd = field === 'category' && !isCustomNoteCategory ? noteCategory.length : input?.selectionEnd ?? selectionStart;
-    const maxLength = field === 'title' ? 30 : field === 'content' ? 1000 : Infinity;
+    const maxLength = field === 'title' ? 30 : field === 'content' ? 1000 : field === 'category' ? NOTE_CATEGORY_MAX_LENGTH : Infinity;
+    const voiceFieldLabel = field === 'title' ? '標題' : field === 'category' ? '分類' : '筆記內容';
     noteVoiceRecognitionRef.current = recognition;
     noteVoiceFieldRef.current = field;
     noteVoiceSelectionRef.current = {
@@ -2309,7 +2311,7 @@ function App() {
       const availableLength = Math.max(0, maxLength - (value.length - (end - start)));
       const insertedText = transcript.slice(0, availableLength);
       if (!insertedText) {
-        showToast(`⚠️ ${field === 'title' ? '標題' : '筆記內容'}已達字數上限，無法加入語音辨識結果。`);
+        showToast(`⚠️ ${voiceFieldLabel}已達字數上限，無法加入語音辨識結果。`);
         return;
       }
       const updatedValue = `${value.slice(0, start)}${insertedText}${value.slice(end)}`;
@@ -2327,7 +2329,7 @@ function App() {
         window.requestAnimationFrame(() => currentInput.setSelectionRange(caretPosition, caretPosition));
       }
       if (insertedText.length < transcript.length) {
-        showToast(`⚠️ 語音內容已加入至${field === 'title' ? '標題' : '筆記內容'}字數上限。`);
+        showToast(`⚠️ 語音內容已加入至${voiceFieldLabel}字數上限。`);
       }
     };
     recognition.onerror = event => {
@@ -5982,16 +5984,23 @@ function App() {
     value: ""
   }, "＋ 自訂分類…")), isCustomNoteCategory && /*#__PURE__*/React.createElement("div", {
     className: "flex items-center gap-2 mt-2"
-  }, /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 min-w-0"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
+  }, /*#__PURE__*/React.createElement("span", null, "自訂分類（最多 ", NOTE_CATEGORY_MAX_LENGTH, " 字）"), /*#__PURE__*/React.createElement("span", {
+    className: "text-[10px] text-slate-400"
+  }, noteCategory.length, "/", NOTE_CATEGORY_MAX_LENGTH)), /*#__PURE__*/React.createElement("input", {
     ref: noteCategoryInputRef,
     type: "text",
+    maxLength: NOTE_CATEGORY_MAX_LENGTH,
     value: noteCategory,
     onFocus: () => setNoteVoiceTarget('category'),
     onChange: e => setNoteCategory(e.target.value),
     placeholder: "請輸入分類名稱",
     "aria-label": "自訂標籤分類",
     className: "min-w-0 flex-1 p-2 text-xs border rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
-  }))), /*#__PURE__*/React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "w-full sm:w-2/3"
   }, /*#__PURE__*/React.createElement("label", {
     className: "block text-[11px] font-bold text-slate-600 mb-1 flex justify-between"
