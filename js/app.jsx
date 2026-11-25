@@ -1035,11 +1035,19 @@
         return saveGrowthChartOptions(nextOptions);
       };
 
+      const normalizeBirthWeightToGrams = value => {
+        if (value === '' || value === null || typeof value === 'undefined') return '';
+        const weight = Number(value);
+        if (!Number.isFinite(weight)) return value;
+        return String(weight > 0 && weight < 30 ? weight * 1000 : weight);
+      };
+
       const [babyInfo, setBabyInfo] = React.useState(() => {
         const saved = localStorage.getItem('sun_baby_profile_v5');
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
+            parsed.birthWeight = normalizeBirthWeightToGrams(parsed.birthWeight);
             if (parsed.birthDate) parsed.birthDate = sanitizeDateStr(parsed.birthDate);
             if (parsed.dueDate) parsed.dueDate = sanitizeDateStr(parsed.dueDate);
 
@@ -1943,6 +1951,7 @@
 
         if (backupData.babyInfo) {
           const cleanedProfile = { ...backupData.babyInfo };
+          cleanedProfile.birthWeight = normalizeBirthWeightToGrams(cleanedProfile.birthWeight);
           if (cleanedProfile.birthDate) cleanedProfile.birthDate = sanitizeDateStr(cleanedProfile.birthDate);
           if (cleanedProfile.dueDate) cleanedProfile.dueDate = sanitizeDateStr(cleanedProfile.dueDate);
           setBabyInfo(cleanedProfile);
@@ -3214,7 +3223,7 @@
                                 {
                                   text: [
                                     { text: '出生體重：', bold: true },
-                                    babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'
+                                    babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'
                                   ],
                                   style: 'fact'
                                 }
@@ -5024,7 +5033,7 @@
               <div><b>實際出生日：</b> {babyInfo.birthDate || '未填寫'}</div>
               <div><b>預產期：</b> {babyInfo.dueDate || '未填寫'}</div>
               <div><b>出生週數：</b> {babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'}</div>
-              <div><b>出生體重：</b> {babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'}</div>
+              <div><b>出生體重：</b> {babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'}</div>
               <div><b>實際月齡：</b> {ageData.chronoText.replace(/^實際\s*/, '')}</div>
               <div className="sm:col-span-2"><b>當前體重/身長/頭圍：</b> {babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—'} / {babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—'} / {babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—'}</div>
             </div>
@@ -5200,11 +5209,11 @@
                   </div>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div>
-                      <label className="font-bold block mb-1">出生體重(kg)</label>
+                      <label className="font-bold block mb-1">出生體重(g)</label>
                       <input
                         type="number"
-                        step="0.01"
-                        placeholder="2.8"
+                        step="1"
+                        placeholder="1450"
                         value={editFormData.birthWeight}
                         onChange={(e) => setEditFormData({ ...editFormData, birthWeight: e.target.value })}
                         className="w-full p-2 border rounded-xl"

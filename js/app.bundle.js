@@ -1201,11 +1201,18 @@ function App() {
     setGrowthChartOptions(nextOptions);
     return saveGrowthChartOptions(nextOptions);
   };
+  const normalizeBirthWeightToGrams = value => {
+    if (value === '' || value === null || typeof value === 'undefined') return '';
+    const weight = Number(value);
+    if (!Number.isFinite(weight)) return value;
+    return String(weight > 0 && weight < 30 ? weight * 1000 : weight);
+  };
   const [babyInfo, setBabyInfo] = React.useState(() => {
     const saved = localStorage.getItem('sun_baby_profile_v5');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
+        parsed.birthWeight = normalizeBirthWeightToGrams(parsed.birthWeight);
         if (parsed.birthDate) parsed.birthDate = sanitizeDateStr(parsed.birthDate);
         if (parsed.dueDate) parsed.dueDate = sanitizeDateStr(parsed.dueDate);
 
@@ -2008,6 +2015,7 @@ function App() {
       const cleanedProfile = {
         ...backupData.babyInfo
       };
+      cleanedProfile.birthWeight = normalizeBirthWeightToGrams(cleanedProfile.birthWeight);
       if (cleanedProfile.birthDate) cleanedProfile.birthDate = sanitizeDateStr(cleanedProfile.birthDate);
       if (cleanedProfile.dueDate) cleanedProfile.dueDate = sanitizeDateStr(cleanedProfile.dueDate);
       setBabyInfo(cleanedProfile);
@@ -3251,7 +3259,7 @@ function App() {
                     text: [{
                       text: '出生體重：',
                       bold: true
-                    }, babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'],
+                    }, babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'],
                     style: 'fact'
                   }]
                 }],
@@ -4913,7 +4921,7 @@ function App() {
     className: "text-xs text-slate-500"
   }, babyInfo.gender === 'girl' ? '👧 女寶' : '👦 男寶', " | ", ageData.correctedText))), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section grid grid-cols-1 gap-3 text-xs bg-amber-50/50 p-4 rounded-xl border border-amber-200 sm:grid-cols-2"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際出生日："), " ", babyInfo.birthDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "預產期："), " ", babyInfo.dueDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生週數："), " ", babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生體重："), " ", babyInfo.birthWeight ? `${babyInfo.birthWeight} kg` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際月齡："), " ", ageData.chronoText.replace(/^實際\s*/, '')), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際出生日："), " ", babyInfo.birthDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "預產期："), " ", babyInfo.dueDate || '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生週數："), " ", babyInfo.gestationalWeeks ? `${babyInfo.gestationalWeeks} 週` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "出生體重："), " ", babyInfo.birthWeight ? `${babyInfo.birthWeight} g` : '未填寫'), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "實際月齡："), " ", ageData.chronoText.replace(/^實際\s*/, '')), /*#__PURE__*/React.createElement("div", {
     className: "sm:col-span-2"
   }, /*#__PURE__*/React.createElement("b", null, "當前體重/身長/頭圍："), " ", babyInfo.currentWeight ? `${babyInfo.currentWeight} kg` : '—', " / ", babyInfo.currentHeight ? `${babyInfo.currentHeight} cm` : '—', " / ", babyInfo.currentHead ? `${babyInfo.currentHead} cm` : '—')), /*#__PURE__*/React.createElement("div", {
     className: "pdf-section space-y-2"
@@ -5097,10 +5105,10 @@ function App() {
     className: "grid grid-cols-2 gap-2 sm:grid-cols-4"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
-  }, "出生體重(kg)"), /*#__PURE__*/React.createElement("input", {
+  }, "出生體重(g)"), /*#__PURE__*/React.createElement("input", {
     type: "number",
-    step: "0.01",
-    placeholder: "2.8",
+    step: "1",
+    placeholder: "1450",
     value: editFormData.birthWeight,
     onChange: e => setEditFormData({
       ...editFormData,
