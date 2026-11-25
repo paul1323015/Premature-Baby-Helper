@@ -11,11 +11,14 @@ describe('textarea resizing', () => {
     const solidFoodReactionTextareas = appSource.match(
       /<label className="font-bold block mb-1">反應（以逗號分隔）<\/label>\s*<textarea\b[\s\S]*?\/>/g
     ) || [];
+    const solidFoodReactionResizeHandles = appSource.match(/aria-label="拖曳調整反應欄位高度"/g) || [];
 
     expect(textareaTags.length).toBeGreaterThan(0);
     textareaTags.forEach(tag => {
       expect(tag).toMatch(/className="[^"]*\bresize-y\b[^"]*"/);
     });
     expect(solidFoodReactionTextareas).toHaveLength(2);
+    expect(solidFoodReactionResizeHandles).toHaveLength(2);
+    expect(appSource).toContain('onPointerMove={handleSolidFoodReactionResizeMove}');
   });
 });

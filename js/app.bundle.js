@@ -3566,6 +3566,32 @@ function App() {
     reactions: '',
     notes: ''
   });
+  const [solidFoodReactionHeight, setSolidFoodReactionHeight] = React.useState(72);
+  const solidFoodReactionResizeRef = React.useRef(null);
+  const handleSolidFoodReactionResizeStart = event => {
+    if (event.currentTarget.setPointerCapture) event.currentTarget.setPointerCapture(event.pointerId);
+    solidFoodReactionResizeRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startHeight: solidFoodReactionHeight
+    };
+  };
+  const handleSolidFoodReactionResizeMove = event => {
+    const resize = solidFoodReactionResizeRef.current;
+    if (!resize || resize.pointerId !== event.pointerId) return;
+    setSolidFoodReactionHeight(Math.max(56, Math.min(360, resize.startHeight + event.clientY - resize.startY)));
+  };
+  const handleSolidFoodReactionResizeEnd = event => {
+    if (solidFoodReactionResizeRef.current?.pointerId === event.pointerId) {
+      solidFoodReactionResizeRef.current = null;
+    }
+  };
+  const handleSolidFoodReactionResizeKeyDown = event => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    const heightChange = event.key === 'ArrowUp' ? -16 : 16;
+    setSolidFoodReactionHeight(height => Math.max(56, Math.min(360, height + heightChange)));
+  };
   const safeFoods = ['十倍粥', '南瓜泥', '地瓜泥', '胡蘿蔔泥', '蘋果泥'];
   const allergyWarningFoods = ['花生', '堅果', '蛋', '牛奶', '小麥', '魚類', '蝦蟹'];
   const todayTotalMilk = React.useMemo(() => {
@@ -5373,8 +5399,34 @@ function App() {
       reactions: e.target.value
     }),
     placeholder: "例如：紅疹、拉肚子",
+    style: {
+      height: `${solidFoodReactionHeight}px`
+    },
     className: "w-full p-2 border rounded-xl resize-y"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "拖曳調整反應欄位高度",
+    title: "拖曳調整高度",
+    onPointerDown: handleSolidFoodReactionResizeStart,
+    onPointerMove: handleSolidFoodReactionResizeMove,
+    onPointerUp: handleSolidFoodReactionResizeEnd,
+    onPointerCancel: handleSolidFoodReactionResizeEnd,
+    onLostPointerCapture: handleSolidFoodReactionResizeEnd,
+    onKeyDown: handleSolidFoodReactionResizeKeyDown,
+    className: "w-full flex items-center justify-center py-2",
+    style: {
+      touchAction: 'none',
+      minHeight: '44px',
+      cursor: 'ns-resize'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    className: "block rounded-full bg-slate-400",
+    style: {
+      width: '2.5rem',
+      height: '0.25rem'
+    }
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 5,
@@ -5640,8 +5692,34 @@ function App() {
       reactions: e.target.value
     }),
     placeholder: "例如：紅疹、拉肚子",
+    style: {
+      height: `${solidFoodReactionHeight}px`
+    },
     className: "w-full p-2 border rounded-xl resize-y"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "拖曳調整反應欄位高度",
+    title: "拖曳調整高度",
+    onPointerDown: handleSolidFoodReactionResizeStart,
+    onPointerMove: handleSolidFoodReactionResizeMove,
+    onPointerUp: handleSolidFoodReactionResizeEnd,
+    onPointerCancel: handleSolidFoodReactionResizeEnd,
+    onLostPointerCapture: handleSolidFoodReactionResizeEnd,
+    onKeyDown: handleSolidFoodReactionResizeKeyDown,
+    className: "w-full flex items-center justify-center py-2",
+    style: {
+      touchAction: 'none',
+      minHeight: '44px',
+      cursor: 'ns-resize'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    "aria-hidden": "true",
+    className: "block rounded-full bg-slate-400",
+    style: {
+      width: '2.5rem',
+      height: '0.25rem'
+    }
+  }))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "備註（選填）"), /*#__PURE__*/React.createElement("textarea", {
     rows: 5,
