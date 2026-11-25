@@ -20,6 +20,30 @@ describe('growth chart month range', () => {
     expect(appSource).toMatch(/monthTicks\.push\(maxX\)/);
   });
 
+  test('web chart labels every month on the X axis', () => {
+    const appSource = fs.readFileSync(
+      path.join(__dirname, '..', 'js', 'app.jsx'),
+      'utf8'
+    );
+
+    expect(appSource).toMatch(/for \(let m = minX; m <= maxX; m \+= 1\)/);
+    expect(appSource).not.toMatch(/const step = \(maxX - minX\) > 16 \? 2 : 1/);
+    expect(appSource).toMatch(/\{mVal\}/);
+    expect(appSource).not.toMatch(/\{isZero \? '0個月' : `\$\{mVal\}個`\}/);
+  });
+
+  test('WHO percentile curves require corrected age with a due date', () => {
+    const appSource = fs.readFileSync(
+      path.join(__dirname, '..', 'js', 'app.jsx'),
+      'utf8'
+    );
+
+    expect(appSource).toMatch(/const canShowPercentiles = !useChronoAxis && Boolean\(babyInfo\.dueDate\)/);
+    expect(appSource).toMatch(/showPercentiles && canShowPercentiles && percentileIndices\.map/);
+    expect(appSource).toMatch(/if \(showPercentiles && babyInfo\.dueDate\)/);
+    expect(appSource).toContain('預產期前僅顯示測量點，不提供 WHO 百分位判讀。');
+  });
+
   test('chart scale helper shares the app bundle cache version', () => {
     const indexSource = fs.readFileSync(
       path.join(__dirname, '..', 'index.html'),

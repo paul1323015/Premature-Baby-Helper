@@ -209,18 +209,7 @@ const Icon = ({
     r: "10"
   }));
 };
-const WHO_GROWTH_DATA = {
-  boy: {
-    weight: [[-2, 1.2, 1.5, 2.0, 2.5, 3.0], [0, 2.5, 2.9, 3.3, 3.9, 4.4], [1, 3.4, 3.9, 4.5, 5.1, 5.8], [2, 4.3, 4.9, 5.6, 6.3, 7.1], [3, 5.0, 5.7, 6.4, 7.2, 8.0], [4, 5.6, 6.2, 7.0, 7.8, 8.7], [5, 6.0, 6.7, 7.5, 8.4, 9.3], [6, 6.4, 7.1, 7.9, 8.8, 9.8], [8, 6.9, 7.7, 8.6, 9.6, 10.7], [10, 7.4, 8.2, 9.2, 10.2, 11.4], [12, 7.8, 8.6, 9.6, 10.8, 12.0], [18, 8.8, 9.8, 10.9, 12.2, 13.7], [24, 9.7, 10.8, 12.2, 13.6, 15.3]],
-    height: [[-2, 38, 40, 43, 46, 48], [0, 46.3, 48.0, 49.9, 51.8, 53.4], [1, 50.8, 52.8, 54.7, 56.7, 58.6], [2, 54.4, 56.4, 58.4, 60.4, 62.4], [3, 57.3, 59.3, 61.4, 63.5, 65.5], [4, 59.7, 61.8, 63.9, 66.0, 68.0], [5, 61.7, 63.8, 65.9, 68.0, 70.1], [6, 63.3, 65.5, 67.6, 69.8, 71.9], [8, 66.2, 68.4, 70.6, 72.8, 75.0], [10, 68.7, 71.0, 73.3, 75.6, 77.9], [12, 71.0, 73.4, 75.7, 78.1, 80.5], [18, 76.9, 79.6, 82.3, 85.0, 87.7], [24, 81.7, 84.6, 87.8, 90.9, 93.9]],
-    head: [[-2, 27, 28.5, 30.5, 32.5, 34], [0, 31.9, 33.1, 34.5, 35.8, 37.0], [1, 34.9, 36.1, 37.3, 38.6, 39.7], [2, 36.9, 38.0, 39.1, 40.3, 41.3], [3, 38.3, 39.4, 40.5, 41.6, 42.6], [4, 39.4, 40.5, 41.6, 42.7, 43.7], [5, 40.3, 41.4, 42.5, 43.6, 44.6], [6, 41.0, 42.1, 43.3, 44.4, 45.4], [8, 42.2, 43.3, 44.5, 45.6, 46.6], [10, 43.1, 44.2, 45.4, 46.5, 47.6], [12, 43.8, 45.0, 46.1, 47.3, 48.3], [18, 45.3, 46.5, 47.7, 48.9, 50.0], [24, 46.3, 47.5, 48.7, 50.0, 51.1]]
-  },
-  girl: {
-    weight: [[-2, 1.1, 1.4, 1.9, 2.4, 2.9], [0, 2.4, 2.8, 3.2, 3.7, 4.2], [1, 3.2, 3.6, 4.2, 4.8, 5.5], [2, 3.9, 4.5, 5.1, 5.8, 6.6], [3, 4.5, 5.2, 5.8, 6.6, 7.5], [4, 5.0, 5.7, 6.4, 7.3, 8.2], [5, 5.4, 6.1, 6.9, 7.8, 8.8], [6, 5.7, 6.5, 7.3, 8.2, 9.3], [8, 6.3, 7.0, 7.9, 9.0, 10.2], [10, 6.7, 7.5, 8.5, 9.6, 10.9], [12, 7.0, 7.9, 8.9, 10.1, 11.5], [18, 8.1, 9.1, 10.2, 11.5, 13.0], [24, 9.0, 10.2, 11.5, 13.0, 14.8]],
-    height: [[-2, 37, 39, 42, 45, 47], [0, 45.4, 47.3, 49.1, 51.0, 52.7], [1, 49.8, 51.7, 53.7, 55.6, 57.6], [2, 53.0, 55.0, 57.1, 59.1, 61.1], [3, 55.6, 57.7, 59.8, 61.9, 64.0], [4, 57.8, 59.9, 62.1, 64.2, 66.4], [5, 59.6, 61.8, 64.0, 66.2, 68.5], [6, 61.2, 63.5, 65.7, 68.0, 70.3], [8, 64.0, 66.3, 68.7, 71.0, 73.4], [10, 66.4, 68.8, 71.2, 73.6, 76.1], [12, 68.5, 71.0, 73.5, 76.0, 78.5], [18, 74.9, 77.8, 80.7, 83.6, 86.5], [24, 80.0, 83.2, 86.4, 89.6, 92.9]],
-    head: [[-2, 26.5, 28, 30, 32, 33.5], [0, 31.5, 32.7, 33.9, 35.1, 36.2], [1, 34.2, 35.4, 36.5, 37.7, 38.8], [2, 36.0, 37.1, 38.3, 39.4, 40.5], [3, 37.3, 38.4, 39.5, 40.6, 41.7], [4, 38.3, 39.4, 40.6, 41.7, 42.8], [5, 39.2, 40.3, 41.5, 42.6, 43.7], [6, 39.9, 41.0, 42.2, 43.3, 44.4], [8, 41.0, 42.2, 43.4, 44.5, 45.6], [10, 41.9, 43.1, 44.3, 45.4, 46.5], [12, 42.6, 43.8, 45.0, 46.2, 47.3], [18, 44.2, 45.4, 46.6, 47.8, 48.9], [24, 45.2, 46.4, 47.6, 48.9, 50.0]]
-  }
-};
+const WHO_GROWTH_DATA = GrowthChartScale.WHO_GROWTH_DATA;
 const formatLocalDateTime = (date = new Date()) => {
   const pad = value => String(value).padStart(2, '0');
   const year = date.getFullYear();
@@ -539,6 +528,8 @@ const PretermGrowthChart = ({
       isOver2Years: targetAgeM > 24
     };
   }).filter(p => p !== null && !isNaN(p.value));
+  const hasNegativeAgePoints = babyPoints.some(point => point.plotMonths < 0);
+  const canShowPercentiles = !useChronoAxis && Boolean(babyInfo.dueDate);
   const babyMonths = babyPoints.map(p => p.plotMonths);
   const minBabyMonth = babyMonths.length > 0 ? Math.min(...babyMonths) : 0;
   const maxBabyMonth = babyMonths.length > 0 ? Math.max(...babyMonths) : 12;
@@ -584,8 +575,7 @@ const PretermGrowthChart = ({
   const percentileLabels = ['3%', '15%', '50%', '85%', '97%'];
   const percentileColors = ['#cbd5e1', '#94a3b8', '#3b82f6', '#94a3b8', '#cbd5e1'];
   const monthTicks = [];
-  const step = maxX - minX > 16 ? 2 : 1;
-  for (let m = minX; m <= maxX; m += step) {
+  for (let m = minX; m <= maxX; m += 1) {
     monthTicks.push(m);
   }
   if (monthTicks[monthTicks.length - 1] !== maxX) {
@@ -645,7 +635,11 @@ const PretermGrowthChart = ({
     className: "block text-amber-700 font-bold"
   }, "⚠️ 實際月齡模式僅供月齡趨勢查看，不作 WHO 百分位判讀。"), !useChronoAxis && /*#__PURE__*/React.createElement("span", {
     className: "block text-amber-700 font-bold"
-  }, "⚠️ 矯正月齡模式較適合早產兒生長趨勢參考；百分位結果僅供參考，實際判讀請諮詢兒科或新生兒科醫師。"))), /*#__PURE__*/React.createElement("button", {
+  }, "⚠️ 矯正月齡模式較適合早產兒生長趨勢參考；百分位結果僅供參考，實際判讀請諮詢兒科或新生兒科醫師。"), !useChronoAxis && !babyInfo.dueDate && /*#__PURE__*/React.createElement("span", {
+    className: "block text-amber-700 font-bold"
+  }, "⚠️ 尚未設定預產期，無法以矯正月齡判讀 WHO 百分位曲線。"), !useChronoAxis && babyInfo.dueDate && hasNegativeAgePoints && /*#__PURE__*/React.createElement("span", {
+    className: "block text-amber-700 font-bold"
+  }, "⚠️ WHO 參考曲線從矯正 0 個月開始；預產期前僅顯示測量點，不提供 WHO 百分位判讀。"))), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       const nextUseChronoAxis = !useChronoAxis;
       const saved = setUseChronoAxis(nextUseChronoAxis);
@@ -663,17 +657,19 @@ const PretermGrowthChart = ({
     className: "flex flex-wrap items-center gap-2"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => {
+      if (!canShowPercentiles) return;
       const nextShowPercentiles = !showPercentiles;
       const saved = setShowPercentiles(nextShowPercentiles);
       showToast(saved ? `✅ 百分位曲線已${nextShowPercentiles ? '顯示' : '隱藏'}` : '⚠️ 百分位曲線已切換，但設定無法儲存。');
     },
-    className: `px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${showPercentiles ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200' : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'}`,
-    title: "切換顯示/隱藏背景 WHO 百分位參考虛線"
+    disabled: !canShowPercentiles,
+    className: `px-2.5 py-1 rounded-lg text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-colors border shadow-sm ${showPercentiles && canShowPercentiles ? 'bg-amber-100 border-amber-300 text-amber-900 hover:bg-amber-200' : 'bg-slate-100 border-slate-300 text-slate-500 hover:bg-slate-200'}`,
+    title: canShowPercentiles ? '切換顯示/隱藏背景 WHO 百分位參考虛線' : 'WHO 百分位曲線僅適用於已設定預產期的矯正月齡模式'
   }, /*#__PURE__*/React.createElement("span", {
-    className: `w-2 h-2 rounded-full ${showPercentiles ? 'bg-amber-500' : 'bg-slate-400'}`
+    className: `w-2 h-2 rounded-full ${showPercentiles && canShowPercentiles ? 'bg-amber-500' : 'bg-slate-400'}`
   }), /*#__PURE__*/React.createElement("span", {
     className: "whitespace-nowrap"
-  }, "百分位曲線：", showPercentiles ? '顯示' : '隱藏')), /*#__PURE__*/React.createElement("button", {
+  }, canShowPercentiles ? `百分位曲線：${showPercentiles ? '顯示' : '隱藏'}` : '百分位曲線：矯正月齡限定')), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       const nextShowZeroBaseline = !showZeroBaseline;
       const saved = setShowZeroBaseline(nextShowZeroBaseline);
@@ -755,7 +751,7 @@ const PretermGrowthChart = ({
       y: height - padding.bottom + 17,
       textAnchor: "middle",
       className: `font-mono text-[9px] ${emphasizeZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`
-    }, isZero ? '0個月' : `${mVal}個`));
+    }, mVal));
   }), zeroInRange && showZeroBaseline && /*#__PURE__*/React.createElement("g", {
     key: "zero-ref"
   }, /*#__PURE__*/React.createElement("line", {
@@ -795,7 +791,7 @@ const PretermGrowthChart = ({
     textAnchor: "middle",
     transform: `rotate(-90 12 ${height / 2})`,
     className: "fill-slate-600 font-bold text-[10px]"
-  }, "Y 軸：", metricConfig.label, "（", metricConfig.unit, "）"), showPercentiles && percentileIndices.map((pIndex, i) => {
+  }, "Y 軸：", metricConfig.label, "（", metricConfig.unit, "）"), showPercentiles && canShowPercentiles && percentileIndices.map((pIndex, i) => {
     const pathD = refData.map((d, idx) => `${idx === 0 ? 'M' : 'L'} ${xScale(d[0])} ${yScale(d[pIndex])}`).join(' ');
     const lastPt = refData[refData.length - 1];
     return /*#__PURE__*/React.createElement("g", {
@@ -3118,7 +3114,7 @@ function App() {
           const zeroX = xScale(0);
           svg.push(`<line x1="${zeroX}" y1="${chartPadding.top}" x2="${zeroX}" y2="${plotBottom}" stroke="#d97706" stroke-width="2" stroke-dasharray="6 3"/>`);
         }
-        if (showPercentiles) {
+        if (showPercentiles && babyInfo.dueDate) {
           [1, 2, 3, 4, 5].forEach((percentileIndex, index) => {
             const path = referenceData.map((row, rowIndex) => `${rowIndex === 0 ? 'M' : 'L'} ${xScale(row[0]).toFixed(2)} ${yScale(row[percentileIndex]).toFixed(2)}`).join(' ');
             svg.push(`<path d="${path}" fill="none" stroke="${growthChartColors[index]}" stroke-width="${percentileIndex === 3 ? 2 : 1.5}"${percentileIndex === 3 ? '' : ' stroke-dasharray="4 3"'}/>`);
@@ -3137,7 +3133,8 @@ function App() {
         svg.push('</svg>');
         return {
           svg: svg.join(''),
-          pointsCount: points.length
+          pointsCount: points.length,
+          hasNegativeAgePoints: points.some(point => point.age < 0)
         };
       };
       const growthCharts = pdfExportOptions.growthChart ? growthChartMetrics.map(metricConfig => ({
@@ -3402,7 +3399,7 @@ function App() {
             text: '生長曲線',
             style: 'sectionTitle'
           }, {
-            text: `X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點；${showPercentiles ? '曲線標示 3%、15%、50%、85%、97% 百分位' : '百分位參考曲線依目前圖表設定隱藏'}；${showZeroBaseline ? '橘色虛線為 0 個月基準線' : '0 個月基準線依目前圖表設定隱藏'}。資料沿用應用程式的 WHO 參考曲線，僅供趨勢參考，請由醫療專業人員判讀。`,
+            text: `X 軸為矯正月齡（預產期為 0 個月），Y 軸單位見各圖標題；橘色為寶寶測量點；${showPercentiles && babyInfo.dueDate ? '曲線標示 3%、15%、50%、85%、97% 百分位' : showPercentiles ? '尚未設定預產期，百分位參考曲線未顯示' : '百分位參考曲線依目前圖表設定隱藏'}；${showZeroBaseline ? '橘色虛線為 0 個月基準線' : '0 個月基準線依目前圖表設定隱藏'}。${growthCharts.some(chart => chart.hasNegativeAgePoints) ? '預產期前的測量點僅供趨勢參考，不適用 WHO 百分位判讀。' : ''}資料沿用 WHO 官方參考曲線，僅供趨勢參考，請由醫療專業人員判讀。`,
             style: 'muted',
             margin: [0, 0, 0, 8]
           }, ...growthCharts.map(chart => ({
