@@ -5841,7 +5841,7 @@ function App() {
   }, "麥克風測試錄音最長 5 秒，只暫存在此裝置供播放確認，不會上傳。"), noteMicTestStatus === 'requesting' && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
-    className: "mt-1 text-[10px] font-bold text-sky-700"
+    className: "mt-1 text-[10px] font-bold text-slate-800"
   }, "正在等待麥克風權限，請依瀏覽器提示選擇允許。"), noteMicTestStatus === 'recording' && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
@@ -5849,11 +5849,11 @@ function App() {
   }, "正在錄音，請說幾句話；最長 5 秒，也可以按「停止測試」提早結束。"), noteMicTestStatus === 'processing' && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
-    className: "mt-1 text-[10px] font-bold text-sky-700"
+    className: "mt-1 text-[10px] font-bold text-slate-800"
   }, "正在準備播放測試錄音…"), noteMicTestStatus === 'ready' && noteMicTestAudioUrl && /*#__PURE__*/React.createElement("div", {
-    className: "mt-2 p-2 rounded-xl border border-sky-100 bg-sky-50"
+    className: "mt-1"
   }, /*#__PURE__*/React.createElement("p", {
-    className: "mb-1 text-[10px] font-bold text-sky-800"
+    className: "mb-1 text-[10px] font-bold text-slate-800"
   }, "錄音完成，請播放確認是否聽見自己的聲音。"), /*#__PURE__*/React.createElement("audio", {
     controls: true,
     src: noteMicTestAudioUrl,
@@ -5866,7 +5866,7 @@ function App() {
   })), noteMicTestStatus === 'played' && /*#__PURE__*/React.createElement("p", {
     role: "status",
     "aria-live": "polite",
-    className: "mt-1 text-[10px] font-bold text-sky-800"
+    className: "mt-1 text-[10px] font-bold text-slate-800"
   }, "播放完成；若沒聽清楚，可再按「測試麥克風」試一次。"), noteMicTestError && /*#__PURE__*/React.createElement("p", {
     role: "alert",
     className: "mt-1 text-[10px] font-bold text-red-600"
