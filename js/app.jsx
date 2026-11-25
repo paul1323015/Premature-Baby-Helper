@@ -3472,7 +3472,9 @@
       const [newLogDetail, setNewLogDetail] = React.useState('');
       const [newLogNotes, setNewLogNotes] = React.useState('');
       const [newLogMilkType, setNewLogMilkType] = React.useState('');
+      const [newLogCustomMilkType, setNewLogCustomMilkType] = React.useState('');
       const [newLogFeedingMethod, setNewLogFeedingMethod] = React.useState('');
+      const [newLogCustomFeedingMethod, setNewLogCustomFeedingMethod] = React.useState('');
       const [newLogAmount, setNewLogAmount] = React.useState('');
       const [showVaccinationModal, setShowVaccinationModal] = React.useState(false);
       const [showSolidFoodModal, setShowSolidFoodModal] = React.useState(false);
@@ -3631,17 +3633,35 @@
           return;
         }
 
+        if (newLogType === 'feeding') {
+          if (newLogMilkType === '自訂' && !newLogCustomMilkType.trim()) {
+            showToast('⚠️ 請輸入自訂奶水種類。');
+            return;
+          }
+          if (newLogFeedingMethod === '自訂' && !newLogCustomFeedingMethod.trim()) {
+            showToast('⚠️ 請輸入自訂餵養方式。');
+            return;
+          }
+        }
+
         const customDetail = newLogDetail.trim();
-        const feedingTags = [newLogFeedingMethod, newLogMilkType].filter(Boolean).join('');
+        const milkType = newLogMilkType === '自訂' ? newLogCustomMilkType.trim() : newLogMilkType;
+        const feedingMethod = newLogFeedingMethod === '自訂' ? newLogCustomFeedingMethod.trim() : newLogFeedingMethod;
+        const feedingTags = [feedingMethod, milkType].filter(Boolean).join(
+          newLogMilkType === '自訂' || newLogFeedingMethod === '自訂' ? '、' : ''
+        );
         const detail = newLogType === 'feeding'
           ? [feedingTags, customDetail].filter(Boolean).join(' ')
           : customDetail;
         const amount = newLogType === 'feeding' && newLogAmount ? `${newLogAmount}ml` : null;
+        const feedingMetadata = newLogType === 'feeding'
+          ? { milkType, feedingMethod, feedingDetail: customDetail }
+          : { milkType: '', feedingMethod: '', feedingDetail: '' };
 
         if (editingLogId !== null) {
           setLogs(prevLogs => prevLogs.map(log => (
             log.id === editingLogId
-              ? { ...log, date: newLogDate, time: newLogTime, type: newLogType, detail, amount, notes: newLogNotes.trim() }
+              ? { ...log, date: newLogDate, time: newLogTime, type: newLogType, detail, amount, notes: newLogNotes.trim(), ...feedingMetadata }
               : log
           )));
           showToast('💾 已儲存照護紀錄修改！');
@@ -3655,6 +3675,7 @@
             detail,
             amount,
             notes: newLogNotes.trim(),
+            ...feedingMetadata
           }, ...prevLogs]);
           showToast('🍼 已新增今日快照紀錄！');
         }
@@ -3664,7 +3685,9 @@
         setNewLogDetail('');
         setNewLogNotes('');
         setNewLogMilkType('');
+        setNewLogCustomMilkType('');
         setNewLogFeedingMethod('');
+        setNewLogCustomFeedingMethod('');
         setNewLogAmount('');
       };
 
@@ -3773,35 +3796,52 @@
         setNewLogType(log.type);
         const logDetail = log.detail || '';
         if (log.type === 'feeding') {
-          const bracketMatch = logDetail.match(/^\[([^\]]+)\](?:\s*(.*))?$/);
-          const tagOptions = [
-            { text: '瓶餵母乳', milkType: '母乳', feedingMethod: '瓶餵' },
-            { text: '瓶餵配方奶', milkType: '配方奶', feedingMethod: '瓶餵' },
-            { text: '瓶餵混合', milkType: '混合', feedingMethod: '瓶餵' },
-            { text: '親餵母乳', milkType: '母乳', feedingMethod: '親餵' },
-            { text: '親餵配方奶', milkType: '配方奶', feedingMethod: '親餵' },
-            { text: '親餵混合', milkType: '混合', feedingMethod: '親餵' },
-            { text: '母乳', milkType: '母乳', feedingMethod: '' },
-            { text: '配方奶', milkType: '配方奶', feedingMethod: '' },
-            { text: '混合', milkType: '混合', feedingMethod: '' },
-            { text: '瓶餵', milkType: '', feedingMethod: '瓶餵' },
-            { text: '親餵', milkType: '', feedingMethod: '親餵' },
-          ];
-          const tagSource = bracketMatch?.[1] || logDetail;
-          const legacyDefault = logDetail === '瓶餵母乳/配方奶';
-          const matchedTag = tagOptions.find(option => tagSource.startsWith(option.text));
-          setNewLogMilkType(matchedTag?.milkType || '');
-          setNewLogFeedingMethod(matchedTag?.feedingMethod || '');
-          const customDetail = bracketMatch
-            ? (bracketMatch[2] || '')
-            : matchedTag
-              ? logDetail.slice(matchedTag.text.length).trim()
-              : logDetail;
-          setNewLogDetail(legacyDefault ? '' : customDetail);
+          if (Object.prototype.hasOwnProperty.call(log, 'milkType')
+            || Object.prototype.hasOwnProperty.call(log, 'feedingMethod')) {
+            const knownMilkTypes = ['母乳', '配方奶', '混合'];
+            const knownFeedingMethods = ['瓶餵', '親餵'];
+            const milkType = log.milkType || '';
+            const feedingMethod = log.feedingMethod || '';
+            setNewLogMilkType(milkType ? (knownMilkTypes.includes(milkType) ? milkType : '自訂') : '');
+            setNewLogCustomMilkType(milkType && !knownMilkTypes.includes(milkType) ? milkType : '');
+            setNewLogFeedingMethod(feedingMethod ? (knownFeedingMethods.includes(feedingMethod) ? feedingMethod : '自訂') : '');
+            setNewLogCustomFeedingMethod(feedingMethod && !knownFeedingMethods.includes(feedingMethod) ? feedingMethod : '');
+            setNewLogDetail(log.feedingDetail || '');
+          } else {
+            const bracketMatch = logDetail.match(/^\[([^\]]+)\](?:\s*(.*))?$/);
+            const tagOptions = [
+              { text: '瓶餵母乳', milkType: '母乳', feedingMethod: '瓶餵' },
+              { text: '瓶餵配方奶', milkType: '配方奶', feedingMethod: '瓶餵' },
+              { text: '瓶餵混合', milkType: '混合', feedingMethod: '瓶餵' },
+              { text: '親餵母乳', milkType: '母乳', feedingMethod: '親餵' },
+              { text: '親餵配方奶', milkType: '配方奶', feedingMethod: '親餵' },
+              { text: '親餵混合', milkType: '混合', feedingMethod: '親餵' },
+              { text: '母乳', milkType: '母乳', feedingMethod: '' },
+              { text: '配方奶', milkType: '配方奶', feedingMethod: '' },
+              { text: '混合', milkType: '混合', feedingMethod: '' },
+              { text: '瓶餵', milkType: '', feedingMethod: '瓶餵' },
+              { text: '親餵', milkType: '', feedingMethod: '親餵' },
+            ];
+            const tagSource = bracketMatch?.[1] || logDetail;
+            const legacyDefault = logDetail === '瓶餵母乳/配方奶';
+            const matchedTag = tagOptions.find(option => tagSource.startsWith(option.text));
+            setNewLogMilkType(matchedTag?.milkType || '');
+            setNewLogFeedingMethod(matchedTag?.feedingMethod || '');
+            const customDetail = bracketMatch
+              ? (bracketMatch[2] || '')
+              : matchedTag
+                ? logDetail.slice(matchedTag.text.length).trim()
+                : logDetail;
+            setNewLogDetail(legacyDefault ? '' : customDetail);
+            setNewLogCustomMilkType('');
+            setNewLogCustomFeedingMethod('');
+          }
         } else {
           setNewLogDetail(logDetail);
           setNewLogMilkType('');
+          setNewLogCustomMilkType('');
           setNewLogFeedingMethod('');
+          setNewLogCustomFeedingMethod('');
         }
         setNewLogAmount(log.amount ? String(log.amount).replace(/ml$/i, '') : '');
         if (log.type === 'vaccination') {
@@ -3848,7 +3888,9 @@
         setNewLogDetail('');
         setNewLogNotes('');
         setNewLogMilkType('');
+        setNewLogCustomMilkType('');
         setNewLogFeedingMethod('');
+        setNewLogCustomFeedingMethod('');
         setNewLogAmount('');
       };
 
@@ -4559,7 +4601,9 @@
                       setNewLogDetail('');
                       setNewLogNotes('');
                       setNewLogMilkType('');
+                      setNewLogCustomMilkType('');
                       setNewLogFeedingMethod('');
+                      setNewLogCustomFeedingMethod('');
                       setNewLogAmount('');
                       setShowAddLogModal(true);
                     }}
@@ -5476,7 +5520,7 @@
                       <div>
                         <label className="font-bold block mb-1">奶水種類</label>
                         <div className="flex flex-wrap gap-2" role="group" aria-label="奶水種類">
-                          {['母乳', '配方奶', '混合'].map(tag => (
+                          {['母乳', '配方奶', '混合', '自訂'].map(tag => (
                             <button
                               key={tag}
                               type="button"
@@ -5488,11 +5532,20 @@
                             </button>
                           ))}
                         </div>
+                        {newLogMilkType === '自訂' && (
+                          <input
+                            required
+                            value={newLogCustomMilkType}
+                            onChange={(e) => setNewLogCustomMilkType(e.target.value)}
+                            placeholder="輸入自訂奶水種類"
+                            className="w-full p-2 border rounded-xl mt-2"
+                          />
+                        )}
                       </div>
                       <div>
                         <label className="font-bold block mb-1">餵養方式</label>
                         <div className="flex flex-wrap gap-2" role="group" aria-label="餵養方式">
-                          {['瓶餵', '親餵'].map(tag => (
+                          {['瓶餵', '親餵', '自訂'].map(tag => (
                             <button
                               key={tag}
                               type="button"
@@ -5504,6 +5557,15 @@
                             </button>
                           ))}
                         </div>
+                        {newLogFeedingMethod === '自訂' && (
+                          <input
+                            required
+                            value={newLogCustomFeedingMethod}
+                            onChange={(e) => setNewLogCustomFeedingMethod(e.target.value)}
+                            placeholder="輸入自訂餵養方式"
+                            className="w-full p-2 border rounded-xl mt-2"
+                          />
+                        )}
                       </div>
                       <div>
                         <label className="font-bold block mb-1">細節（選填）</label>
