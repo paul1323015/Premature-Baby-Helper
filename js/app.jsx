@@ -456,6 +456,41 @@
               if (!shouldContinue) return;
             }
           }
+
+          const shouldStopForMeasurementWarning = [
+            { field: 'height', label: '身長', threshold: 2 },
+            { field: 'head', label: '頭圍', threshold: 1 }
+          ].some(({ field, label, threshold }) => {
+            const enteredValue = Number.parseFloat(newRecord[field]);
+            if (!Number.isFinite(enteredValue)) return false;
+
+            const previousRecord = growthHistory
+              .map(record => {
+                const recordDate = parseDateOnly(record.date);
+                const value = Number.parseFloat(record[field]);
+                return {
+                  date: record.date,
+                  day: recordDate
+                    ? Date.UTC(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate()) / MS_PER_DAY
+                    : null,
+                  value: Number.isFinite(value) ? value : null
+                };
+              })
+              .filter(record => record.day !== null && record.day <= measurementDay && record.value !== null)
+              .sort((a, b) => b.day - a.day)[0];
+
+            if (!previousRecord) return false;
+
+            const daysSincePrevious = measurementDay - previousRecord.day;
+            if (daysSincePrevious >= 7 || Math.abs(enteredValue - previousRecord.value) <= threshold) {
+              return false;
+            }
+
+            return !window.confirm(
+              `本次輸入與前次${label}紀錄差距較大，請確認數值與量測方式是否正確。\n\n前次紀錄：${previousRecord.date}，${previousRecord.value} cm\n本次輸入：${newRecord.date}，${newRecord[field]} cm\n\n仍要儲存嗎？`
+            );
+          });
+          if (shouldStopForMeasurementWarning) return;
         }
 
         onAddGrowthRecord({
