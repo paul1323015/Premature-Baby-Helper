@@ -419,6 +419,8 @@ const PretermGrowthChart = ({
 }) => {
   const [showRecordModal, setShowRecordModal] = React.useState(false);
   const [editingRecordId, setEditingRecordId] = React.useState(null);
+  const [pendingDuplicateGrowthRecord, setPendingDuplicateGrowthRecord] = React.useState(null);
+  const [pendingGrowthDateWarning, setPendingGrowthDateWarning] = React.useState(null);
   const [recDate, setRecDate] = React.useState(getLocalDateString());
   const [recTime, setRecTime] = React.useState('');
   const [recWeight, setRecWeight] = React.useState(babyInfo.currentWeight || '');
@@ -589,10 +591,56 @@ const PretermGrowthChart = ({
   if (monthTicks[monthTicks.length - 1] !== maxX) {
     monthTicks.push(maxX);
   }
-  const handleFormSubmit = e => {
-    e.preventDefault();
+  const handleSaveNewGrowthRecord = newRecord => {
+    const enteredWeight = Number.parseFloat(newRecord.weight);
+    const measurementDate = parseDateOnly(newRecord.date);
+    if (Number.isFinite(enteredWeight) && measurementDate) {
+      const measurementDay = Date.UTC(measurementDate.getFullYear(), measurementDate.getMonth(), measurementDate.getDate()) / MS_PER_DAY;
+      const previousWeightRecord = growthHistory.map(record => {
+        const recordDate = parseDateOnly(record.date);
+        const weight = normalizeMetricValue(record.weight, 'weight');
+        return {
+          date: record.date,
+          day: recordDate ? Date.UTC(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate()) / MS_PER_DAY : null,
+          weight
+        };
+      }).filter(record => record.day !== null && record.day <= measurementDay && record.weight !== null).sort((a, b) => b.day - a.day)[0];
+      if (previousWeightRecord) {
+        const daysSincePrevious = measurementDay - previousWeightRecord.day;
+        if (daysSincePrevious < 7 && Math.abs(enteredWeight - previousWeightRecord.weight) > 0.5) {
+          const shouldContinue = window.confirm(`本次輸入與前次體重紀錄差距較大，請確認數值與單位是否正確。\n\n前次紀錄：${previousWeightRecord.date}，${previousWeightRecord.weight.toFixed(2)} kg\n本次輸入：${newRecord.date}，${newRecord.weight} kg\n\n仍要儲存嗎？`);
+          if (!shouldContinue) return;
+        }
+      }
+    }
+    onAddGrowthRecord({
+      ...newRecord,
+      date: newRecord.date,
+      plotOnChart: window.confirm('是否要將這筆測量資料繪製在生長圖表上？')
+    });
+    setShowRecordModal(false);
+  };
+  const processGrowthRecordSubmission = (skipDateWarning = false) => {
     if (!recDate) return;
-    const cleanDate = sanitizeDateStr(recDate);
+    const selectedDate = parseDateOnly(recDate);
+    const selectedDateStr = selectedDate ? getLocalDateString(selectedDate) : null;
+    const todayDateStr = getLocalDateString();
+    const cleanDate = selectedDateStr && selectedDateStr > todayDateStr ? selectedDateStr : sanitizeDateStr(recDate);
+    if (!skipDateWarning) {
+      const dateToCheck = selectedDateStr || cleanDate;
+      const birthDate = babyInfo.birthDate ? parseDateOnly(babyInfo.birthDate) : null;
+      const birthDateStr = birthDate ? getLocalDateString(birthDate) : null;
+      let dateWarning = null;
+      if (dateToCheck > todayDateStr) {
+        dateWarning = `測量日期 ${dateToCheck} 晚於今天（${todayDateStr}），請確認日期是否正確。`;
+      } else if (birthDateStr && dateToCheck < birthDateStr) {
+        dateWarning = `測量日期 ${dateToCheck} 早於寶寶出生日（${birthDateStr}），請確認日期是否正確。`;
+      }
+      if (dateWarning) {
+        setPendingGrowthDateWarning(dateWarning);
+        return;
+      }
+    }
     if (editingRecordId !== null) {
       const editingRecord = growthHistory.find(item => item.id === editingRecordId);
       if (!editingRecord) return;
@@ -609,17 +657,29 @@ const PretermGrowthChart = ({
       setShowRecordModal(false);
       return;
     }
-    onAddGrowthRecord({
+    const newRecord = {
       id: Date.now(),
       date: cleanDate,
       time: recTime,
       weight: recWeight,
       height: recHeight,
       head: recHead,
-      notes: recNotes.trim(),
-      plotOnChart: window.confirm('是否要將這筆測量資料繪製在生長圖表上？')
-    });
-    setShowRecordModal(false);
+      notes: recNotes.trim()
+    };
+    const enteredMeasurementFields = ['weight', 'height', 'head'].filter(field => newRecord[field] !== '' && newRecord[field] !== null && typeof newRecord[field] !== 'undefined');
+    const duplicateRecords = growthHistory.filter(record => record.date === cleanDate && enteredMeasurementFields.some(field => record[field] !== '' && record[field] !== null && typeof record[field] !== 'undefined'));
+    if (duplicateRecords.length > 0) {
+      setPendingDuplicateGrowthRecord({
+        record: newRecord,
+        duplicates: duplicateRecords
+      });
+      return;
+    }
+    handleSaveNewGrowthRecord(newRecord);
+  };
+  const handleFormSubmit = e => {
+    e.preventDefault();
+    processGrowthRecordSubmission();
   };
   const handleSetRecordDateTimeToNow = () => {
     const now = new Date();
@@ -1080,7 +1140,75 @@ const PretermGrowthChart = ({
   }, "取消"), /*#__PURE__*/React.createElement("button", {
     type: "submit",
     className: "flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
-  }, editingRecordId !== null ? '儲存修改' : '儲存數據'))))));
+  }, editingRecordId !== null ? '儲存修改' : '儲存數據'))))), pendingGrowthDateWarning && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    role: "alertdialog",
+    "aria-modal": "true",
+    "aria-labelledby": "growth-record-date-warning-title",
+    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3"
+  }, /*#__PURE__*/React.createElement("h3", {
+    id: "growth-record-date-warning-title",
+    className: "font-bold text-sm text-amber-700"
+  }, "測量日期需確認"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-600"
+  }, pendingGrowthDateWarning), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-500"
+  }, "若確認日期正確，仍可儲存；選擇返回會保留表單供你檢查。"), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setPendingGrowthDateWarning(null),
+    className: "flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold"
+  }, "返回檢查"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      setPendingGrowthDateWarning(null);
+      processGrowthRecordSubmission(true);
+    },
+    className: "flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
+  }, "仍要儲存")))), pendingDuplicateGrowthRecord && /*#__PURE__*/React.createElement("div", {
+    className: "fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+  }, /*#__PURE__*/React.createElement("div", {
+    role: "alertdialog",
+    "aria-modal": "true",
+    "aria-labelledby": "duplicate-growth-record-title",
+    className: "w-full max-w-sm p-5 rounded-2xl border shadow-xl bg-white space-y-3 max-h-[90vh] overflow-y-auto"
+  }, /*#__PURE__*/React.createElement("h3", {
+    id: "duplicate-growth-record-title",
+    className: "font-bold text-sm text-amber-700"
+  }, "該日期已有測量紀錄"), /*#__PURE__*/React.createElement("p", {
+    className: "text-xs text-slate-600"
+  }, pendingDuplicateGrowthRecord.record.date, " 已有 ", pendingDuplicateGrowthRecord.duplicates.length, " 筆包含相同測量項目的紀錄。請確認是否仍要新增，系統不會覆蓋原紀錄。"), /*#__PURE__*/React.createElement("div", {
+    className: "space-y-1.5 max-h-52 overflow-y-auto pr-1 text-xs"
+  }, pendingDuplicateGrowthRecord.duplicates.map((record, index) => /*#__PURE__*/React.createElement("div", {
+    key: `${record.id || record.date}-${index}`,
+    className: "p-2 border rounded-xl bg-slate-50/70"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "font-bold text-slate-800"
+  }, record.date, record.time ? ` ${record.time}` : ''), /*#__PURE__*/React.createElement("div", {
+    className: "text-[11px] text-slate-500 mt-0.5 space-x-2"
+  }, record.weight !== '' && record.weight !== null && typeof record.weight !== 'undefined' && /*#__PURE__*/React.createElement("span", null, "體重: ", /*#__PURE__*/React.createElement("b", {
+    className: "text-slate-700"
+  }, normalizeMetricValue(record.weight, 'weight') ?? record.weight, " kg")), record.height !== '' && record.height !== null && typeof record.height !== 'undefined' && /*#__PURE__*/React.createElement("span", null, "身長: ", /*#__PURE__*/React.createElement("b", {
+    className: "text-slate-700"
+  }, record.height, " cm")), record.head !== '' && record.head !== null && typeof record.head !== 'undefined' && /*#__PURE__*/React.createElement("span", null, "頭圍: ", /*#__PURE__*/React.createElement("b", {
+    className: "text-slate-700"
+  }, record.head, " cm")))))), /*#__PURE__*/React.createElement("div", {
+    className: "flex gap-2 pt-2"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setPendingDuplicateGrowthRecord(null),
+    className: "flex-1 py-2 text-xs border rounded-xl text-slate-500 font-bold"
+  }, "返回檢查"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => {
+      const pending = pendingDuplicateGrowthRecord;
+      setPendingDuplicateGrowthRecord(null);
+      if (pending) handleSaveNewGrowthRecord(pending.record);
+    },
+    className: "flex-1 py-2 text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl shadow-md"
+  }, "仍新增")))));
 };
 function App() {
   const defaultNoteCategories = ['回診提問', '成長大事記', '其他備忘'];
