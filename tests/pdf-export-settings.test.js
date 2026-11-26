@@ -38,6 +38,25 @@ describe('PDF export settings persistence', () => {
     expect(appSource).toMatch(/setPdfExportDraft\(\{ \.\.\.restoredPdfExportOptions \}\)/);
   });
 
+  test('PDF export resets its busy state if the asynchronous download callback stalls', () => {
+    expect(appSource).toMatch(/let exportFinished = false/);
+    expect(appSource).toMatch(/window\.setTimeout\(\(\) => \{[\s\S]*?finishExport\(false, '❌ PDF 報告產生或下載逾時/);
+    expect(appSource).toMatch(/if \(exportFinished\) return;[\s\S]*?setIsExporting\(false\)/);
+    expect(appSource).toMatch(/finishExport\(true\)/);
+  });
+
+  test('PDF export surfaces asynchronous generation errors and removes its listener on completion', () => {
+    expect(appSource).toMatch(/window\.addEventListener\('unhandledrejection', exportUnhandledRejectionHandler\)/);
+    expect(appSource).toMatch(/window\.removeEventListener\('unhandledrejection', exportUnhandledRejectionHandler\)/);
+    expect(appSource).toMatch(/Asynchronous PDF export failure:/);
+    expect(appSource).toMatch(/detail\.slice\(0, 100\)/);
+  });
+
+  test('growth-record PDF table uses supported absolute and wildcard column widths', () => {
+    expect(appSource).toMatch(/widths: \[110, 74, 74, 74, '\*'\]/);
+    expect(appSource).not.toMatch(/widths: \['[\d.]+\*'/);
+  });
+
   test('PDF export settings in backups are validated', () => {
     expect(appSource).toMatch(/if \(hasOwn\('pdfExportOptions'\)\) \{/);
     expect(appSource).toMatch(/'profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'encryptPdf'/);

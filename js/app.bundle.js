@@ -2978,6 +2978,21 @@ function App() {
     }
     setIsExporting(true);
     showToast('📄 正在生成 PDF 報告，請稍候...');
+    let exportFinished = false;
+    let exportTimeoutId = null;
+    let exportUnhandledRejectionHandler = null;
+    const finishExport = (succeeded, failureMessage = null) => {
+      if (exportFinished) return;
+      exportFinished = true;
+      if (exportTimeoutId !== null) window.clearTimeout(exportTimeoutId);
+      if (exportUnhandledRejectionHandler) {
+        window.removeEventListener('unhandledrejection', exportUnhandledRejectionHandler);
+      }
+      setIsExporting(false);
+      setPdfPassword('');
+      setPdfPasswordConfirm('');
+      showToast(succeeded ? '✅ PDF 報告已順利匯出下載！' : failureMessage || '❌ PDF 報告產生失敗，請稍後再試。若問題持續發生，請確認瀏覽器可正常下載檔案。');
+    };
     try {
       if (!window.pdfMake || !window.pdfMake.vfs || !window.pdfMake.vfs['NotoSansTC-Variable.ttf']) {
         throw new Error('PDFMake 或繁體中文字型尚未載入。');
@@ -3351,7 +3366,7 @@ function App() {
           } : {
             table: {
               headerRows: 1,
-              widths: ['1.2*', '0.8*', '0.8*', '0.8*', '2*'],
+              widths: [110, 74, 74, 74, '*'],
               dontBreakRows: true,
               body: [[{
                 text: '日期／時間',
@@ -3560,18 +3575,24 @@ function App() {
         }]
       };
       const filename = `${babyInfo.name || '寶寶'}_巴掌小太陽·早產兒門診照護與生長報告_${formatLocalDateTimeForFileName()}.pdf`;
+      exportTimeoutId = window.setTimeout(() => {
+        console.error(new Error('PDF export did not complete within 60 seconds.'));
+        finishExport(false, '❌ PDF 報告產生或下載逾時，請稍後再試。若問題持續發生，請確認瀏覽器可正常下載檔案。');
+      }, 60000);
+      exportUnhandledRejectionHandler = event => {
+        const error = event.reason;
+        console.error('Asynchronous PDF export failure:', error);
+        const detail = error instanceof Error ? error.message : String(error || '');
+        const failureMessage = detail ? `❌ PDF 報告產生失敗：${detail.slice(0, 100)}` : '❌ PDF 報告產生失敗，請檢查報告內容後再試。';
+        finishExport(false, failureMessage);
+      };
+      window.addEventListener('unhandledrejection', exportUnhandledRejectionHandler);
       pdfMake.createPdf(docDefinition).download(filename, () => {
-        setIsExporting(false);
-        setPdfPassword('');
-        setPdfPasswordConfirm('');
-        showToast('✅ PDF 報告已順利匯出下載！');
+        finishExport(true);
       });
     } catch (err) {
       console.error(err);
-      setIsExporting(false);
-      setPdfPassword('');
-      setPdfPasswordConfirm('');
-      showToast('❌ PDF 報告產生失敗，請稍後再試。若問題持續發生，請確認瀏覽器可正常下載檔案。');
+      finishExport(false);
     }
   };
   const ageData = React.useMemo(() => {
