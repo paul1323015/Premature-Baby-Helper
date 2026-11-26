@@ -1446,7 +1446,7 @@ function App() {
         try {
           const pb = parsed.birthDate ? parseDateOnly(parsed.birthDate) : null;
           const pd = parsed.dueDate ? parseDateOnly(parsed.dueDate) : null;
-          if (pb && pd && pb.getTime() > pd.getTime()) {
+          if (pb && pd && pb.getTime() > pd.getTime() && parsed.birthDueDateOrderConfirmed !== true) {
             // Detected inconsistent stored profile where birthDate is later than dueDate.
             // Swap to correct order assuming values were entered reversed.
             const corrected = {
@@ -2882,6 +2882,14 @@ function App() {
       birthDate: editFormData.birthDate ? sanitizeDateStr(editFormData.birthDate) : '',
       dueDate: editFormData.dueDate ? sanitizeDateStr(editFormData.dueDate) : ''
     };
+    delete cleanedForm.birthDueDateOrderConfirmed;
+    const birthDate = cleanedForm.birthDate ? parseDateOnly(cleanedForm.birthDate) : null;
+    const dueDate = cleanedForm.dueDate ? parseDateOnly(cleanedForm.dueDate) : null;
+    if (birthDate && dueDate && birthDate > dueDate) {
+      const shouldContinue = window.confirm(`實際出生日（${cleanedForm.birthDate}）晚於預產期（${cleanedForm.dueDate}），請確認日期是否填反。\n\n仍要照目前輸入儲存嗎？`);
+      if (!shouldContinue) return;
+      cleanedForm.birthDueDateOrderConfirmed = true;
+    }
 
     // Update babyInfo immediately with the cleaned form
     setBabyInfo(cleanedForm);
@@ -4590,6 +4598,21 @@ function App() {
   const doctorNoteCategories = [...new Set(['門診提問', '看診備忘', ...doctorNotes.map(note => note.category || note.tag || '門診提問')])].filter(Boolean);
   const isDoctorNoteDateRangeInvalid = doctorNoteFilterStartDate && doctorNoteFilterEndDate && doctorNoteFilterStartDate > doctorNoteFilterEndDate;
   const filteredDoctorNotes = isDoctorNoteDateRangeInvalid ? [] : doctorNotes.filter(note => (!doctorNoteFilterStartDate || note.date && note.date >= doctorNoteFilterStartDate) && (!doctorNoteFilterEndDate || note.date && note.date <= doctorNoteFilterEndDate) && (doctorNoteFilterCategory === 'all' || (note.category || note.tag || '門診提問') === doctorNoteFilterCategory) && (!doctorNoteSearchQuery.trim() || `${note.question || ''} ${note.answer || ''}`.toLowerCase().includes(doctorNoteSearchQuery.trim().toLowerCase())));
+  const profileBirthDate = editFormData.birthDate ? parseDateOnly(editFormData.birthDate) : null;
+  const profileDueDate = editFormData.dueDate ? parseDateOnly(editFormData.dueDate) : null;
+  const birthDueDateRelation = profileBirthDate && profileDueDate ? profileBirthDate.getTime() === profileDueDate.getTime() ? {
+    text: '同日',
+    label: '實際出生日與預產期相同'
+  } : profileBirthDate < profileDueDate ? {
+    text: '→',
+    label: '實際出生日早於預產期'
+  } : {
+    text: '←',
+    label: '預產期早於實際出生日，請確認日期'
+  } : {
+    text: '—',
+    label: '填寫兩個日期以查看先後'
+  };
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
   const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
   return /*#__PURE__*/React.createElement("div", {
@@ -5606,6 +5629,14 @@ function App() {
     className: "w-full p-2 border rounded-xl"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-1 gap-2 sm:grid-cols-2"
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      gridColumn: '1 / -1',
+      display: 'grid',
+      gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
+      alignItems: 'end',
+      gap: '8px'
+    }
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "實際出生日期"), /*#__PURE__*/React.createElement("input", {
@@ -5616,7 +5647,11 @@ function App() {
       birthDate: e.target.value
     }),
     className: "w-full p-2 border rounded-xl"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "text-center text-slate-400 font-bold px-1",
+    title: birthDueDateRelation.label,
+    "aria-label": birthDueDateRelation.label
+  }, birthDueDateRelation.text), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "預產期 (算矯正月齡)"), /*#__PURE__*/React.createElement("input", {
     type: "date",
@@ -5626,7 +5661,7 @@ function App() {
       dueDate: e.target.value
     }),
     className: "w-full p-2 border rounded-xl"
-  }))), /*#__PURE__*/React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-2 gap-2 sm:grid-cols-4"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
