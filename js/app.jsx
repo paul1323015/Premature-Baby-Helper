@@ -6584,7 +6584,7 @@
                   {[
                     ['profile', '寶寶基本資料與最新數值'],
                     ['growthRecords', '生長測量紀錄表'],
-                    ['growthChart', '生長曲線圖'],
+                    ['growthChart', '矯正月齡生長曲線圖'],
                     ['milestones', '矯正月齡發展里程碑檢核'],
                     ['careLogs', '照護日誌'],
                     ['doctor', '看診備忘與門診提問'],

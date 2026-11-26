@@ -66,7 +66,7 @@ describe('PDF export settings persistence', () => {
   test('growth records and chart have separate PDF export settings', () => {
     expect(appSource).toMatch(/growthRecords: true,\s+growthChart: true/);
     expect(appSource).toMatch(/\['growthRecords', '生長測量紀錄表'\]/);
-    expect(appSource).toMatch(/\['growthChart', '生長曲線圖'\]/);
+    expect(appSource).toMatch(/\['growthChart', '矯正月齡生長曲線圖'\]/);
     expect(appSource).toMatch(/pdfExportOptions\.growthRecords/);
     expect(appSource).toMatch(/pdfExportOptions\.growthChart/);
   });
