@@ -1106,6 +1106,7 @@ function App() {
     profile: true,
     growthRecords: true,
     growthChart: true,
+    milestones: true,
     careLogs: true,
     doctor: true,
     notes: true,
@@ -1900,7 +1901,7 @@ function App() {
     if (hasOwn('pdfExportOptions')) {
       const options = backupData.pdfExportOptions;
       if (!isBackupRecord(options)) return false;
-      if (['profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'encryptPdf', 'showExportTime'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
+      if (['profile', 'growth', 'growthRecords', 'growthChart', 'milestones', 'careLogs', 'doctor', 'notes', 'encryptPdf', 'showExportTime'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
       if (Object.prototype.hasOwnProperty.call(options, 'range') && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
       if (['startDate', 'endDate'].some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'string')) return false;
     }
@@ -3503,6 +3504,41 @@ function App() {
             }] : [])]
           }))],
           margin: [0, 0, 0, 14]
+        }] : []), ...(pdfExportOptions.milestones ? [{
+          stack: [{
+            text: '矯正月齡發展里程碑檢核',
+            style: 'sectionTitle'
+          }, milestones.length === 0 ? {
+            text: '尚無發展里程碑',
+            style: 'emptyState',
+            margin: [0, 0, 0, 10]
+          } : {
+            table: {
+              headerRows: 1,
+              widths: [78, '*'],
+              dontBreakRows: true,
+              body: [[{
+                text: '檢核狀態',
+                style: 'tableHeader'
+              }, {
+                text: '發展里程碑',
+                style: 'tableHeader'
+              }], ...milestones.map(milestone => [{
+                text: milestone.done ? '已完成' : '未完成',
+                style: 'tableCell'
+              }, {
+                text: milestone.text || '—',
+                style: 'tableCell'
+              }])]
+            },
+            layout: {
+              hLineColor: () => '#E2E8F0',
+              vLineColor: () => '#E2E8F0',
+              hLineWidth: () => 0.5,
+              vLineWidth: () => 0.5
+            },
+            margin: [0, 0, 0, 14]
+          }]
         }] : []), ...(pdfExportOptions.careLogs ? [{
           stack: [{
             text: '照護日誌',
@@ -6606,7 +6642,7 @@ function App() {
     className: "space-y-2"
   }, /*#__PURE__*/React.createElement("p", {
     className: "font-bold text-slate-700"
-  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['careLogs', '照護日誌'], ['doctor', '看診備忘與門診提問'], ['notes', '筆記本']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
+  }, "匯出資料"), [['profile', '寶寶基本資料與最新數值'], ['growthRecords', '生長測量紀錄表'], ['growthChart', '生長曲線圖'], ['milestones', '矯正月齡發展里程碑檢核'], ['careLogs', '照護日誌'], ['doctor', '看診備忘與門診提問'], ['notes', '筆記本']].map(([key, label]) => /*#__PURE__*/React.createElement("div", {
     key: key,
     className: "space-y-1"
   }, /*#__PURE__*/React.createElement("label", {

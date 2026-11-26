@@ -59,7 +59,7 @@ describe('PDF export settings persistence', () => {
 
   test('PDF export settings in backups are validated', () => {
     expect(appSource).toMatch(/if \(hasOwn\('pdfExportOptions'\)\) \{/);
-    expect(appSource).toMatch(/'profile', 'growth', 'growthRecords', 'growthChart', 'careLogs', 'doctor', 'notes', 'encryptPdf'/);
+    expect(appSource).toMatch(/'profile', 'growth', 'growthRecords', 'growthChart', 'milestones', 'careLogs', 'doctor', 'notes', 'encryptPdf'/);
     expect(appSource).toMatch(/!\['all', '7', '30', '90', 'custom'\]\.includes\(options\.range\)/);
   });
 
@@ -69,6 +69,16 @@ describe('PDF export settings persistence', () => {
     expect(appSource).toMatch(/\['growthChart', '生長曲線圖'\]/);
     expect(appSource).toMatch(/pdfExportOptions\.growthRecords/);
     expect(appSource).toMatch(/pdfExportOptions\.growthChart/);
+  });
+
+  test('corrected-age milestone checklist has a PDF setting and exports completion state', () => {
+    expect(appSource).toMatch(/growthChart: true,\s+milestones: true/);
+    expect(appSource).toMatch(/\['milestones', '矯正月齡發展里程碑檢核'\]/);
+    expect(appSource).toMatch(/\.\.\.\(pdfExportOptions\.milestones \?/);
+    expect(appSource).toMatch(/text: '矯正月齡發展里程碑檢核'/);
+    expect(appSource).toMatch(/milestone\.done \? '已完成' : '未完成'/);
+    expect(appSource).toMatch(/text: milestone\.text \|\| '—'/);
+    expect(appSource).toMatch(/'milestones', 'careLogs'/);
   });
 
   test('legacy growth export setting maps to both separate options', () => {
