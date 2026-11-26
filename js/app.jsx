@@ -400,6 +400,14 @@
       }));
 
       babyPoints.sort((a, b) => a.plotMonths - b.plotMonths);
+      const dateLabelLaneEnds = [];
+      babyPoints.forEach(point => {
+        const labelLeft = point.x - 28;
+        let lane = dateLabelLaneEnds.findIndex(labelRight => labelLeft >= labelRight + 4);
+        if (lane < 0) lane = dateLabelLaneEnds.length;
+        dateLabelLaneEnds[lane] = point.x + 28;
+        point.dateLabelLane = lane;
+      });
 
       const percentileIndices = [1, 2, 3, 4, 5];
       const percentileLabels = ['3%', '15%', '50%', '85%', '97%'];
@@ -627,14 +635,18 @@
               {babyPoints.map((p, i) => {
                 const ages = getAgesForDate(p.date, babyInfo.birthDate, babyInfo.dueDate);
                 const chartAgeDays = useChronoAxis ? ages.chronoDays : ages.correctedDays;
-                const labelText = formatAgeText(chartAgeDays, useChronoAxis ? '實際' : '矯正', true);
+                const calendarAgeText = useChronoAxis || !babyInfo.dueDate ? ages.chronoText : ages.correctedText;
+                const labelText = Math.abs(chartAgeDays) > 24 * 30.4375
+                  || chartAgeDays < 0
+                  ? formatAgeText(chartAgeDays, useChronoAxis ? '實際' : '矯正', true)
+                  : calendarAgeText;
                 const compactLabel = labelText
                   .replace(/^矯正\s*/, '')
                   .replace(/^實際\s*/, '')
                   .replace(/個月/g, '月')
                   .replace(/天/g, '天');
                 // Move the small orange date label above the bottom axis to avoid overlapping ticks
-                const labelY = height - padding.bottom - 10;
+                const labelY = height - padding.bottom - 10 - p.dateLabelLane * 16;
                 const labelRectX = p.x - 28;
                 const labelRectWidth = 56;
 

@@ -54,14 +54,26 @@ describe('growth chart month range', () => {
     expect(appSource).toContain('預產期前僅顯示測量點，不提供 WHO 百分位判讀。');
   });
 
-  test('measurement age labels use the same day-based age as chart positions', () => {
+  test('measurement positions use day-based age while labels use calendar age', () => {
     const appSource = fs.readFileSync(
       path.join(__dirname, '..', 'js', 'app.jsx'),
       'utf8'
     );
 
     expect(appSource).toMatch(/const chartAgeDays = useChronoAxis \? ages\.chronoDays : ages\.correctedDays/);
-    expect(appSource).toMatch(/formatAgeText\(chartAgeDays, useChronoAxis \? '實際' : '矯正', true\)/);
+    expect(appSource).toMatch(/const calendarAgeText = useChronoAxis \|\| !babyInfo\.dueDate \? ages\.chronoText : ages\.correctedText/);
+    expect(appSource).toMatch(/Math\.abs\(chartAgeDays\) > 24 \* 30\.4375[\s\S]*?chartAgeDays < 0[\s\S]*?formatAgeText\(chartAgeDays, useChronoAxis \? '實際' : '矯正', true\)[\s\S]*?: calendarAgeText/);
+  });
+
+  test('nearby measurement age labels use separate vertical lanes', () => {
+    const appSource = fs.readFileSync(
+      path.join(__dirname, '..', 'js', 'app.jsx'),
+      'utf8'
+    );
+
+    expect(appSource).toMatch(/const dateLabelLaneEnds = \[\];[\s\S]*?const labelLeft = point\.x - 28;[\s\S]*?dateLabelLaneEnds\.findIndex\(labelRight => labelLeft >= labelRight \+ 4\)/);
+    expect(appSource).toMatch(/point\.dateLabelLane = lane/);
+    expect(appSource).toMatch(/height - padding\.bottom - 10 - p\.dateLabelLane \* 16/);
   });
 
   test('chart scale helper shares the app bundle cache version', () => {
