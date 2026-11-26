@@ -44,6 +44,16 @@ describe('growth chart month range', () => {
     expect(appSource).toContain('預產期前僅顯示測量點，不提供 WHO 百分位判讀。');
   });
 
+  test('measurement age labels use the same day-based age as chart positions', () => {
+    const appSource = fs.readFileSync(
+      path.join(__dirname, '..', 'js', 'app.jsx'),
+      'utf8'
+    );
+
+    expect(appSource).toMatch(/const chartAgeDays = useChronoAxis \? ages\.chronoDays : ages\.correctedDays/);
+    expect(appSource).toMatch(/formatAgeText\(chartAgeDays, useChronoAxis \? '實際' : '矯正', true\)/);
+  });
+
   test('chart scale helper shares the app bundle cache version', () => {
     const indexSource = fs.readFileSync(
       path.join(__dirname, '..', 'index.html'),

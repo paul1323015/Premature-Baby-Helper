@@ -809,9 +809,8 @@ const PretermGrowthChart = ({
     }, percentileLabels[i]));
   }), babyPoints.map((p, i) => {
     const ages = getAgesForDate(p.date, babyInfo.birthDate, babyInfo.dueDate);
-    const correctedAgeCalculatedLabel = ages.correctedText;
-    const actualAgeCalculatedLabel = ages.chronoText;
-    const labelText = useChronoAxis ? actualAgeCalculatedLabel : correctedAgeCalculatedLabel;
+    const chartAgeDays = useChronoAxis ? ages.chronoDays : ages.correctedDays;
+    const labelText = formatAgeText(chartAgeDays, useChronoAxis ? '實際' : '矯正', true);
     const compactLabel = labelText.replace(/^矯正\s*/, '').replace(/^實際\s*/, '').replace(/個月/g, '月').replace(/天/g, '天');
     // Move the small orange date label above the bottom axis to avoid overlapping ticks
     const labelY = height - padding.bottom - 10;
