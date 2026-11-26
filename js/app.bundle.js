@@ -1712,11 +1712,20 @@ function App() {
   React.useEffect(() => {
     if (babyInfo.gender) setSelectedGender(babyInfo.gender);
   }, [babyInfo.gender]);
-  React.useEffect(() => {
+  const getLatestGrowthMeasurements = () => {
     const sortedHistory = [...growthHistory].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-    const latestWeight = sortedHistory.find(item => typeof item.weight !== 'undefined' && item.weight !== null);
-    const latestHeight = sortedHistory.find(item => typeof item.height !== 'undefined' && item.height !== null);
-    const latestHead = sortedHistory.find(item => typeof item.head !== 'undefined' && item.head !== null);
+    return {
+      weight: sortedHistory.find(item => typeof item.weight !== 'undefined' && item.weight !== null),
+      height: sortedHistory.find(item => typeof item.height !== 'undefined' && item.height !== null),
+      head: sortedHistory.find(item => typeof item.head !== 'undefined' && item.head !== null)
+    };
+  };
+  React.useEffect(() => {
+    const {
+      weight: latestWeight,
+      height: latestHeight,
+      head: latestHead
+    } = getLatestGrowthMeasurements();
     setBabyInfo(previous => {
       let updated = previous;
       if (latestWeight && previous.currentWeight !== latestWeight.weight) {
@@ -2668,9 +2677,30 @@ function App() {
     showToast('🗑️ 已刪除筆記');
   };
   const handleOpenEditModal = () => {
-    setEditFormData({
+    const latestMeasurements = getLatestGrowthMeasurements();
+    let updatedBabyInfo = {
       ...babyInfo
-    });
+    };
+    if (latestMeasurements.weight && updatedBabyInfo.currentWeight !== latestMeasurements.weight.weight) {
+      updatedBabyInfo = {
+        ...updatedBabyInfo,
+        currentWeight: latestMeasurements.weight.weight
+      };
+    }
+    if (latestMeasurements.height && updatedBabyInfo.currentHeight !== latestMeasurements.height.height) {
+      updatedBabyInfo = {
+        ...updatedBabyInfo,
+        currentHeight: latestMeasurements.height.height
+      };
+    }
+    if (latestMeasurements.head && updatedBabyInfo.currentHead !== latestMeasurements.head.head) {
+      updatedBabyInfo = {
+        ...updatedBabyInfo,
+        currentHead: latestMeasurements.head.head
+      };
+    }
+    if (updatedBabyInfo !== babyInfo) setBabyInfo(updatedBabyInfo);
+    setEditFormData(updatedBabyInfo);
     setShowEditProfileModal(true);
   };
   const handleSaveProfile = e => {
