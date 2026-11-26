@@ -4486,13 +4486,6 @@
         )
       ));
 
-      const profileBirthDate = editFormData.birthDate ? parseDateOnly(editFormData.birthDate) : null;
-      const profileDueDate = editFormData.dueDate ? parseDateOnly(editFormData.dueDate) : null;
-      const birthDueDateRelation = profileBirthDate && profileDueDate
-        && profileBirthDate.getTime() === profileDueDate.getTime()
-        ? '同日'
-        : '';
-
       const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
       const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
 
@@ -5669,7 +5662,7 @@
                     </div>
                   </div>
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)', alignItems: 'end', gap: '8px' }}>
+                    <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', alignItems: 'end', gap: '8px' }}>
                       <div>
                         <label className="font-bold block mb-1">實際出生日期</label>
                         <input
@@ -5678,9 +5671,6 @@
                           onChange={(e) => setEditFormData({ ...editFormData, birthDate: e.target.value })}
                           className="w-full p-2 border rounded-xl"
                         />
-                      </div>
-                      <div className="text-center text-slate-400 font-bold px-1">
-                        {birthDueDateRelation}
                       </div>
                       <div>
                         <label className="font-bold block mb-1">預產期 (算矯正月齡)</label>

@@ -10,10 +10,9 @@ describe('profile birth and due date order confirmation', () => {
     /const handleSaveProfile = \(e\) => \{([\s\S]*?)\n      \};/
   );
 
-  test('shows same-day text but no directional arrows between the date fields', () => {
-    expect(appSource).toMatch(/profileBirthDate\.getTime\(\) === profileDueDate\.getTime\(\)\s*\?\s*'同日'/);
-    expect(appSource).not.toMatch(/text: '[←→]'/);
-    expect(appSource).toMatch(/>\s*\{birthDueDateRelation\}\s*</);
+  test('shows no date relationship text or arrows between the date fields', () => {
+    expect(appSource).not.toMatch(/birthDueDateRelation|profileBirthDate|profileDueDate|'同日'|[←→]/);
+    expect(appSource).toMatch(/gridTemplateColumns: 'minmax\(0, 1fr\) minmax\(0, 1fr\)'/);
   });
 
   test('asks before saving when the actual birth date is later than the due date', () => {

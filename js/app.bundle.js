@@ -4598,9 +4598,6 @@ function App() {
   const doctorNoteCategories = [...new Set(['門診提問', '看診備忘', ...doctorNotes.map(note => note.category || note.tag || '門診提問')])].filter(Boolean);
   const isDoctorNoteDateRangeInvalid = doctorNoteFilterStartDate && doctorNoteFilterEndDate && doctorNoteFilterStartDate > doctorNoteFilterEndDate;
   const filteredDoctorNotes = isDoctorNoteDateRangeInvalid ? [] : doctorNotes.filter(note => (!doctorNoteFilterStartDate || note.date && note.date >= doctorNoteFilterStartDate) && (!doctorNoteFilterEndDate || note.date && note.date <= doctorNoteFilterEndDate) && (doctorNoteFilterCategory === 'all' || (note.category || note.tag || '門診提問') === doctorNoteFilterCategory) && (!doctorNoteSearchQuery.trim() || `${note.question || ''} ${note.answer || ''}`.toLowerCase().includes(doctorNoteSearchQuery.trim().toLowerCase())));
-  const profileBirthDate = editFormData.birthDate ? parseDateOnly(editFormData.birthDate) : null;
-  const profileDueDate = editFormData.dueDate ? parseDateOnly(editFormData.dueDate) : null;
-  const birthDueDateRelation = profileBirthDate && profileDueDate && profileBirthDate.getTime() === profileDueDate.getTime() ? '同日' : '';
   const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
   const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
   return /*#__PURE__*/React.createElement("div", {
@@ -5621,7 +5618,7 @@ function App() {
     style: {
       gridColumn: '1 / -1',
       display: 'grid',
-      gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)',
+      gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
       alignItems: 'end',
       gap: '8px'
     }
@@ -5635,9 +5632,7 @@ function App() {
       birthDate: e.target.value
     }),
     className: "w-full p-2 border rounded-xl"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "text-center text-slate-400 font-bold px-1"
-  }, birthDueDateRelation), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("label", {
     className: "font-bold block mb-1"
   }, "預產期 (算矯正月齡)"), /*#__PURE__*/React.createElement("input", {
     type: "date",
