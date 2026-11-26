@@ -10,11 +10,10 @@ describe('profile birth and due date order confirmation', () => {
     /const handleSaveProfile = \(e\) => \{([\s\S]*?)\n      \};/
   );
 
-  test('shows the date relationship dynamically between the profile date fields', () => {
-    expect(appSource).toMatch(/profileBirthDate\.getTime\(\) === profileDueDate\.getTime\(\)[\s\S]*?text: '同日'/);
-    expect(appSource).toMatch(/profileBirthDate < profileDueDate[\s\S]*?text: '→'/);
-    expect(appSource).toMatch(/text: '←', label: '預產期早於實際出生日，請確認日期'/);
-    expect(appSource).toMatch(/title=\{birthDueDateRelation\.label\} aria-label=\{birthDueDateRelation\.label\}/);
+  test('shows same-day text but no directional arrows between the date fields', () => {
+    expect(appSource).toMatch(/profileBirthDate\.getTime\(\) === profileDueDate\.getTime\(\)\s*\?\s*'同日'/);
+    expect(appSource).not.toMatch(/text: '[←→]'/);
+    expect(appSource).toMatch(/>\s*\{birthDueDateRelation\}\s*</);
   });
 
   test('asks before saving when the actual birth date is later than the due date', () => {

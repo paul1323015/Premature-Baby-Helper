@@ -4489,12 +4489,9 @@
       const profileBirthDate = editFormData.birthDate ? parseDateOnly(editFormData.birthDate) : null;
       const profileDueDate = editFormData.dueDate ? parseDateOnly(editFormData.dueDate) : null;
       const birthDueDateRelation = profileBirthDate && profileDueDate
-        ? profileBirthDate.getTime() === profileDueDate.getTime()
-          ? { text: '同日', label: '實際出生日與預產期相同' }
-          : profileBirthDate < profileDueDate
-            ? { text: '→', label: '實際出生日早於預產期' }
-            : { text: '←', label: '預產期早於實際出生日，請確認日期' }
-        : { text: '—', label: '填寫兩個日期以查看先後' };
+        && profileBirthDate.getTime() === profileDueDate.getTime()
+        ? '同日'
+        : '';
 
       const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
       const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
@@ -5682,8 +5679,8 @@
                           className="w-full p-2 border rounded-xl"
                         />
                       </div>
-                      <div className="text-center text-slate-400 font-bold px-1" title={birthDueDateRelation.label} aria-label={birthDueDateRelation.label}>
-                        {birthDueDateRelation.text}
+                      <div className="text-center text-slate-400 font-bold px-1">
+                        {birthDueDateRelation}
                       </div>
                       <div>
                         <label className="font-bold block mb-1">預產期 (算矯正月齡)</label>
