@@ -1712,6 +1712,34 @@ function App() {
   React.useEffect(() => {
     if (babyInfo.gender) setSelectedGender(babyInfo.gender);
   }, [babyInfo.gender]);
+  React.useEffect(() => {
+    const sortedHistory = [...growthHistory].sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    const latestWeight = sortedHistory.find(item => typeof item.weight !== 'undefined' && item.weight !== null);
+    const latestHeight = sortedHistory.find(item => typeof item.height !== 'undefined' && item.height !== null);
+    const latestHead = sortedHistory.find(item => typeof item.head !== 'undefined' && item.head !== null);
+    setBabyInfo(previous => {
+      let updated = previous;
+      if (latestWeight && previous.currentWeight !== latestWeight.weight) {
+        updated = {
+          ...updated,
+          currentWeight: latestWeight.weight
+        };
+      }
+      if (latestHeight && previous.currentHeight !== latestHeight.height) {
+        updated = {
+          ...updated,
+          currentHeight: latestHeight.height
+        };
+      }
+      if (latestHead && previous.currentHead !== latestHead.head) {
+        updated = {
+          ...updated,
+          currentHead: latestHead.head
+        };
+      }
+      return updated;
+    });
+  }, [growthHistory]);
 
   // If initializer set a transient fix notice, show it once after mount
   React.useEffect(() => {
