@@ -724,8 +724,8 @@ const PretermGrowthChart = ({
     x: padding.left - 6,
     y: yScale(yVal) + 4,
     textAnchor: "end",
-    className: "fill-slate-400 font-mono text-[10px]"
-  }, yVal, " ", metricConfig.unit))), monthTicks.map(mVal => {
+    className: "fill-slate-500 font-mono text-[9px] font-medium"
+  }, yVal))), monthTicks.map(mVal => {
     const xPos = xScale(mVal);
     const isZero = mVal === 0;
     const emphasizeZero = isZero && showZeroBaseline;

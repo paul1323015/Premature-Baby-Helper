@@ -32,6 +32,16 @@ describe('growth chart month range', () => {
     expect(appSource).not.toMatch(/\{isZero \? '0個月' : `\$\{mVal\}個`\}/);
   });
 
+  test('web chart Y-axis tick labels match the X-axis number-only styling', () => {
+    const appSource = fs.readFileSync(
+      path.join(__dirname, '..', 'js', 'app.jsx'),
+      'utf8'
+    );
+
+    expect(appSource).toMatch(/textAnchor="end" className="fill-slate-500 font-mono text-\[9px\] font-medium">\{yVal\}<\/text>/);
+    expect(appSource).not.toMatch(/\{yVal\} \{metricConfig\.unit\}/);
+  });
+
   test('WHO percentile curves require corrected age with a due date', () => {
     const appSource = fs.readFileSync(
       path.join(__dirname, '..', 'js', 'app.jsx'),

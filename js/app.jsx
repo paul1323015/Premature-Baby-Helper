@@ -575,7 +575,7 @@
               {metricConfig.yTicks.map((yVal) => (
                 <g key={`y-${yVal}`}>
                   <line x1={padding.left} y1={yScale(yVal)} x2={width - padding.right} y2={yScale(yVal)} stroke="#f1f5f9" strokeWidth="1" />
-                  <text x={padding.left - 6} y={yScale(yVal) + 4} textAnchor="end" className="fill-slate-400 font-mono text-[10px]">{yVal} {metricConfig.unit}</text>
+                  <text x={padding.left - 6} y={yScale(yVal) + 4} textAnchor="end" className="fill-slate-500 font-mono text-[9px] font-medium">{yVal}</text>
                 </g>
               ))}
 
