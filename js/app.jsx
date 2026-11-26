@@ -869,6 +869,8 @@
         growthRecords: true,
         growthChart: true,
         milestones: true,
+        todayMilkProgress: true,
+        careReminders: true,
         careLogs: true,
         doctor: true,
         notes: true,
@@ -1704,7 +1706,7 @@
         if (hasOwn('pdfExportOptions')) {
           const options = backupData.pdfExportOptions;
           if (!isBackupRecord(options)) return false;
-          if (['profile', 'growth', 'growthRecords', 'growthChart', 'milestones', 'careLogs', 'doctor', 'notes', 'encryptPdf', 'showExportTime']
+          if (['profile', 'growth', 'growthRecords', 'growthChart', 'milestones', 'todayMilkProgress', 'careReminders', 'careLogs', 'doctor', 'notes', 'encryptPdf', 'showExportTime']
             .some(key => Object.prototype.hasOwnProperty.call(options, key) && typeof options[key] !== 'boolean')) return false;
           if (Object.prototype.hasOwnProperty.call(options, 'range')
             && !['all', '7', '30', '90', 'custom'].includes(options.range)) return false;
@@ -3064,6 +3066,10 @@
           const pdfLogs = logs.filter(isPdfRecordInRange);
           const pdfDoctorNotes = doctorNotes.filter(isPdfRecordInRange);
           const pdfNotes = notes.filter(isPdfRecordInRange);
+          const pdfCareReminders = [...careReminders]
+            .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime());
+          const pdfExportDate = getLocalDateInputValue();
+          const pdfExportNow = Date.now();
 
           const pdfMake = window.pdfMake;
           pdfMake.fonts = Object.assign({}, pdfMake.fonts || {}, {
@@ -3369,6 +3375,66 @@
                         },
                         margin: [0, 0, 0, 14]
                       }
+                ]
+              }] : []),
+              ...(pdfExportOptions.todayMilkProgress ? [{
+                stack: [
+                      { text: '今日總奶量進度', style: 'sectionTitle' },
+                      { text: `日期：${pdfExportDate}`, style: 'listItem' },
+                      {
+                        text: `已記錄奶量：${todayTotalMilk} ml / 每日目標：${targetMilkNum > 0 ? `${targetMilkNum} ml` : '未設定'}`,
+                        style: 'listItem'
+                      },
+                      {
+                        text: targetMilkNum > 0 ? `已達成每日目標的 ${milkPercent}%` : '尚未設定每日目標奶量',
+                        style: 'muted',
+                        margin: [0, 0, 0, 10]
+                      }
+                ]
+              }] : []),
+              ...(pdfExportOptions.careReminders ? [{
+                stack: [
+                      { text: '照護提醒', style: 'sectionTitle' },
+                      pdfCareReminders.length === 0
+                        ? { text: '目前沒有未完成的照護提醒', style: 'emptyState', margin: [0, 0, 0, 10] }
+                        : {
+                            table: {
+                              headerRows: 1,
+                              widths: [62, '*', 110, 66],
+                              dontBreakRows: true,
+                              body: [
+                                [
+                                  { text: '狀態', style: 'tableHeader' },
+                                  { text: '提醒事項', style: 'tableHeader' },
+                                  { text: '提醒時間', style: 'tableHeader' },
+                                  { text: '重複間隔', style: 'tableHeader' }
+                                ],
+                                ...pdfCareReminders.map(reminder => {
+                                  const repeatInterval = getCareReminderRepeatInterval(reminder);
+                                  return [
+                                    { text: new Date(reminder.dueAt).getTime() <= pdfExportNow ? '已到期' : '預定', style: 'tableCell' },
+                                    { text: reminder.title || '照護提醒', style: 'tableCell' },
+                                    { text: formatReminderDateTimeInput(new Date(reminder.dueAt)).replace('T', ' '), style: 'tableCell' },
+                                    {
+                                      text: repeatInterval === null
+                                        ? '—'
+                                        : repeatInterval % 60 === 0
+                                          ? `${repeatInterval / 60} 小時`
+                                          : `${repeatInterval} 分鐘`,
+                                      style: 'tableCell'
+                                    }
+                                  ];
+                                })
+                              ]
+                            },
+                            layout: {
+                              hLineColor: () => '#E2E8F0',
+                              vLineColor: () => '#E2E8F0',
+                              hLineWidth: () => 0.5,
+                              vLineWidth: () => 0.5
+                            },
+                            margin: [0, 0, 0, 14]
+                          }
                 ]
               }] : []),
               ...(pdfExportOptions.careLogs ? [{
@@ -6586,6 +6652,8 @@
                     ['growthRecords', '生長測量紀錄表'],
                     ['growthChart', '矯正月齡生長曲線圖'],
                     ['milestones', '矯正月齡發展里程碑檢核'],
+                    ['todayMilkProgress', '今日總奶量進度'],
+                    ['careReminders', '照護提醒'],
                     ['careLogs', '照護日誌'],
                     ['doctor', '看診備忘與門診提問'],
                     ['notes', '筆記本']

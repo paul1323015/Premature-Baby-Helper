@@ -59,7 +59,7 @@ describe('PDF export settings persistence', () => {
 
   test('PDF export settings in backups are validated', () => {
     expect(appSource).toMatch(/if \(hasOwn\('pdfExportOptions'\)\) \{/);
-    expect(appSource).toMatch(/'profile', 'growth', 'growthRecords', 'growthChart', 'milestones', 'careLogs', 'doctor', 'notes', 'encryptPdf'/);
+    expect(appSource).toMatch(/'profile', 'growth', 'growthRecords', 'growthChart', 'milestones', 'todayMilkProgress', 'careReminders', 'careLogs', 'doctor', 'notes', 'encryptPdf'/);
     expect(appSource).toMatch(/!\['all', '7', '30', '90', 'custom'\]\.includes\(options\.range\)/);
   });
 
@@ -78,7 +78,21 @@ describe('PDF export settings persistence', () => {
     expect(appSource).toMatch(/text: '矯正月齡發展里程碑檢核'/);
     expect(appSource).toMatch(/milestone\.done \? '已完成' : '未完成'/);
     expect(appSource).toMatch(/text: milestone\.text \|\| '—'/);
-    expect(appSource).toMatch(/'milestones', 'careLogs'/);
+    expect(appSource).toMatch(/'milestones', 'todayMilkProgress', 'careReminders', 'careLogs'/);
+  });
+
+  test('today milk progress and care reminders have separate PDF settings and export summaries', () => {
+    expect(appSource).toMatch(/milestones: true,\s+todayMilkProgress: true,\s+careReminders: true/);
+    expect(appSource).toMatch(/'milestones', 'todayMilkProgress', 'careReminders', 'careLogs'/);
+    expect(appSource).toMatch(/\['todayMilkProgress', '今日總奶量進度'\]/);
+    expect(appSource).toMatch(/\['careReminders', '照護提醒'\]/);
+    expect(appSource).toMatch(/pdfExportOptions\.todayMilkProgress/);
+    expect(appSource).toMatch(/已記錄奶量：\$\{todayTotalMilk\} ml \/ 每日目標：/);
+    expect(appSource).toMatch(/pdfExportOptions\.careReminders/);
+    expect(appSource).toMatch(/pdfCareReminders\.map\(reminder => \{/);
+    expect(appSource).toMatch(/'已到期' : '預定'/);
+    expect(appSource).toMatch(/formatReminderDateTimeInput\(new Date\(reminder\.dueAt\)\)/);
+    expect(appSource).toMatch(/repeatInterval === null/);
   });
 
   test('legacy growth export setting maps to both separate options', () => {
