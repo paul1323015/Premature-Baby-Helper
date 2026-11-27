@@ -1068,14 +1068,27 @@
 
     function App() {
       const defaultNoteCategories = ['回診提問', '成長大事記', '其他備忘'];
-      const [isNightMode, setIsNightMode] = React.useState(() => {
+      const [themeMode, setThemeMode] = React.useState(() => {
         try {
-          return localStorage.getItem('sun_baby_night_mode_v1') === 'true';
+          const savedThemeMode = localStorage.getItem('sun_baby_theme_mode_v1');
+          if (['light', 'dark', 'system'].includes(savedThemeMode)) return savedThemeMode;
+          return localStorage.getItem('sun_baby_night_mode_v1') === 'true' ? 'dark' : 'light';
         } catch (error) {
           console.error('Failed to read night mode preference:', error);
+          return 'light';
+        }
+      });
+      const [systemPrefersDark, setSystemPrefersDark] = React.useState(() => {
+        try {
+          return typeof window !== 'undefined'
+            && typeof window.matchMedia === 'function'
+            && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        } catch (error) {
+          console.error('Failed to read system color preference:', error);
           return false;
         }
       });
+      const isNightMode = themeMode === 'dark' || (themeMode === 'system' && systemPrefersDark);
       const [activeTab, setActiveTab] = React.useState('dashboard');
       const [showHelpModal, setShowHelpModal] = React.useState(false);
       const [showBackupModal, setShowBackupModal] = React.useState(false);
@@ -1084,6 +1097,11 @@
       const [storageUsage, setStorageUsage] = React.useState({ bytes: 0, percent: 0 });
       const storageWarningLevelRef = React.useRef(0);
       const [showNotesModal, setShowNotesModal] = React.useState(false);
+      const [showThemeMenu, setShowThemeMenu] = React.useState(false);
+      const [themeMenuPosition, setThemeMenuPosition] = React.useState({ top: 8, right: 8 });
+      const themeMenuTriggerRef = React.useRef(null);
+      const themeMenuRef = React.useRef(null);
+      const firstThemeMenuItemRef = React.useRef(null);
       const [isExporting, setIsExporting] = React.useState(false);
       const [showPdfSettingsModal, setShowPdfSettingsModal] = React.useState(false);
       const [showPdfPasswordModal, setShowPdfPasswordModal] = React.useState(false);
@@ -1597,6 +1615,7 @@
         'sun_baby_note_categories_v1',
         'sun_baby_milestones_v1',
         'sun_baby_night_mode_v1',
+        'sun_baby_theme_mode_v1',
         'sun_baby_pdf_export_options_v1',
         'sun_baby_growth_chart_options_v1',
         ...LEGACY_BACKUP_STORAGE_KEYS
@@ -1655,6 +1674,50 @@
       }, []);
 
       React.useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const handleSystemColorChange = event => {
+          setSystemPrefersDark(event.matches);
+          if (themeMode === 'system') {
+            try {
+              localStorage.setItem('sun_baby_night_mode_v1', String(event.matches));
+            } catch (error) {
+              console.error('Failed to save system color preference:', error);
+            }
+          }
+        };
+        setSystemPrefersDark(mediaQuery.matches);
+        if (typeof mediaQuery.addEventListener === 'function') {
+          mediaQuery.addEventListener('change', handleSystemColorChange);
+          return () => mediaQuery.removeEventListener('change', handleSystemColorChange);
+        }
+        mediaQuery.addListener(handleSystemColorChange);
+        return () => mediaQuery.removeListener(handleSystemColorChange);
+      }, [themeMode]);
+
+      React.useEffect(() => {
+        if (!showThemeMenu) return;
+        const dismissThemeMenu = event => {
+          if (event && (
+            themeMenuTriggerRef.current?.contains(event.target)
+            || themeMenuRef.current?.contains(event.target)
+          )) return;
+          setShowThemeMenu(false);
+        };
+        const handlePointerDown = event => dismissThemeMenu(event);
+        const handleViewportChange = () => dismissThemeMenu();
+        document.addEventListener('pointerdown', handlePointerDown);
+        window.addEventListener('resize', handleViewportChange);
+        window.addEventListener('scroll', handleViewportChange, true);
+        firstThemeMenuItemRef.current?.focus();
+        return () => {
+          document.removeEventListener('pointerdown', handlePointerDown);
+          window.removeEventListener('resize', handleViewportChange);
+          window.removeEventListener('scroll', handleViewportChange, true);
+        };
+      }, [showThemeMenu]);
+
+      React.useEffect(() => {
         const usage = refreshStorageUsage();
         const nextLevel = usage.bytes >= STORAGE_LIMIT_BYTES ? 2 : usage.bytes >= STORAGE_WARNING_BYTES ? 1 : 0;
         if (nextLevel > storageWarningLevelRef.current && nextLevel > 0) {
@@ -1667,7 +1730,7 @@
         APP_STORAGE_KEYS.forEach((key) => {
           try { localStorage.removeItem(key); } catch (error) { console.error('Failed to remove key:', key, error); }
         });
-        setIsNightMode(false);
+        setThemeMode('light');
         setPdfExportOptions(DEFAULT_PDF_EXPORT_OPTIONS);
         setPdfExportDraft(DEFAULT_PDF_EXPORT_OPTIONS);
         setGrowthChartOptions(DEFAULT_GROWTH_CHART_OPTIONS);
@@ -1881,7 +1944,8 @@
         notebookNotes: notes,
         doctorQuestions: doctorNotes,
         pdfExportOptions,
-        growthChartOptions
+        growthChartOptions,
+        themeMode
       });
 
       const isBackupRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -1930,6 +1994,7 @@
         if (hasOwn('noteCategories') && (!Array.isArray(backupData.noteCategories)
           || !backupData.noteCategories.every(category => typeof category === 'string'))) return false;
         if (hasOwn('nightMode') && typeof backupData.nightMode !== 'boolean') return false;
+        if (hasOwn('themeMode') && !['light', 'dark', 'system'].includes(backupData.themeMode)) return false;
         if (hasOwn('doctorVisitSummary') && typeof backupData.doctorVisitSummary !== 'string') return false;
         if (hasOwn('pdfExportOptions')) {
           const options = backupData.pdfExportOptions;
@@ -1981,6 +2046,14 @@
 
         if (typeof backupData.nightMode === 'boolean') {
           addEntry('sun_baby_night_mode_v1', String(backupData.nightMode));
+        }
+        const restoredThemeMode = ['light', 'dark', 'system'].includes(backupData.themeMode)
+          ? backupData.themeMode
+          : typeof backupData.nightMode === 'boolean'
+            ? backupData.nightMode ? 'dark' : 'light'
+            : null;
+        if (restoredThemeMode) {
+          addEntry('sun_baby_theme_mode_v1', restoredThemeMode);
         }
         if (Array.isArray(backupData.vaccinationLogs)) {
           addEntry('sun_baby_vaccination_logs_v1', backupData.vaccinationLogs);
@@ -2158,8 +2231,10 @@
           return;
         }
 
-        if (typeof backupData.nightMode === 'boolean') {
-          setIsNightMode(backupData.nightMode);
+        if (['light', 'dark', 'system'].includes(backupData.themeMode)) {
+          setThemeMode(backupData.themeMode);
+        } else if (typeof backupData.nightMode === 'boolean') {
+          setThemeMode(backupData.nightMode ? 'dark' : 'light');
         }
         if (isBackupRecord(backupData.pdfExportOptions)) {
           const restoredPdfExportOptions = normalizePdfExportOptions(backupData.pdfExportOptions);
@@ -3150,15 +3225,32 @@
         showToast('🧴 已重設奶量設定/目標');
       };
 
+      const handleSetThemeMode = mode => {
+        const themeModeLabels = { light: '淺色', dark: '深色', system: '跟隨裝置' };
+        const nextIsNightMode = mode === 'dark' || (mode === 'system' && systemPrefersDark);
+        setThemeMode(mode);
+        setShowThemeMenu(false);
+        themeMenuTriggerRef.current?.focus();
+        try {
+          localStorage.setItem('sun_baby_theme_mode_v1', mode);
+          localStorage.setItem('sun_baby_night_mode_v1', String(nextIsNightMode));
+          showToast(`✅ 外觀已設為：${themeModeLabels[mode]}`);
+        } catch (error) {
+          console.error('Failed to save theme mode preference:', error);
+          showToast(`⚠️ 外觀已切換為${themeModeLabels[mode]}，但偏好儲存失敗，重新整理後可能恢復原設定。`);
+        }
+      };
+
       const handleResetNightMode = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將重設夜間模式設定並切回日間模式。確定要繼續嗎？'
+          '⚠️ 此操作將重設外觀模式設定並切回淺色模式。確定要繼續嗎？'
         );
         if (!confirmed) return;
         try {
           localStorage.removeItem('sun_baby_night_mode_v1');
-          setIsNightMode(false);
-          showToast('🌙 已重設夜間模式設定，目前為日間模式。');
+          localStorage.removeItem('sun_baby_theme_mode_v1');
+          setThemeMode('light');
+          showToast('🌙 已重設外觀模式設定，目前為淺色模式。');
         } catch (error) {
           console.error('Failed to reset night mode preference:', error);
           showToast('⚠️ 無法重設夜間模式設定，請稍後再試。');
@@ -4490,6 +4582,60 @@
 
       const themeBg = isNightMode ? 'bg-slate-900 text-slate-100' : 'bg-amber-50/50 text-slate-800';
       const cardBg = isNightMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100';
+      const themeModeMenu = showThemeMenu && typeof document !== 'undefined'
+        ? ReactDOM.createPortal(
+          <div
+            id="theme-mode-menu"
+            role="menu"
+            aria-label="選擇外觀模式"
+            className="fixed z-50 rounded-xl border shadow-xl bg-white text-slate-800"
+            style={{ width: '11rem', top: themeMenuPosition.top, right: themeMenuPosition.right }}
+            onKeyDown={event => {
+              if (event.key === 'Escape') {
+                setShowThemeMenu(false);
+                themeMenuTriggerRef.current?.focus();
+                return;
+              }
+              if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
+                event.preventDefault();
+                const items = Array.from(event.currentTarget.querySelectorAll('[role="menuitemradio"]'));
+                const currentIndex = items.indexOf(document.activeElement);
+                const nextIndex = event.key === 'Home'
+                  ? 0
+                  : event.key === 'End'
+                    ? items.length - 1
+                    : (currentIndex + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+                items[nextIndex]?.focus();
+              }
+            }}
+            ref={themeMenuRef}
+          >
+            {[
+              { value: 'light', label: '淺色' },
+              { value: 'dark', label: '深色' },
+              { value: 'system', label: '跟隨裝置' }
+            ].map(option => (
+              <button
+                key={option.value}
+                type="button"
+                role="menuitemradio"
+                aria-checked={themeMode === option.value}
+                onClick={() => handleSetThemeMode(option.value)}
+                ref={option.value === 'light' ? firstThemeMenuItemRef : null}
+                className="w-full px-3 py-2 text-xs text-left"
+                style={{
+                  backgroundColor: themeMode === option.value ? '#fef3c7' : '#ffffff',
+                  color: '#1e293b',
+                  fontWeight: themeMode === option.value ? 'bold' : 'normal'
+                }}
+              >
+                {option.label}{themeMode === option.value ? '（目前）' : ''}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )
+        : null;
 
       return (
         <div className={`min-h-screen font-sans ${themeBg} transition-colors duration-200 relative`}>
@@ -4608,23 +4754,32 @@
                 >
                   <Icon name="info" className="w-4 h-4" />
                 </button>
-                <button
-                  onClick={() => {
-                    const nextIsNightMode = !isNightMode;
-                    setIsNightMode(nextIsNightMode);
-                    try {
-                      localStorage.setItem('sun_baby_night_mode_v1', String(nextIsNightMode));
-                      showToast(`✅ 已${nextIsNightMode ? '開啟' : '關閉'}夜間模式`);
-                    } catch (error) {
-                      console.error('Failed to save night mode preference:', error);
-                      showToast(`⚠️ 已${nextIsNightMode ? '開啟' : '關閉'}夜間模式，但偏好儲存失敗，重新整理後可能恢復原設定。`);
-                    }
-                  }}
-                  className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
-                  title="切換夜間模式"
-                >
-                  <Icon name="moon" className="w-4 h-4" />
-                </button>
+                <div>
+                  <button
+                    ref={themeMenuTriggerRef}
+                    onClick={event => {
+                      if (showThemeMenu) {
+                        setShowThemeMenu(false);
+                        return;
+                      }
+                      const buttonRect = event.currentTarget.getBoundingClientRect();
+                      setThemeMenuPosition({
+                        top: Math.max(8, Math.min(buttonRect.bottom + 4, window.innerHeight - 160)),
+                        right: Math.max(8, window.innerWidth - buttonRect.right)
+                      });
+                      setShowThemeMenu(true);
+                    }}
+                    aria-haspopup="menu"
+                    aria-expanded={showThemeMenu}
+                    aria-controls="theme-mode-menu"
+                    aria-label={`外觀模式：${themeMode === 'light' ? '淺色' : themeMode === 'dark' ? '深色' : '跟隨裝置'}`}
+                    className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
+                    title={`外觀模式：${themeMode === 'light' ? '淺色' : themeMode === 'dark' ? '深色' : '跟隨裝置'}`}
+                  >
+                    <Icon name="moon" className="w-4 h-4" />
+                  </button>
+                </div>
+                {themeModeMenu}
               </div>
             </div>
           </header>
