@@ -3253,7 +3253,7 @@
           showToast('🌙 已重設外觀模式設定，目前為淺色模式。');
         } catch (error) {
           console.error('Failed to reset night mode preference:', error);
-          showToast('⚠️ 無法重設夜間模式設定，請稍後再試。');
+          showToast('⚠️ 無法重設外觀模式設定，請稍後再試。');
         }
       };
 
@@ -6990,7 +6990,7 @@
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
                       <Icon name="moon" className="w-4 h-4" />
-                      重設夜間模式設定
+                      重設外觀模式設定
                     </button>
                     <button
                       onClick={handleResetPdfExportSettings}
