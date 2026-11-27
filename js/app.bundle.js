@@ -851,7 +851,7 @@ const PretermGrowthChart = ({
       y: height - padding.bottom + 17,
       textAnchor: "middle",
       className: `font-mono text-[9px] ${emphasizeZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`
-    }, mVal));
+    }, mVal >= 0 ? mVal : ''));
   }), zeroInRange && showZeroBaseline && /*#__PURE__*/React.createElement("g", {
     key: "zero-ref"
   }, /*#__PURE__*/React.createElement("line", {
@@ -3363,7 +3363,9 @@ function App() {
         monthTicks.forEach(month => {
           const x = xScale(month);
           svg.push(`<line x1="${x}" y1="${chartPadding.top}" x2="${x}" y2="${plotBottom}" stroke="#f1f5f9" stroke-width="1"/>`);
-          svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
+          if (month >= 0) {
+            svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
+          }
         });
         if (showZeroBaseline && minX <= 0 && maxX >= 0) {
           const zeroX = xScale(0);

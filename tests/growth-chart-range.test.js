@@ -28,7 +28,11 @@ describe('growth chart month range', () => {
 
     expect(appSource).toMatch(/for \(let m = minX; m <= maxX; m \+= 1\)/);
     expect(appSource).not.toMatch(/const step = \(maxX - minX\) > 16 \? 2 : 1/);
-    expect(appSource).toMatch(/\{mVal\}/);
+    expect(appSource).toMatch(/\{mVal >= 0 \? mVal : ''\}/);
+    expect(appSource).toMatch(/if \(month >= 0\) \{\s+svg\.push\(`<text x="\$\{x\}" y="\$\{plotBottom \+ 18\}"[\s\S]*?\$\{month\}/);
+    expect(appSource).toMatch(/const x = xScale\(month\);[\s\S]*?svg\.push\(`<line x1="\$\{x\}"[\s\S]*?if \(month >= 0\)/);
+    expect(appSource).toMatch(/xScale\(point\.age\)/);
+    expect(appSource).not.toMatch(/points\s*=\s*pdfGrowthHistory[\s\S]*?filter\(point => point\.age >= 0\)/);
     expect(appSource).not.toMatch(/\{isZero \? '0個月' : `\$\{mVal\}個`\}/);
   });
 

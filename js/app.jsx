@@ -716,7 +716,7 @@
                     <line x1={xPos} y1={padding.top} x2={xPos} y2={height - padding.bottom} stroke={emphasizeZero ? "#f59e0b" : "#f1f5f9"} strokeWidth={emphasizeZero ? "2" : "1"} strokeDasharray={emphasizeZero ? "3,3" : "none"} />
                     <line x1={xPos} y1={height - padding.bottom} x2={xPos} y2={height - padding.bottom + 5} stroke={emphasizeZero ? "#d97706" : "#cbd5e1"} strokeWidth={emphasizeZero ? "2" : "1"} />
                     <text x={xPos} y={height - padding.bottom + 17} textAnchor="middle" className={`font-mono text-[9px] ${emphasizeZero ? 'fill-amber-600 font-extrabold text-[10px]' : 'fill-slate-500 font-medium'}`}>
-                      {mVal}
+                      {mVal >= 0 ? mVal : ''}
                     </text>
                   </g>
                 );
@@ -3366,7 +3366,9 @@
             monthTicks.forEach(month => {
               const x = xScale(month);
               svg.push(`<line x1="${x}" y1="${chartPadding.top}" x2="${x}" y2="${plotBottom}" stroke="#f1f5f9" stroke-width="1"/>`);
-              svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
+              if (month >= 0) {
+                svg.push(`<text x="${x}" y="${plotBottom + 18}" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#475569">${month}</text>`);
+              }
             });
             if (showZeroBaseline && minX <= 0 && maxX >= 0) {
               const zeroX = xScale(0);
