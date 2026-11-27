@@ -33,7 +33,7 @@
 
 
 ## 架構與隱私防護紅線（最高安全性）
-- **禁止移除瀏覽器端轉譯**：本專案依賴 `babel.min.js` 即時轉譯 `<script type="text/babel">`，嚴禁以效能優化為由刪除 Babel 相關標籤或檔案。
+- **Babel 建置流程維護**：本專案在建置階段透過 `build:app` 使用 Babel 將 `js/app.jsx` 編譯為 `js/app.bundle.js`；瀏覽器載入編譯後的 bundle，沒有使用 `<script type="text/babel">` 即時轉譯。未經使用者明確要求，不得移除或破壞 Babel 建置流程、依賴或編譯產物。
 - **100% 離線與零外部傳輸**：嚴禁新增任何 `fetch`、`XMLHttpRequest`、外部 CDN 連結或第三方追蹤碼，所有資料僅限本機瀏覽器儲存。
 - **LocalStorage 結構唯讀**：嚴禁更改既有的 `localStorage` 鍵名（Key）或既有 JSON 欄位名稱，確保家長既有紀錄與備份檔 100% 向下相容。
 - **版本號更新規範**：修改 `app.bundle.js` 或 `chart-scale.js` 時，應同步更新 `index.html` 中對應檔案的 `?v=...` 時間戳記。此時只允許修改對應 `<script>` 標籤的 `?v=...` 參數；除此之外，所有 `<script>` 與 `<link>` 標籤的路徑及其他屬性一律唯讀。
