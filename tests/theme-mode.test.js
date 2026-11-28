@@ -16,12 +16,13 @@ describe('appearance mode selection', () => {
     expect(appSource).toMatch(/mediaQuery\.removeEventListener\('change', handleSystemColorChange\)/);
   });
 
-  test('opens one accessible menu with the three direct appearance choices', () => {
+  test('opens one accessible menu with the three direct night-mode choices', () => {
     expect(appSource).toMatch(/aria-haspopup="menu"[\s\S]*?aria-expanded=\{showThemeMenu\}/);
-    expect(appSource).toMatch(/role="menu"[\s\S]*?aria-label="選擇外觀模式"/);
-    expect(appSource).toMatch(/\{ value: 'light', label: '淺色' \}/);
-    expect(appSource).toMatch(/\{ value: 'dark', label: '深色' \}/);
+    expect(appSource).toMatch(/role="menu"[\s\S]*?aria-label="選擇夜間模式"/);
+    expect(appSource).toMatch(/\{ value: 'dark', label: '開啟' \}/);
+    expect(appSource).toMatch(/\{ value: 'light', label: '關閉' \}/);
     expect(appSource).toMatch(/\{ value: 'system', label: '跟隨裝置' \}/);
+    expect(appSource).toMatch(/showToast\(`✅ 夜間模式：\$\{themeModeLabels\[mode\]\}`\)/);
     expect(appSource).toMatch(/role="menuitemradio"[\s\S]*?aria-checked=\{themeMode === option\.value\}/);
     expect(appSource).toMatch(/ReactDOM\.createPortal\([\s\S]*?document\.body/);
   });
@@ -46,8 +47,8 @@ describe('appearance mode selection', () => {
     expect(appSource).toMatch(/backgroundColor: '#1e293b',\s+color: '#fff'/);
     expect(appSource).toMatch(/border: '1px solid #334155'/);
     expect(resetHandler).not.toBeNull();
-    expect(resetHandler[1]).toMatch(/切回淺色模式/);
-    expect(resetHandler[1]).toMatch(/目前為淺色模式/);
+    expect(resetHandler[1]).toMatch(/關閉夜間模式/);
+    expect(resetHandler[1]).toMatch(/目前已關閉/);
     expect(clearHandler).not.toBeNull();
     expect(clearHandler[1]).toMatch(/setThemeMode\('light'\)/);
     expect(appSource).toMatch(/'sun_baby_theme_mode_v1'/);

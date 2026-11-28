@@ -3226,7 +3226,7 @@
       };
 
       const handleSetThemeMode = mode => {
-        const themeModeLabels = { light: '淺色', dark: '深色', system: '跟隨裝置' };
+        const themeModeLabels = { light: '關閉', dark: '開啟', system: '跟隨裝置' };
         const nextIsNightMode = mode === 'dark' || (mode === 'system' && systemPrefersDark);
         setThemeMode(mode);
         setShowThemeMenu(false);
@@ -3234,26 +3234,26 @@
         try {
           localStorage.setItem('sun_baby_theme_mode_v1', mode);
           localStorage.setItem('sun_baby_night_mode_v1', String(nextIsNightMode));
-          showToast(`✅ 外觀已設為：${themeModeLabels[mode]}`);
+          showToast(`✅ 夜間模式：${themeModeLabels[mode]}`);
         } catch (error) {
           console.error('Failed to save theme mode preference:', error);
-          showToast(`⚠️ 外觀已切換為${themeModeLabels[mode]}，但偏好儲存失敗，重新整理後可能恢復原設定。`);
+          showToast(`⚠️ 夜間模式已切換為${themeModeLabels[mode]}，但偏好儲存失敗，重新整理後可能恢復原設定。`);
         }
       };
 
       const handleResetNightMode = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將重設外觀模式設定並切回淺色模式。確定要繼續嗎？'
+          '⚠️ 此操作將重設夜間模式設定並關閉夜間模式。確定要繼續嗎？'
         );
         if (!confirmed) return;
         try {
           localStorage.removeItem('sun_baby_night_mode_v1');
           localStorage.removeItem('sun_baby_theme_mode_v1');
           setThemeMode('light');
-          showToast('🌙 已重設外觀模式設定，目前為淺色模式。');
+          showToast('🌙 已重設夜間模式設定，目前已關閉。');
         } catch (error) {
           console.error('Failed to reset night mode preference:', error);
-          showToast('⚠️ 無法重設外觀模式設定，請稍後再試。');
+          showToast('⚠️ 無法重設夜間模式設定，請稍後再試。');
         }
       };
 
@@ -4587,7 +4587,7 @@
           <div
             id="theme-mode-menu"
             role="menu"
-            aria-label="選擇外觀模式"
+            aria-label="選擇夜間模式"
             className="fixed z-50 rounded-xl border shadow-xl bg-white text-slate-800"
             style={{ width: '11rem', top: themeMenuPosition.top, right: themeMenuPosition.right }}
             onKeyDown={event => {
@@ -4611,8 +4611,8 @@
             ref={themeMenuRef}
           >
             {[
-              { value: 'light', label: '淺色' },
-              { value: 'dark', label: '深色' },
+              { value: 'dark', label: '開啟' },
+              { value: 'light', label: '關閉' },
               { value: 'system', label: '跟隨裝置' }
             ].map(option => (
               <button
@@ -4621,7 +4621,7 @@
                 role="menuitemradio"
                 aria-checked={themeMode === option.value}
                 onClick={() => handleSetThemeMode(option.value)}
-                ref={option.value === 'light' ? firstThemeMenuItemRef : null}
+                ref={option.value === 'dark' ? firstThemeMenuItemRef : null}
                 className="w-full px-3 py-2 text-xs text-left"
                 style={{
                   backgroundColor: themeMode === option.value ? '#fef3c7' : '#ffffff',
@@ -4772,9 +4772,9 @@
                     aria-haspopup="menu"
                     aria-expanded={showThemeMenu}
                     aria-controls="theme-mode-menu"
-                    aria-label={`外觀模式：${themeMode === 'light' ? '淺色' : themeMode === 'dark' ? '深色' : '跟隨裝置'}`}
+                    aria-label={`夜間模式：${themeMode === 'light' ? '關閉' : themeMode === 'dark' ? '開啟' : '跟隨裝置'}`}
                     className="p-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white transition-colors flex-shrink-0"
-                    title={`外觀模式：${themeMode === 'light' ? '淺色' : themeMode === 'dark' ? '深色' : '跟隨裝置'}`}
+                    title={`夜間模式：${themeMode === 'light' ? '關閉' : themeMode === 'dark' ? '開啟' : '跟隨裝置'}`}
                   >
                     <Icon name="moon" className="w-4 h-4" />
                   </button>
@@ -6990,7 +6990,7 @@
                       className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
                     >
                       <Icon name="moon" className="w-4 h-4" />
-                      重設外觀模式設定
+                      重設夜間模式設定
                     </button>
                     <button
                       onClick={handleResetPdfExportSettings}
