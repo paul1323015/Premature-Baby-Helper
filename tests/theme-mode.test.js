@@ -47,7 +47,7 @@ describe('appearance mode selection', () => {
     expect(appSource).toMatch(/backgroundColor: '#1e293b',\s+color: '#fff'/);
     expect(appSource).toMatch(/border: '1px solid #334155'/);
     expect(resetHandler).not.toBeNull();
-    expect(resetHandler[1]).toMatch(/關閉夜間模式/);
+    expect(resetHandler[1]).toMatch(/夜間模式重設為關閉/);
     expect(resetHandler[1]).toMatch(/目前已關閉/);
     expect(clearHandler).not.toBeNull();
     expect(clearHandler[1]).toMatch(/setThemeMode\('light'\)/);

@@ -3243,7 +3243,7 @@
 
       const handleResetNightMode = () => {
         const confirmed = window.confirm(
-          '⚠️ 此操作將重設夜間模式設定並關閉夜間模式。確定要繼續嗎？'
+          '⚠️ 此操作會將夜間模式重設為關閉。確定要繼續嗎？'
         );
         if (!confirmed) return;
         try {
