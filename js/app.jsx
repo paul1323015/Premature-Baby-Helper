@@ -6874,7 +6874,7 @@
                   <div className="space-y-2 bg-amber-50 p-3 rounded-xl border border-amber-200 text-amber-900">
                     <h4 className="font-bold text-xs">📤 匯出備份</h4>
                     <p className="text-[11px] leading-relaxed">
-                      更換裝置或備份資料時使用，可以匯出完整的紀錄檔案。
+                      更換裝置或備份資料與設定時使用，可以匯出完整紀錄檔案。
                     </p>
                     <div className="flex gap-2 pt-1">
                       <button
@@ -6890,7 +6890,7 @@
                   <div className="space-y-2 bg-blue-50 p-3 rounded-xl border border-blue-200 text-blue-900">
                     <h4 className="font-bold text-xs">📥 還原資料</h4>
                     <p className="text-[11px] leading-relaxed">
-                      更換裝置或還原資料時使用，可以匯入完整的紀錄檔案。
+                      更換裝置或還原資料與設定時使用，可以匯入完整紀錄檔案。
                     </p>
                     <div className="space-y-2 pt-1">
                       <label className="block w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-center cursor-pointer shadow-sm transition-colors">
